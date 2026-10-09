@@ -522,7 +522,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func watchPermission() {
         permissionTimer?.invalidate()
         let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self, TextSelection.authorized else { return }
                 self.permissionTimer?.invalidate(); self.permissionTimer = nil
                 self.model.watcher.start()
