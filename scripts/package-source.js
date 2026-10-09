@@ -8,6 +8,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const release = resolve(root, 'release');
 const name = 'PromptFinch-source-v1.0.0';
 const destination = resolve(release, name);
+const readmeLocales = [
+  'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'pt', 'it', 'ru', 'tr', 'nl', 'pl', 'uk',
+  'ja', 'ko', 'hi', 'bn', 'id', 'vi', 'th', 'ta', 'te', 'mr', 'ar', 'ur', 'fa', 'sw', 'pa', 'fil',
+];
 const files = [
   'README.md', 'LICENSE', 'CONTRIBUTING.md', 'SECURITY.md', '.gitignore', '.dockerignore',
   '.env.example', '.env.deepseek.example', 'package.json', 'package-lock.json', 'Dockerfile',
@@ -18,6 +22,7 @@ const files = [
   'macos/Info.plist', 'macos/Icon.swift', 'macos/Sources/Core.swift', 'macos/Sources/Backend.swift',
   'macos/Sources/Selection.swift', 'macos/Sources/Watcher.swift', 'macos/Sources/App.swift', 'macos/Tests/CoreTests.swift', 'macos/Tests/ServiceSmoke.swift',
   'docs/design.md', 'docs/macos.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', '.github/workflows/check.yml',
+  ...readmeLocales.map((locale) => `docs/readme/README.${locale}.md`),
 ];
 // Audit before copying, not after a private file could enter a release.
 const localEnv = existsSync(resolve(root, '.env')) ? parseEnv(readFileSync(resolve(root, '.env'), 'utf8')) : {};

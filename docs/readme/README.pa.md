@@ -1,0 +1,13 @@
+[English](../../README.md) · [简体中文（zh-CN）](README.zh-CN.md) · [繁體中文（zh-TW）](README.zh-TW.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português](README.pt.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Українська](README.uk.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [हिन्दी](README.hi.md) · [বাংলা](README.bn.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [ไทย](README.th.md) · [தமிழ்](README.ta.md) · [తెలుగు](README.te.md) · [मराठी](README.mr.md) · [العربية](README.ar.md) · [اردو](README.ur.md) · [فارسی](README.fa.md) · [Kiswahili](README.sw.md) · **ਪੰਜਾਬੀ** · [Filipino](README.fil.md)
+
+# PromptFinch
+
+> ਇਸ ਪੰਨੇ ਉੱਤੇ ਜਾਣ-ਪਛਾਣ ਦਾ ਅਨੁਵਾਦ ਹੈ। ਇੰਸਟਾਲੇਸ਼ਨ ਅਤੇ API ਸਮੇਤ ਪੂਰਾ ਤਕਨੀਕੀ ਦਸਤਾਵੇਜ਼ [English](../../README.md#english) ਵਿੱਚ ਉਪਲਬਧ ਹੈ।
+
+## ਪੰਜਾਬੀ
+
+PromptFinch ਲਿਖਣ, ਕੋਡਿੰਗ, ਖੋਜ, ਸਾਰ ਬਣਾਉਣ ਅਤੇ ਯੋਜਨਾਬੰਦੀ ਲਈ ਪ੍ਰੌਂਪਟ ਸੰਪਾਦਕ ਅਤੇ ਸੁਧਾਰਕ ਹੈ। ਕਿਸੇ ਵੀ ਭਾਸ਼ਾ ਵਿੱਚ ਹਦਾਇਤਾਂ ਦਾਖ਼ਲ ਜਾਂ ਚੁਣ ਕੇ ਅੰਗਰੇਜ਼ੀ ਪ੍ਰੌਂਪਟ ਬਣਾਓ। ਸਪਸ਼ਟ ਲੋੜਾਂ, ਜਵਾਬ ਲਈ ਮੰਗੀ ਭਾਸ਼ਾ ਅਤੇ ਹਵਾਲਾ-ਚਿੰਨ੍ਹਾਂ ਵਿੱਚ ਦਿੱਤਾ ਸਥਿਰ ਟੈਕਸਟ ਬਰਕਰਾਰ ਰਹਿੰਦਾ ਹੈ।
+
+macOS ਐਪ ਵਿੱਚ ਹੱਥੀਂ ਕੰਮ ਕਰਨ ਦੀ ਥਾਂ ਅਤੇ ਚੁਣੇ ਟੈਕਸਟ ਲਈ ਸਹਾਇਕ ਹੈ; ਅਨੁਕੂਲ ਐਪਾਂ ਵਿੱਚ ਟੈਕਸਟ ਚੁਣੋ, ਸੱਜਾ-ਕਲਿੱਕ ਕਰੋ, ਫਿਰ ਸਹਾਇਕ ਮੀਨੂ ਵਿੱਚ **Convert to an English Prompt** ਚੁਣ ਕੇ ਨਤੀਜੇ ਵੇਖੋ। ਬ੍ਰਾਊਜ਼ਰ ਵਰਕਸਪੇਸ ਵੀ ਉਪਲਬਧ ਹੈ। ਅਸਲ ਜਨਰੇਸ਼ਨ ਲਈ ਮਾਡਲ ਦੀ ਸੰਰਚਿਤ API ਕੁੰਜੀ ਚਾਹੀਦੀ ਹੈ। Mock ਸਿਰਫ਼ ਕਾਰਜ-ਪ੍ਰਵਾਹ ਦਿਖਾਉਂਦਾ ਹੈ, ਅਨੁਵਾਦ ਜਾਂ ਸੁਧਾਰ ਨਹੀਂ ਕਰਦਾ। ਇੰਟਰਫੇਸ ਰਵਾਇਤੀ ਚੀਨੀ ਵਿੱਚ ਹੈ; ਇਹ ਸਿਰਫ਼ ਦਸਤਾਵੇਜ਼ਾਂ ਦਾ ਅਨੁਵਾਦ ਹੈ।
+
+**ਕਦਮ:** ਦਾਖ਼ਲ ਕਰੋ/ਚੁਣੋ → ਪ੍ਰੌਂਪਟ ਬਣਾਓ → ਜਾਂਚੋ/ਕਾਪੀ ਕਰੋ।

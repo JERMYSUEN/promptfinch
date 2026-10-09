@@ -1,0 +1,13 @@
+[English](../../README.md) · [简体中文（zh-CN）](README.zh-CN.md) · [繁體中文（zh-TW）](README.zh-TW.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português](README.pt.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Українська](README.uk.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [हिन्दी](README.hi.md) · [বাংলা](README.bn.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [ไทย](README.th.md) · [தமிழ்](README.ta.md) · [తెలుగు](README.te.md) · **मराठी** · [العربية](README.ar.md) · [اردو](README.ur.md) · [فارسی](README.fa.md) · [Kiswahili](README.sw.md) · [ਪੰਜਾਬੀ](README.pa.md) · [Filipino](README.fil.md)
+
+# PromptFinch
+
+> या पृष्ठावर परिचयाचे भाषांतर आहे. स्थापना आणि API यांसह संपूर्ण तांत्रिक माहिती [English](../../README.md#english) मध्ये उपलब्ध आहे.
+
+## PromptFinch परिचय
+
+PromptFinch हे सर्वसाधारण वापरासाठी प्रॉम्प्ट संपादन आणि सुधारणा करणारे साधन आहे. कोणत्याही भाषेत सूचना लिहा किंवा निवडा आणि लेखन, कोडिंग, संशोधन, सारांश व नियोजनासाठी इंग्रजी प्रॉम्प्ट तयार करा. स्पष्ट आवश्यकता, उत्तराची मागितलेली भाषा आणि अवतरणचिन्हांतील निश्चित मजकूर जतन होतो.
+
+macOS अ‍ॅपमध्ये कार्यक्षेत्र आणि निवड सहाय्यक आहे: सुसंगत अ‍ॅपमध्ये मजकूर निवडा, उजवे क्लिक करा आणि सहाय्यक मेनूमधून **Convert to an English Prompt** निवडा; त्यानंतर निकाल पॅनेल दिसते. ब्राउझर कार्यक्षेत्रही उपलब्ध आहे. प्रत्यक्ष निर्मितीसाठी मॉडेलची API की आवश्यक आहे. मॉक मोड फक्त प्रक्रिया दाखवतो; भाषांतर किंवा सुधारणा करत नाही. UI पारंपरिक चिनी भाषेत आहे; हे भाषांतर फक्त README दस्तऐवजासाठी आहे.
+
+**प्रक्रिया:** लिहा किंवा निवडा → इंग्रजी प्रॉम्प्ट तयार करा → निकाल पाहा
