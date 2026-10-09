@@ -98,6 +98,10 @@ final class SelectionWatcher {
     private var pendingRightFinishWorkItem: DispatchWorkItem?
     private var nextEventSequence: UInt64 = 0
 
+    private static func eventMask(_ type: CGEventType) -> CGEventMask {
+        CGEventMask(1) << type.rawValue
+    }
+
     static var leftTrigger: Bool { UserDefaults.standard.object(forKey: leftKey) as? Bool ?? true }
     static var rightTrigger: Bool { UserDefaults.standard.object(forKey: rightKey) as? Bool ?? true }
     static var pasteBack: Bool { UserDefaults.standard.object(forKey: pasteBackKey) as? Bool ?? true }
@@ -108,7 +112,7 @@ final class SelectionWatcher {
             activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
                 forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
             ) { [weak self] _ in
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     guard let self, let pid = self.menuSourcePID,
                           NSWorkspace.shared.frontmostApplication?.processIdentifier != pid else { return }
                     self.hideActionMenu(reason: "foreground-changed")
@@ -124,11 +128,11 @@ final class SelectionWatcher {
             DebugLog.write("watcher start skipped: accessibility permission off")
             return
         }
-        let mask = CGEventMask((1 << CGEventType.leftMouseDown.rawValue)
-            | (1 << CGEventType.leftMouseUp.rawValue)
-            | (1 << CGEventType.rightMouseDown.rawValue)
-            | (1 << CGEventType.rightMouseUp.rawValue)
-            | (1 << CGEventType.keyDown.rawValue))
+        let mask = Self.eventMask(.leftMouseDown)
+            | Self.eventMask(.leftMouseUp)
+            | Self.eventMask(.rightMouseDown)
+            | Self.eventMask(.rightMouseUp)
+            | Self.eventMask(.keyDown)
         // listenOnly: we never modify or swallow the user's clicks.
         guard let port = CGEvent.tapCreate(tap: .cghidEventTap, place: .headInsertEventTap, options: .listenOnly,
             eventsOfInterest: mask, callback: { _, type, event, _ in
