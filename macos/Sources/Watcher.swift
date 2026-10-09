@@ -7,6 +7,10 @@ import ApplicationServices
 
 @MainActor private var activeWatcher: SelectionWatcher?
 
+// Ignore only the Escape we post after an explicit companion-menu choice.
+// Host/user keyboard input must still invalidate offered actions.
+private let contextMenuDismissalMarker: Int64 = 0x50464D454E55
+
 // Flow tracing without content: statuses and counts only, never prompt text.
 enum DebugLog {
     static let fileURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -57,8 +61,9 @@ enum RightClickCapturePolicy {
 
 enum SelectionMenuPolicy {
     static func canConvert(sourceMatches: Bool, sourcePID: pid_t, frontPID: pid_t?,
-                           enabled: Bool, busy: Bool, age: TimeInterval) -> Bool {
-        sourceMatches && sourcePID == frontPID && enabled && !busy && age >= 0 && age < 12
+                           enabled: Bool, busy: Bool, age: TimeInterval,
+                           maximumAge: TimeInterval = 12) -> Bool {
+        sourceMatches && sourcePID == frontPID && enabled && !busy && age >= 0 && age < maximumAge
     }
 }
 
@@ -72,11 +77,15 @@ final class SelectionWatcher {
     var canStartConversion: (() -> Bool)?
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
-    private let panel = FloatingBarPanel()
+    private let panel: FloatingBarPanel
     private let actionMenu = SelectionActionMenu()
+    private let frontmostPID: () -> pid_t?
+    private let captureForAction: (pid_t, CGPoint, UInt64, String) -> SelectionCapture?
+    private let now: () -> Date
+    private let presentPanel: (NSPanel) -> Void
+    private var barSessionID: UUID?
     private var menuHideWorkItem: DispatchWorkItem?
     private var menuSessionID: UUID?
-    private var menuSourcePID: pid_t?
     private var activationObserver: NSObjectProtocol?
     private var hideWorkItem: DispatchWorkItem?
     private var leftInspectWorkItem: DispatchWorkItem?
@@ -98,6 +107,22 @@ final class SelectionWatcher {
     private var pendingRightFinishWorkItem: DispatchWorkItem?
     private var nextEventSequence: UInt64 = 0
 
+    // Narrow action-time seams allow real button-flow checks without reading
+    // another app's text, displaying a panel or installing a global event tap.
+    init(floatingBar: FloatingBarPanel? = nil,
+         frontmostPID: @escaping () -> pid_t? = { NSWorkspace.shared.frontmostApplication?.processIdentifier },
+         captureForAction: ((pid_t, CGPoint, UInt64, String) -> SelectionCapture?)? = nil,
+         now: @escaping () -> Date = Date.init,
+         presentPanel: ((NSPanel) -> Void)? = nil) {
+        self.panel = floatingBar ?? FloatingBarPanel()
+        self.frontmostPID = frontmostPID
+        self.captureForAction = captureForAction ?? {
+            TextSelection.capture(expectedPID: $0, eventSequence: $2, phase: $3, hitTestPoint: $1)
+        }
+        self.now = now
+        self.presentPanel = presentPanel ?? { $0.orderFrontRegardless() }
+    }
+
     private static func eventMask(_ type: CGEventType) -> CGEventMask {
         CGEventMask(1) << type.rawValue
     }
@@ -106,6 +131,29 @@ final class SelectionWatcher {
     static var rightTrigger: Bool { UserDefaults.standard.object(forKey: rightKey) as? Bool ?? true }
     static var pasteBack: Bool { UserDefaults.standard.object(forKey: pasteBackKey) as? Bool ?? true }
 
+    func updateLanguage() {
+        // Changing language invalidates pending menu choices without generating.
+        invalidatePendingActions(reason: "language-changed")
+        actionMenu.updateLanguage()
+    }
+
+    func invalidatePendingActions(reason: String = "settings-changed") {
+        hideActionMenu(reason: reason)
+        hideBar(reason: reason)
+        cancelScheduledLeftInspect()
+        clearPendingRightClick()
+        clearRecentCandidate()
+        latestLeftSelectionSequence = nil
+    }
+
+    func foregroundChanged() {
+        invalidatePendingActions(reason: "foreground-changed")
+    }
+
+    func keyboardInputReceived() {
+        invalidatePendingActions(reason: "keyboard")
+    }
+
     func activate() {
         activeWatcher = self
         if activationObserver == nil {
@@ -113,9 +161,7 @@ final class SelectionWatcher {
                 forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
             ) { [weak self] _ in
                 Task { @MainActor [weak self] in
-                    guard let self, let pid = self.menuSourcePID,
-                          NSWorkspace.shared.frontmostApplication?.processIdentifier != pid else { return }
-                    self.hideActionMenu(reason: "foreground-changed")
+                    self?.foregroundChanged()
                 }
             }
         }
@@ -142,6 +188,9 @@ final class SelectionWatcher {
                     }
                     return Unmanaged.passUnretained(event)
                 }
+                if event.getIntegerValueField(.eventSourceUserData) == contextMenuDismissalMarker {
+                    return Unmanaged.passUnretained(event)
+                }
                 // The CGEvent is only valid inside this callback; copy what we need.
                 let location = event.location
                 Task { @MainActor in activeWatcher?.process(type: type, location: location) }
@@ -161,12 +210,7 @@ final class SelectionWatcher {
         if let tap { CGEvent.tapEnable(tap: tap, enable: false) }
         if let source { CFRunLoopRemoveSource(RunLoop.main.getCFRunLoop(), source, .commonModes) }
         tap = nil; source = nil
-        hideBar(reason: "watcher-stop")
-        hideActionMenu(reason: "watcher-stop")
-        leftInspectWorkItem?.cancel(); leftInspectWorkItem = nil
-        scheduledLeftInspectSequence = nil; scheduledLeftInspectPID = nil; scheduledLeftInspectPoint = nil
-        scheduledLeftInspectGestureSequence = nil
-        clearPendingRightClick()
+        invalidatePendingActions(reason: "watcher-stop")
     }
 
     private func recoverTap(after type: CGEventType) {
@@ -181,7 +225,7 @@ final class SelectionWatcher {
         case .keyDown:
             // Escape, copy, typing or navigation cancels the offered action.
             // listenOnly leaves the original key event with the source app.
-            if actionMenu.isVisible { hideActionMenu(reason: "keyboard") }
+            keyboardInputReceived()
         case .leftMouseUp where Self.leftTrigger && !panel.isVisible && menuSessionID == nil:
             let sequence = makeEventSequence()
             let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
@@ -250,7 +294,7 @@ final class SelectionWatcher {
                 return
             }
             DebugLog.write("inspect seq=\(eventSequence) result=selected capturePID=\(capture.pid) frontPID=\(frontPID!) selectedUTF16=\(capture.text.utf16.count) bounds=\(capture.bounds != nil)")
-            showBar(capture: capture, mouse: mouse, eventSequence: eventSequence)
+            offerLeftSelection(capture: capture, mouse: mouse, eventSequence: eventSequence)
         case .explicitlyEmpty:
             invalidateRecentCandidate(for: expectedPID, reason: "explicit-empty-selection", inspectSequence: eventSequence)
             if RightClickCapturePolicy.delayedInspectMatches(expectedSequence: pendingRightAwaitedInspectSequence,
@@ -455,12 +499,11 @@ final class SelectionWatcher {
     private func showActionMenu(capture: SelectionCapture, mouse: CGPoint, eventSequence: UInt64) {
         hideActionMenu(reason: "replace")
         let session = UUID()
-        let offeredAt = Date()
+        let offeredAt = now()
         menuSessionID = session
-        menuSourcePID = capture.pid
         actionMenu.configure(onConvert: { [weak self] anchor in
             guard let self, self.menuSessionID == session,
-                  NSWorkspace.shared.frontmostApplication?.processIdentifier == capture.pid,
+                  self.frontmostPID() == capture.pid,
                   Self.rightTrigger, self.canStartConversion?() ?? true else { return }
             self.menuHideWorkItem?.cancel()
             self.menuHideWorkItem = nil
@@ -468,18 +511,16 @@ final class SelectionWatcher {
             PasteBack.dismissContextMenu(processID: capture.pid)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
                 guard let self, self.menuSessionID == session else { return }
-                let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
-                let current = TextSelection.capture(expectedPID: capture.pid, eventSequence: eventSequence,
-                                                    phase: "right-menu-confirm", hitTestPoint: mouse)
-                let matches = current.map { capture.stillTargetsSameSelection(as: $0) } ?? false
+                let current = self.captureForAction(capture.pid, mouse, eventSequence, "right-menu-confirm")
+                let matches = current.map { capture.matchesForConversion(as: $0) } ?? false
                 let allowed = SelectionMenuPolicy.canConvert(
-                    sourceMatches: matches, sourcePID: capture.pid, frontPID: frontPID,
+                    sourceMatches: matches, sourcePID: capture.pid, frontPID: self.frontmostPID(),
                     enabled: Self.rightTrigger, busy: !(self.canStartConversion?() ?? true),
-                    age: Date().timeIntervalSince(offeredAt))
+                    age: self.now().timeIntervalSince(offeredAt))
                 self.hideActionMenu(reason: allowed ? "convert-chosen" : "selection-changed")
                 guard allowed else {
                     DebugLog.write("right-menu seq=\(eventSequence) rejected=source-changed-or-unavailable")
-                    self.showMenuNotice("選取內容已變更或無法核對。請重新選取，再按右鍵。", at: mouse)
+                    self.showMenuNotice(L10n.text(.selectionExpired), at: mouse)
                     return
                 }
                 DebugLog.write("right-menu seq=\(eventSequence) action=convert capturePID=\(capture.pid) selectedUTF16=\(capture.text.utf16.count)")
@@ -500,14 +541,14 @@ final class SelectionWatcher {
     private func hideActionMenu(reason: String) {
         menuHideWorkItem?.cancel(); menuHideWorkItem = nil
         if menuSessionID != nil { DebugLog.write("right-menu hidden reason=\(reason)") }
-        menuSessionID = nil; menuSourcePID = nil
+        menuSessionID = nil
         actionMenu.dismiss()
     }
 
     private func showMenuNotice(_ message: String, at mouse: CGPoint) {
         panel.showNotice(message)
         panel.placeNear(topLeft: TextSelection.appKitPoint(fromQuartz: mouse))
-        panel.orderFrontRegardless()
+        presentPanel(panel)
         hideWorkItem?.cancel()
         let item = DispatchWorkItem { [weak self] in self?.hideBar(reason: "menu-notice-timeout") }
         hideWorkItem = item
@@ -540,11 +581,11 @@ final class SelectionWatcher {
 
     private func showAccessibilityNotice(at mouse: CGPoint, waiting: Bool) {
         let message = waiting
-            ? "文字輔助功能正在啟動。請等 2 秒，再重新選取並按右鍵。"
-            : "已啟用此程式的文字輔助功能。請等 2 秒，再重新選取並按右鍵。"
+            ? L10n.text(.accessibilityWarming)
+            : L10n.text(.accessibilityEnabled)
         panel.showNotice(message)
         panel.placeNear(topLeft: TextSelection.appKitPoint(fromQuartz: mouse))
-        panel.orderFrontRegardless()
+        presentPanel(panel)
         DebugLog.write("floatingBar notice=accessibility-bootstrap waiting=\(waiting) frame=\(Int(panel.frame.minX)),\(Int(panel.frame.minY)),\(Int(panel.frame.width)),\(Int(panel.frame.height))")
         hideWorkItem?.cancel()
         let item = DispatchWorkItem { [weak self] in self?.hideBar(reason: "accessibility-notice-timeout") }
@@ -552,13 +593,36 @@ final class SelectionWatcher {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5, execute: item)
     }
 
-    private func showBar(capture: SelectionCapture, mouse: CGPoint, eventSequence: UInt64) {
+    func offerLeftSelection(capture: SelectionCapture, mouse: CGPoint, eventSequence: UInt64) {
+        hideBar(reason: "replace", eventSequence: eventSequence)
+        let session = UUID()
+        let offeredAt = now()
+        barSessionID = session
         let top = capture.bounds.map { TextSelection.topLeftPoint(from: $0) } ?? mouse
         panel.configure(text: capture.text) { [weak self] barTopLeft in
-            self?.onSelection?(capture, barTopLeft, eventSequence)
+            guard let self, self.barSessionID == session else { return }
+            let frontPID = self.frontmostPID()
+            let mayInspect = SelectionMenuPolicy.canConvert(
+                sourceMatches: true, sourcePID: capture.pid, frontPID: frontPID,
+                enabled: Self.leftTrigger, busy: !(self.canStartConversion?() ?? true),
+                age: self.now().timeIntervalSince(offeredAt), maximumAge: 8)
+            let current = mayInspect
+                ? self.captureForAction(capture.pid, mouse, eventSequence, "left-bar-confirm") : nil
+            let allowed = mayInspect && SelectionMenuPolicy.canConvert(
+                sourceMatches: current.map { capture.matchesForConversion(as: $0) } ?? false,
+                sourcePID: capture.pid, frontPID: self.frontmostPID(),
+                enabled: Self.leftTrigger, busy: !(self.canStartConversion?() ?? true),
+                age: self.now().timeIntervalSince(offeredAt), maximumAge: 8)
+            self.hideBar(reason: allowed ? "convert-chosen" : "selection-changed", eventSequence: eventSequence)
+            guard allowed else {
+                DebugLog.write("floatingBar seq=\(eventSequence) rejected=source-changed-disabled-expired-or-busy")
+                self.showMenuNotice(L10n.text(.selectionExpired), at: mouse)
+                return
+            }
+            self.onSelection?(capture, barTopLeft, eventSequence)
         }
         panel.placeNear(topLeft: top)
-        panel.orderFrontRegardless()
+        presentPanel(panel)
         DebugLog.write("floatingBar seq=\(eventSequence) shown capturePID=\(capture.pid) sourceBounds=\(capture.bounds != nil) frame=\(Int(panel.frame.minX)),\(Int(panel.frame.minY)),\(Int(panel.frame.width)),\(Int(panel.frame.height)) screens=\(NSScreen.screens.count)")
         hideWorkItem?.cancel()
         let item = DispatchWorkItem { [weak self] in self?.hideBar(reason: "eight-second-timeout", eventSequence: eventSequence) }
@@ -568,10 +632,11 @@ final class SelectionWatcher {
 
     private func hideBar(reason: String, eventSequence: UInt64? = nil) {
         hideWorkItem?.cancel(); hideWorkItem = nil
+        barSessionID = nil
         if panel.isVisible {
             DebugLog.write("floatingBar seq=\(eventSequence.map(String.init) ?? "-") hidden reason=\(reason)")
         }
-        panel.orderOut(nil)
+        panel.dismiss()
     }
 
     private func clearPendingRightClick() {
@@ -587,6 +652,8 @@ final class SelectionWatcher {
 
 @MainActor
 final class SelectionActionMenu: NSPanel {
+    private let convert = SelectionMenuButton(title: "", target: nil, action: nil)
+    private let cancel = SelectionMenuButton(title: "", target: nil, action: nil)
     private var onConvert: ((CGPoint) -> Void)?
     private var onCancel: (() -> Void)?
 
@@ -603,22 +670,23 @@ final class SelectionActionMenu: NSPanel {
         effect.autoresizingMask = [.width, .height]
         view.addSubview(effect)
         view.setAccessibilityRole(.menu)
-        view.setAccessibilityLabel("PromptFinch操作選單")
+        view.setAccessibilityLabel(L10n.text(.actionMenu))
 
         let title = NSTextField(labelWithString: "PromptFinch")
         title.font = .systemFont(ofSize: 11)
         title.textColor = .secondaryLabelColor
         title.frame = NSRect(x: 12, y: 7, width: 208, height: 16)
         view.addSubview(title)
-        let convert = SelectionMenuButton(title: "⇄  轉為英文 Prompt", target: self,
-                                          action: #selector(chooseConversion))
+        convert.title = "⇄  " + L10n.text(.convert)
+        convert.target = self; convert.action = #selector(chooseConversion)
         convert.frame = NSRect(x: 5, y: 25, width: 222, height: 30)
-        convert.toolTip = "點選後才會傳送選取文字並生成英文 Prompt"
+        convert.toolTip = L10n.text(.convertTooltip)
         view.addSubview(convert)
         let separator = NSBox(frame: NSRect(x: 10, y: 59, width: 212, height: 1))
         separator.boxType = .separator
         view.addSubview(separator)
-        let cancel = SelectionMenuButton(title: "取消", target: self, action: #selector(cancelChoice))
+        cancel.title = L10n.text(.cancel)
+        cancel.target = self; cancel.action = #selector(cancelChoice)
         cancel.frame = NSRect(x: 5, y: 63, width: 222, height: 26)
         view.addSubview(cancel)
         contentView = view
@@ -629,7 +697,19 @@ final class SelectionActionMenu: NSPanel {
 
     // Offering a menu has no conversion side effects. Only chooseConversion
     // invokes the supplied action, once; dismiss and cancel discard it.
+    func updateLanguage() {
+        convert.title = "⇄  " + L10n.text(.convert)
+        convert.toolTip = L10n.text(.convertTooltip)
+        cancel.title = L10n.text(.cancel)
+        contentView?.setAccessibilityLabel(L10n.text(.actionMenu))
+        let width = max(232, ceil(convert.intrinsicContentSize.width) + 30)
+        setContentSize(NSSize(width: width, height: 94))
+        convert.frame.size.width = width - 10
+        cancel.frame.size.width = width - 10
+    }
+
     func configure(onConvert: @escaping (CGPoint) -> Void, onCancel: @escaping () -> Void) {
+        updateLanguage()
         self.onConvert = onConvert
         self.onCancel = onCancel
     }
@@ -708,7 +788,7 @@ private final class SelectionMenuButton: NSButton {
 @MainActor
 final class FloatingBarPanel: NSPanel {
     private var action: ((CGPoint) -> Void)?
-    private let button = NSButton(title: "⇄ 轉為英文 Prompt", target: nil, action: nil)
+    private let button = NSButton(title: "⇄ " + L10n.text(.convert), target: nil, action: nil)
     private let noticeLabel = NSTextField(wrappingLabelWithString: "")
 
     init() {
@@ -746,8 +826,8 @@ final class FloatingBarPanel: NSPanel {
 
     func configure(text: String, action: @escaping (CGPoint) -> Void) {
         self.action = action
-        setContentSize(NSSize(width: 158, height: 30))
-        button.title = "⇄ 轉為英文 Prompt"
+        button.title = "⇄ " + L10n.text(.convert)
+        setContentSize(NSSize(width: max(158, ceil(button.intrinsicContentSize.width) + 20), height: 30))
         button.isEnabled = true
         button.isHidden = false
         noticeLabel.isHidden = true
@@ -756,10 +836,15 @@ final class FloatingBarPanel: NSPanel {
 
     func showNotice(_ message: String) {
         action = nil
-        setContentSize(NSSize(width: 288, height: 48))
+        setContentSize(NSSize(width: 360, height: 72))
         button.isHidden = true
         noticeLabel.stringValue = message
         noticeLabel.isHidden = false
+    }
+
+    func dismiss() {
+        action = nil
+        orderOut(nil)
     }
 
     func placeNear(topLeft: CGPoint) {
@@ -795,14 +880,14 @@ final class ResultPanel: NSPanel {
     var onCopy: (() -> Void)?
     var onClose: (() -> Void)?
 
-    private let header = NSTextField(labelWithString: "英文 Prompt")
+    private let header = NSTextField(labelWithString: L10n.text(.englishPrompt))
     private let closeButton = NSButton(title: "✕", target: nil, action: nil)
     private let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: 438, height: 158))
     private let statusLine = NSTextField(wrappingLabelWithString: "")
-    private let pasteButton = NSButton(title: "貼回原文", target: nil, action: nil)
-    private let copyButton = NSButton(title: "複製", target: nil, action: nil)
+    private let pasteButton = NSButton(title: L10n.text(.pasteBack), target: nil, action: nil)
+    private let copyButton = NSButton(title: L10n.text(.copy), target: nil, action: nil)
     private let spinner = NSProgressIndicator()
-    private let busyLabel = NSTextField(labelWithString: "正在轉為英文 Prompt…")
+    private let busyLabel = NSTextField(labelWithString: L10n.text(.converting))
 
     init() {
         super.init(contentRect: NSRect(x: 0, y: 0, width: 470, height: 300),
@@ -865,13 +950,23 @@ final class ResultPanel: NSPanel {
             button.target = self; button.action = action
             container.addSubview(button)
         }
-        pasteButton.frame = NSRect(x: 16, y: 248, width: 110, height: 30)
-        copyButton.frame = NSRect(x: 134, y: 248, width: 84, height: 30)
+        pasteButton.frame = NSRect(x: 16, y: 248, width: 190, height: 30)
+        copyButton.frame = NSRect(x: 214, y: 248, width: 110, height: 30)
         contentView = container
+        closeButton.setAccessibilityLabel(L10n.text(.close))
     }
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+
+    func updateLanguage(from previous: UILanguage) {
+        header.stringValue = L10n.text(.englishPrompt)
+        pasteButton.title = L10n.text(.pasteBack)
+        copyButton.title = L10n.text(.copy)
+        busyLabel.stringValue = L10n.text(.converting)
+        closeButton.setAccessibilityLabel(L10n.text(.close))
+        statusLine.stringValue = L10n.relocalize(statusLine.stringValue, from: previous)
+    }
 
     func present(anchor: CGPoint, eventSequence: UInt64? = nil) {
         let wanted = NSRect(x: anchor.x, y: anchor.y + 8, width: 470, height: 300)
@@ -905,6 +1000,13 @@ final class ResultPanel: NSPanel {
         statusLine.textColor = .systemOrange
         pasteButton.isHidden = true; copyButton.isHidden = true
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") failed=true visible=\(isVisible)")
+    }
+
+    // Delayed clipboard outcomes update the existing result only. They never
+    // reopen a closed panel or replace the generated text/action buttons.
+    func updateStatus(_ status: String, error: Bool) {
+        statusLine.stringValue = status
+        statusLine.textColor = error ? NSColor.systemOrange : NSColor.white.withAlphaComponent(0.75)
     }
 
     private func busy(_ running: Bool) {
@@ -947,6 +1049,22 @@ struct ClipboardRestoreTransaction {
     let hadBackup: Bool
 }
 
+enum ClipboardRestoreOutcome: Equatable {
+    case restored
+    case skippedNewerCopy
+    case failed
+    case superseded
+}
+
+enum PasteBackOutcome: Equatable {
+    case notAttempted
+    // The clipboard could not be safely snapshotted/prepared/recovered. Callers
+    // must preserve it and offer the result without an automatic fallback copy.
+    case clipboardUnavailable
+    // Posting Command-V is a request, not evidence that a host editor wrote it.
+    case pasteRequested
+}
+
 // Owns the short clipboard transaction. An injected pasteboard lets tests
 // exercise real delayed writes without touching the user's general clipboard.
 @MainActor
@@ -956,8 +1074,17 @@ final class ClipboardRestoreCoordinator {
     private var pendingLease: PasteRestoreLease?
     private var pendingBackup: [PasteboardItemSnapshot]?
     private var pendingWrittenText: String?
+    private var pendingCompletion: ((ClipboardRestoreOutcome) -> Void)?
+    private let writeString: (String) -> Bool
+    private let writeItems: ([NSPasteboardItem]) -> Bool
 
-    init(pasteboard: NSPasteboard) { self.pasteboard = pasteboard }
+    init(pasteboard: NSPasteboard,
+         writeString: ((String) -> Bool)? = nil,
+         writeItems: (([NSPasteboardItem]) -> Bool)? = nil) {
+        self.pasteboard = pasteboard
+        self.writeString = writeString ?? { pasteboard.setString($0, forType: .string) }
+        self.writeItems = writeItems ?? { pasteboard.writeObjects($0) }
+    }
 
     func backUp() -> [PasteboardItemSnapshot] {
         guard let items = pasteboard.pasteboardItems, !items.isEmpty else { return [] }
@@ -973,10 +1100,15 @@ final class ClipboardRestoreCoordinator {
     // Restore unless the user copied something else in the meantime.
     // Chromium increments changeCount on paste even when the text is unchanged,
     // so compare the string, not only the count.
-    private func restore(_ backup: [PasteboardItemSnapshot], written: String, afterWrite: Int) -> Bool {
+    private func restore(_ backup: [PasteboardItemSnapshot], written: String,
+                         afterWrite: Int) -> ClipboardRestoreOutcome {
         guard ClipboardRestorePolicy.shouldRestore(currentCount: pasteboard.changeCount,
                                                    currentText: pasteboard.string(forType: .string),
-                                                   generatedText: written, afterWrite: afterWrite) else { return false }
+                                                   generatedText: written, afterWrite: afterWrite) else { return .skippedNewerCopy }
+        return writeBackup(backup) ? .restored : .failed
+    }
+
+    private func writeBackup(_ backup: [PasteboardItemSnapshot]) -> Bool {
         guard !backup.isEmpty else {
             pasteboard.clearContents()
             return true
@@ -986,33 +1118,46 @@ final class ClipboardRestoreCoordinator {
             let item = NSPasteboardItem()
             for type in entry.types {
                 guard let data = entry.data[type] else { return false }
-                item.setData(data, forType: type)
+                guard item.setData(data, forType: type) else { return false }
             }
             items.append(item)
         }
         pasteboard.clearContents()
-        return pasteboard.writeObjects(items)
+        return writeItems(items)
     }
 
     func write(_ text: String) -> Bool {
         // A deliberate copy must win over any delayed clipboard restoration.
-        cancelPendingRestore()
-        return writeImmediately(text)
+        let backup = backUp()
+        cancelPendingRestore(outcome: .skippedNewerCopy)
+        guard writeImmediately(text) else {
+            _ = writeBackup(backup)
+            return false
+        }
+        return true
     }
 
-    func preparePaste(_ text: String) -> ClipboardRestoreTransaction? {
+    func preparePaste(_ text: String,
+                      onFailure: ((ClipboardRestoreOutcome) -> Void)? = nil) -> ClipboardRestoreTransaction? {
         let backup: [PasteboardItemSnapshot]
         if let pendingBackup, let pendingWrittenText,
            pasteboard.string(forType: .string) == pendingWrittenText {
             // Keep the original snapshot if another paste starts before restore.
             backup = pendingBackup
         } else {
-            cancelPendingRestore()
             backup = backUp()
         }
-        pendingRestore?.cancel()
+        guard backup.allSatisfy({ entry in entry.types.allSatisfy { entry.data[$0] != nil } }) else {
+            // A promised/custom clipboard type that cannot be snapshotted must
+            // remain untouched rather than be lost during a temporary paste.
+            onFailure?(.failed)
+            return nil
+        }
+        cancelPendingRestore(outcome: .superseded)
         guard writeImmediately(text) else {
-            cancelPendingRestore()
+            // setString can fail after clearContents. Recover the snapshot now;
+            // there is no async gap in which a newer user copy can be overwritten.
+            onFailure?(writeBackup(backup) ? .restored : .failed)
             return nil
         }
         let lease = PasteRestoreLease()
@@ -1024,29 +1169,96 @@ final class ClipboardRestoreCoordinator {
     }
 
     func scheduleRestore(_ transaction: ClipboardRestoreTransaction, after delay: TimeInterval = 0.4,
-                         onRestore: ((Bool) -> Void)? = nil) {
+                         onRestore: ((ClipboardRestoreOutcome) -> Void)? = nil) {
+        guard transaction.lease.isCurrent(pendingLease) else {
+            onRestore?(.superseded)
+            return
+        }
+        pendingRestore?.cancel()
+        pendingCompletion = onRestore
         let work = DispatchWorkItem { [weak self] in
             guard let self, transaction.lease.isCurrent(self.pendingLease) else { return }
-            let restored = self.restore(transaction.backup, written: transaction.written,
-                                        afterWrite: transaction.afterWrite)
-            onRestore?(restored)
-            self.cancelPendingRestore()
+            let outcome = self.restore(transaction.backup, written: transaction.written,
+                                       afterWrite: transaction.afterWrite)
+            self.cancelPendingRestore(outcome: outcome)
         }
         pendingRestore = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
-    private func writeImmediately(_ text: String) -> Bool {
-        pasteboard.clearContents()
-        return pasteboard.setString(text, forType: .string)
+    @discardableResult
+    func restoreImmediately(_ transaction: ClipboardRestoreTransaction,
+                            onRestore: ((ClipboardRestoreOutcome) -> Void)? = nil) -> ClipboardRestoreOutcome {
+        guard transaction.lease.isCurrent(pendingLease) else {
+            onRestore?(.superseded)
+            return .superseded
+        }
+        let outcome = restore(transaction.backup, written: transaction.written, afterWrite: transaction.afterWrite)
+        cancelPendingRestore(outcome: outcome)
+        onRestore?(outcome)
+        return outcome
     }
 
-    private func cancelPendingRestore() {
+    private func writeImmediately(_ text: String) -> Bool {
+        pasteboard.clearContents()
+        return writeString(text)
+    }
+
+    private func cancelPendingRestore(outcome: ClipboardRestoreOutcome) {
+        let completion = pendingCompletion
         pendingRestore?.cancel()
         pendingRestore = nil
         pendingLease = nil
         pendingBackup = nil
         pendingWrittenText = nil
+        pendingCompletion = nil
+        // Clear state before reporting, so a callback may safely start a new copy
+        // or paste without the previous transaction erasing its lease afterward.
+        completion?(outcome)
+    }
+}
+
+// Owns target verification and the clipboard/key request. Its narrow closures
+// let regression tests exercise the actual flow with fake targets and no keys.
+@MainActor
+final class PasteBackCoordinator {
+    private let clipboard: ClipboardRestoreCoordinator
+    private let authorized: () -> Bool
+    private let frontmostPID: () -> pid_t?
+    private let capture: (pid_t) -> SelectionCapture?
+    private let isKnownReadOnly: (AXUIElement) -> Bool
+    private let sendCommandV: () -> Bool
+    private let restoreDelay: TimeInterval
+
+    init(clipboard: ClipboardRestoreCoordinator, authorized: @escaping () -> Bool,
+         frontmostPID: @escaping () -> pid_t?, capture: @escaping (pid_t) -> SelectionCapture?,
+         isKnownReadOnly: @escaping (AXUIElement) -> Bool, sendCommandV: @escaping () -> Bool,
+         restoreDelay: TimeInterval = 0.4) {
+        self.clipboard = clipboard
+        self.authorized = authorized
+        self.frontmostPID = frontmostPID
+        self.capture = capture
+        self.isKnownReadOnly = isKnownReadOnly
+        self.sendCommandV = sendCommandV
+        self.restoreDelay = restoreDelay
+    }
+
+    func paste(_ text: String, expectedTarget: SelectionCapture?,
+               onRestore: ((ClipboardRestoreOutcome) -> Void)? = nil) -> PasteBackOutcome {
+        guard authorized(), let expectedTarget, expectedTarget.hasReliableRange,
+              frontmostPID() == expectedTarget.pid,
+              let current = capture(expectedTarget.pid),
+              expectedTarget.stillTargetsSameSelection(as: current),
+              !isKnownReadOnly(current.element),
+              frontmostPID() == expectedTarget.pid else { return .notAttempted }
+
+        guard let transaction = clipboard.preparePaste(text, onFailure: onRestore) else { return .clipboardUnavailable }
+        guard frontmostPID() == expectedTarget.pid, sendCommandV() else {
+            let recovery = clipboard.restoreImmediately(transaction, onRestore: onRestore)
+            return recovery == .restored ? .notAttempted : .clipboardUnavailable
+        }
+        clipboard.scheduleRestore(transaction, after: restoreDelay, onRestore: onRestore)
+        return .pasteRequested
     }
 }
 
@@ -1054,47 +1266,43 @@ final class ClipboardRestoreCoordinator {
 @MainActor
 enum PasteBack {
     private static let clipboard = ClipboardRestoreCoordinator(pasteboard: .general)
+    private static let coordinator = PasteBackCoordinator(
+        clipboard: clipboard, authorized: { TextSelection.authorized },
+        frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier },
+        capture: { TextSelection.capture(expectedPID: $0, phase: "paste-target") },
+        isKnownReadOnly: { TextSelection.isKnownReadOnly($0) }, sendCommandV: { sendCommandV() })
 
     static func write(_ text: String) -> Bool { clipboard.write(text) }
 
-    static func sendCommandV() {
+    static func sendCommandV() -> Bool {
         guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 0x09, keyDown: true),
-              let up = CGEvent(keyboardEventSource: nil, virtualKey: 0x09, keyDown: false) else { return }
+              let up = CGEvent(keyboardEventSource: nil, virtualKey: 0x09, keyDown: false) else { return false }
         down.flags = .maskCommand; up.flags = .maskCommand
         down.post(tap: .cghidEventTap)
         usleep(60_000)
         up.post(tap: .cghidEventTap)
+        return true
     }
 
     static func dismissContextMenu(processID: pid_t) {
         guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 0x35, keyDown: true),
               let up = CGEvent(keyboardEventSource: nil, virtualKey: 0x35, keyDown: false) else { return }
+        down.setIntegerValueField(.eventSourceUserData, value: contextMenuDismissalMarker)
+        up.setIntegerValueField(.eventSourceUserData, value: contextMenuDismissalMarker)
         down.postToPid(processID)
         usleep(30_000)
         up.postToPid(processID)
     }
 
-    // Replaces the still-selected source text with the generated prompt.
-    // Returns false when our own app is frontmost (wrong paste target); the
-    // caller then keeps the result on the clipboard for a manual ⌘V.
-    static func paste(_ text: String, expectedTarget: SelectionCapture?) -> Bool {
-        let front = NSWorkspace.shared.frontmostApplication
-        DebugLog.write("paste: front=\(front?.localizedName ?? "nil") len=\(text.count)")
-        guard TextSelection.authorized,
-              let expectedTarget,
-              let front,
-              front.processIdentifier == expectedTarget.pid,
-              let currentTarget = TextSelection.capture(expectedPID: expectedTarget.pid, phase: "paste-target"),
-              expectedTarget.stillTargetsSameSelection(as: currentTarget) else {
-            DebugLog.write("paste: target changed or could not be verified")
-            return false
+    // The host may ignore Command-V. Never report a confirmed replacement;
+    // callers show the request status and the later clipboard outcome separately.
+    static func paste(_ text: String, expectedTarget: SelectionCapture?,
+                      onRestore: ((ClipboardRestoreOutcome) -> Void)? = nil) -> PasteBackOutcome {
+        let outcome = coordinator.paste(text, expectedTarget: expectedTarget) { restored in
+            DebugLog.write("paste: clipboard-outcome=\(restored)")
+            onRestore?(restored)
         }
-
-        guard let transaction = clipboard.preparePaste(text) else { return false }
-        DebugLog.write("paste: backup=\(transaction.hadBackup)")
-        sendCommandV()
-        DebugLog.write("paste: ⌘V sent afterWrite=\(transaction.afterWrite)")
-        clipboard.scheduleRestore(transaction) { restored in DebugLog.write("paste: restore=\(restored)") }
-        return true
+        DebugLog.write("paste: request-outcome=\(outcome) UTF16=\(text.utf16.count)")
+        return outcome
     }
 }

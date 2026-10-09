@@ -19,9 +19,9 @@ const files = [
   'playwright.config.js', 'tests/server.test.js', 'tests/backend-release.test.js', 'tests/multilingual.test.js', 'tests/ui/workspace.spec.js',
   'tests/fixtures/multilingual-inputs.json', 'tests/fixtures/multilingual-ko-ru.json',
   'scripts/build-macos.js', 'scripts/setup-signing-macos.js', 'scripts/verify-signing-macos.js', 'scripts/install-macos.js', 'scripts/app-lifecycle.js', 'scripts/terminate-macos-app.swift', 'scripts/update-macos-backend.js', 'scripts/backend-release.js', 'scripts/test-macos.js', 'scripts/package-source.js', 'scripts/verify-multilingual.js',
-  'macos/Info.plist', 'macos/Icon.swift', 'macos/Sources/Core.swift', 'macos/Sources/Backend.swift',
-  'macos/Sources/Selection.swift', 'macos/Sources/Watcher.swift', 'macos/Sources/App.swift', 'macos/Tests/CoreTests.swift', 'macos/Tests/ServiceSmoke.swift',
-  'docs/design.md', 'docs/macos.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', '.github/workflows/check.yml',
+  'macos/Info.plist', 'macos/Icon.swift', 'macos/Sources/Localization.swift', 'macos/Sources/Core.swift', 'macos/Sources/Backend.swift',
+  'macos/Sources/Selection.swift', 'macos/Sources/Watcher.swift', 'macos/Sources/App.swift', 'macos/Tests/CoreTests.swift', 'macos/Tests/WorkspaceTests.swift', 'macos/Tests/ServiceSmoke.swift',
+  'docs/design.md', 'docs/macos.md', 'docs/reliability-verification.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', '.github/workflows/check.yml',
   ...readmeLocales.map((locale) => `docs/readme/README.${locale}.md`),
 ];
 // Audit before copying, not after a private file could enter a release.

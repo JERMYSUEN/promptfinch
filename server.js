@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { isIP } from 'node:net';
 import { AppError, MAX_PROMPT_LENGTH, TASKS, readConfig, validateInput, optimize } from './lib/optimizer.js';
 
 const PUBLIC_DIR = new URL('./public/', import.meta.url);
@@ -12,6 +13,86 @@ const STATIC_FILES = new Map([
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
 ]);
 const BODY_LIMIT = 98304;
+
+// Parse authorities without URL's forgiving handling of credentials, paths,
+// percent-encoded hosts or alternative IPv4 spellings. No wildcard entries.
+function parseAuthority(value) {
+  if (typeof value !== 'string' || !value || /[\s/@?#,%\\]/.test(value)) throw new Error('Invalid authority');
+  const match = value.startsWith('[')
+    ? /^(\[[^\]]+\])(?::([1-9]\d{0,4}))?$/.exec(value)
+    : /^([^:\[\]]+)(?::([1-9]\d{0,4}))?$/.exec(value);
+  if (!match) throw new Error('Invalid authority');
+  let hostname = match[1].toLowerCase();
+  if (hostname.startsWith('[')) {
+    if (isIP(hostname.slice(1, -1)) !== 6) throw new Error('Invalid IPv6 host');
+    hostname = new URL(`http://${hostname}`).hostname;
+  } else if (!isIP(hostname)) {
+    if (hostname.length > 253 || /^\d+(?:\.\d+)*$/.test(hostname)
+        || !hostname.split('.').every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))) {
+      throw new Error('Invalid hostname');
+    }
+  }
+  const port = match[2] === undefined ? null : Number(match[2]);
+  if (port > 65535) throw new Error('Invalid port');
+  return { hostname, port };
+}
+
+function hostPolicy(config) {
+  let listeningHost;
+  let allowedHosts;
+  try {
+    const host = config.host || '127.0.0.1';
+    listeningHost = parseAuthority(isIP(host) === 6 ? `[${host}]` : host);
+    if (listeningHost.port !== null) throw new Error('HOST cannot contain a port');
+    allowedHosts = (config.allowedHosts || []).map(parseAuthority);
+  } catch {
+    throw new Error('HOST 與 ALLOWED_HOSTS 必須使用有效主機名稱或 IP；ALLOWED_HOSTS 可指定連接埠，不可含網址、路徑或萬用字元。');
+  }
+  const localHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
+  if (!['0.0.0.0', '[::]'].includes(listeningHost.hostname)) localHosts.add(listeningHost.hostname);
+  return (authority, actualPort, defaultPort = null) => {
+    if (localHosts.has(authority.hostname) && (authority.port ?? defaultPort ?? 80) === actualPort) return true;
+    return allowedHosts.some(allowed => {
+      if (authority.hostname !== allowed.hostname) return false;
+      if (allowed.port === null) return authority.port === null || [80, 443].includes(authority.port);
+      if (authority.port === null && defaultPort === null) return [80, 443].includes(allowed.port);
+      return (authority.port ?? defaultPort) === allowed.port;
+    });
+  };
+}
+
+function validateAuthority(request, server, isAllowed) {
+  // Do not use Forwarded or X-Forwarded-Host: only an explicitly allowed Host.
+  const hostHeaders = request.rawHeaders.filter((value, index) => index % 2 === 0 && value.toLowerCase() === 'host');
+  let authority;
+  try {
+    if (hostHeaders.length !== 1) throw new Error('Missing or repeated Host');
+    authority = parseAuthority(request.headers.host);
+  } catch { throw new AppError(400, '請求的主機格式無效。'); }
+  if (!isAllowed(authority, server.address().port)) throw new AppError(403, '此主機不在允許清單內，請使用本機服務位址或檢查 ALLOWED_HOSTS。');
+  return authority;
+}
+
+function validateOrigin(request, authority, actualPort, isAllowed) {
+  const origin = request.headers.origin;
+  if (origin !== undefined) {
+    let originAuthority;
+    let defaultPort;
+    try {
+      // Serialized browser origins have no credentials, path, query or fragment.
+      const match = /^(https?):\/\/([^/]+)$/.exec(origin);
+      if (!match) throw new Error('Invalid origin');
+      originAuthority = parseAuthority(match[2]);
+      defaultPort = match[1] === 'https' ? 443 : 80;
+    } catch { throw new AppError(400, '請求的來源格式無效，請從本服務的頁面操作。'); }
+    if (!isAllowed(originAuthority, actualPort, defaultPort)
+        || originAuthority.hostname !== authority.hostname
+        || (originAuthority.port ?? defaultPort) !== (authority.port ?? defaultPort)) {
+      throw new AppError(403, '請從本服務的頁面進行優化。');
+    }
+  }
+  if (request.headers['sec-fetch-site'] === 'cross-site') throw new AppError(403, '請從本服務的頁面進行優化。');
+}
 
 function sendJson(response, status, data) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -46,13 +127,16 @@ async function readJson(request) {
 
 export function createApp(config = readConfig()) {
   let activeRequests = 0;
+  const isAllowed = hostPolicy(config);
   const server = createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
     try {
+      const authority = validateAuthority(request, server, isAllowed);
       const pathname = new URL(request.url, 'http://localhost').pathname;
+      if (pathname.startsWith('/api/')) validateOrigin(request, authority, server.address().port, isAllowed);
       if (pathname === '/api/config' && request.method === 'GET') {
         sendJson(response, 200, {
           service: 'prompt-studio', apiVersion: 2,
@@ -65,10 +149,6 @@ export function createApp(config = readConfig()) {
         return;
       }
       if (pathname === '/api/optimize' && request.method === 'POST') {
-        const origin = request.headers.origin;
-        // Only same-origin browser submissions; no CORS for unrelated sites.
-        if (origin && new URL(origin).host !== request.headers.host) throw new AppError(403, '請從本服務的頁面進行優化。');
-        if (request.headers['sec-fetch-site'] === 'cross-site') throw new AppError(403, '請從本服務的頁面進行優化。');
         if (activeRequests >= 4) throw new AppError(429, '目前正在處理其他優化，請稍後再試。');
         activeRequests++;
         const cancellation = new AbortController();

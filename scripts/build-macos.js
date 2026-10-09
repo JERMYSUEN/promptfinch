@@ -34,7 +34,7 @@ if (process.env.PROMPT_STUDIO_BUILD_NUMBER) {
 }
 const architecture = process.arch === 'arm64' ? 'arm64' : 'x86_64';
 const compile = ['swiftc', '-swift-version', '5', '-O', '-module-cache-path', cache, '-target', `${architecture}-apple-macosx13.0`];
-run('xcrun', [...compile, '-parse-as-library', ...['Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), '-o', resolve(contents, 'MacOS/PromptSelection')]);
+run('xcrun', [...compile, '-parse-as-library', ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), '-o', resolve(contents, 'MacOS/PromptSelection')]);
 
 // Explicit allowlist: .env, logs, tests, artifacts and dependencies are never bundled.
 const backend = resolve(resources, 'backend');

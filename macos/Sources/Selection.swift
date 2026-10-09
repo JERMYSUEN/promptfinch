@@ -14,11 +14,24 @@ struct SelectionCapture {
     let element: AXUIElement
     let range: SelectionRange?
 
-    // Refuse paste-back if the focused control, selected text, or range moved
-    // while the model was generating. PID alone cannot distinguish two fields
-    // in the same editor window.
+    // Text-only accessibility clients can still offer conversion. A missing
+    // range, however, cannot establish where an automatic paste will land.
+    var hasReliableRange: Bool {
+        guard let range else { return false }
+        return range.location >= 0 && range.length > 0
+            && range.length == text.utf16.count
+            && range.location <= Int.max - range.length
+    }
+
+    func matchesForConversion(as current: SelectionCapture) -> Bool {
+        pid == current.pid && CFEqual(element, current.element)
+            && text.utf16.elementsEqual(current.text.utf16) && range == current.range
+    }
+
+    // Refuse paste-back when the field, text or exact UTF-16 range changed.
+    // nil == nil is adequate for conversion, but never for replacing text.
     func stillTargetsSameSelection(as current: SelectionCapture) -> Bool {
-        pid == current.pid && CFEqual(element, current.element) && text == current.text && range == current.range
+        hasReliableRange && current.hasReliableRange && matchesForConversion(as: current)
     }
 }
 
@@ -72,11 +85,23 @@ enum TextSelection {
 
     static func read() throws -> String { try readCapture().text }
 
+    // Reject only positively known read-only controls; unavailable editable
+    // attributes are common in Electron and are not evidence of read-only text.
+    static func isKnownReadOnly(_ element: AXUIElement) -> Bool {
+        let editable = read("AXEditable", from: element)
+        if editable.error == .success, let value = editable.value,
+           CFGetTypeID(value) == CFBooleanGetTypeID() {
+            return !CFBooleanGetValue((value as! CFBoolean))
+        }
+        let role = read(kAXRoleAttribute as String, from: element).value as? String
+        return role == (kAXStaticTextRole as String)
+    }
+
     static func readCapture() throws -> SelectionCapture {
-        guard authorized else { throw ToolError.message("快捷鍵取字需要「輔助使用」權限。可在設定中開啟；也可使用右鍵「服務」或手動貼上。") }
+        guard authorized else { throw ToolError.message(L10n.text(.selectionPermission)) }
         let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
         guard let capture = capture(expectedPID: frontPID, phase: "manual"), !capture.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ToolError.message("目前沒有可讀取的選取文字。此軟體若不支援取字，請複製後從選單列讀取剪貼簿。")
+            throw ToolError.message(L10n.text(.noSelection))
         }
         return capture
     }
@@ -250,6 +275,10 @@ enum TextSelection {
         let selectedLength = selectedText?.utf16.count
         let rangeAttribute = readRange(from: element)
         detail += " selectedTextErr=\(selectedAttribute.error.rawValue) selectedTextType=\(typeName(selectedAttribute.value)) selectedTextUTF16=\(selectedLength.map(String.init) ?? "nil") rangeErr=\(rangeAttribute.error.rawValue) rangeType=\(rangeAttribute.type) range=\(rangeAttribute.detail)"
+
+        // Some clients briefly retain the previous selectedText after clearing
+        // a selection. A positively empty range must win over that stale text.
+        if rangeAttribute.isExplicitlyEmpty { return skipped("explicit-empty-range", explicitlyEmpty: true) }
 
         if let selectedText, !selectedText.isEmpty {
             guard selectedText.utf16.count <= maxSelectedUTF16Length else { return skipped("selected-text-too-long") }

@@ -9,7 +9,7 @@ if (process.platform !== 'darwin') throw new Error('Swift 檢查需要 macOS。'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 mkdirSync(resolve(root, 'build/swift-cache'), { recursive: true });
 const binary = resolve(root, 'build/core-tests');
-const compile = spawnSync('xcrun', ['swiftc', '-swift-version', '5', '-parse-as-library', '-module-cache-path', resolve(root, 'build/swift-cache'), ...['Core', 'Selection', 'Watcher'].map(name => resolve(root, `macos/Sources/${name}.swift`)), resolve(root, 'macos/Tests/CoreTests.swift'), '-o', binary], { stdio: 'inherit' });
+const compile = spawnSync('xcrun', ['swiftc', '-swift-version', '5', '-D', 'PROMPTFINCH_TESTS', '-parse-as-library', '-module-cache-path', resolve(root, 'build/swift-cache'), ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), resolve(root, 'macos/Tests/CoreTests.swift'), resolve(root, 'macos/Tests/WorkspaceTests.swift'), '-o', binary], { stdio: 'inherit' });
 if (compile.error) throw compile.error;
 if (compile.status !== 0) process.exit(compile.status || 1);
 const server = createApp(readConfig({
@@ -20,7 +20,10 @@ const server = createApp(readConfig({
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 try {
   const child = spawn(binary, [`http://127.0.0.1:${server.address().port}`], { stdio: 'inherit' });
-  const status = await new Promise((resolve, reject) => { child.on('error', reject); child.on('exit', resolve); });
+  const status = await new Promise((resolve, reject) => {
+    child.on('error', reject);
+    child.on('exit', code => resolve(code ?? 1));
+  });
   process.exitCode = status || 0;
 } finally {
   server.closeAllConnections();

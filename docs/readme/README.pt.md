@@ -4,8 +4,10 @@
 
 > Esta página contém a introdução traduzida. A referência técnica completa está em [English](../../README.md#english).
 
-PromptFinch: editor e otimizador de uso geral. Introduza ou selecione instruções em qualquer idioma: prompts em inglês para escrita, programação, pesquisa, resumos e planeamento. Preserva requisitos explícitos, idioma de resposta solicitado e textos fixos entre aspas.
+PromptFinch: editor e otimizador de uso geral. Introduza ou selecione instruções em qualquer idioma: prompts em inglês para escrita, programação, pesquisa, resumos e planeamento. Foi concebido para preservar os requisitos explícitos, o idioma de resposta solicitado e os textos fixos entre aspas.
 
-A aplicação para macOS combina espaço manual e assistente de seleção; há versão web. Geração real: chave API de modelo configurada. Modo simulado: pré-visualização do fluxo, sem tradução nem otimização. Interface atual em chinês tradicional; traduções apenas documentais.
+A aplicação para macOS combina espaço manual e assistente de seleção; há versão web. Geração real: chave API de modelo configurada. Modo simulado: pré-visualização do fluxo, sem tradução nem otimização.
 
-**Fluxo:** selecionar texto → clique direito → escolher **Convert to an English Prompt** → painel de resultados (aplicações compatíveis).
+A interface macOS permite escolher chinês tradicional (predefinido), inglês, japonês ou coreano nas definições. A interface do navegador permanece em chinês tradicional. As notas sobre melhorias e pressupostos são solicitadas ao modelo em chinês tradicional e não são traduzidas ao mudar o idioma da interface. Os links de idiomas do README mudam apenas a página de documentação.
+
+**Fluxo:** selecionar texto → clique direito → escolher **Convert to English prompt** → painel de resultados (aplicações compatíveis).

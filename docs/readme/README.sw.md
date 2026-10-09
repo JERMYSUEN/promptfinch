@@ -6,8 +6,10 @@
 
 ## Kiswahili
 
-PromptFinch huhariri na kuboresha prompti za uandishi, programu, utafiti, muhtasari na mipango. Ingiza au chagua maagizo katika lugha yoyote ili kupata prompti ya Kiingereza, huku ukihifadhi mahitaji yaliyobainishwa, lugha ya jibu iliyoombwa na maandishi maalumu ndani ya alama za kunukuu.
+PromptFinch huhariri na kuboresha prompti za uandishi, programu, utafiti, muhtasari na mipango. Ingiza au chagua maagizo katika lugha yoyote ili kupata prompti ya Kiingereza, na imeundwa kuhifadhi mahitaji yaliyobainishwa, lugha ya jibu iliyoombwa na maandishi maalumu ndani ya alama za kunukuu.
 
-Programu ya macOS ina sehemu ya kuandika na msaidizi wa maandishi yaliyochaguliwa; chagua maandishi katika programu inayooana, bofya kulia, kisha chagua **Convert to an English Prompt** kwenye menyu saidizi ili kuona matokeo. Sehemu ya kivinjari pia inapatikana. Uzalishaji halisi unahitaji ufunguo wa API wa modeli uliosanidiwa. Mock huonyesha mchakato bila kutafsiri au kuboresha. Kiolesura ni cha Kichina cha Jadi; hii ni tafsiri ya nyaraka pekee.
+Programu ya macOS ina sehemu ya kuandika na msaidizi wa maandishi yaliyochaguliwa; chagua maandishi katika programu inayooana, bofya kulia, kisha chagua **Convert to English prompt** kwenye menyu saidizi ili kuona matokeo. Sehemu ya kivinjari pia inapatikana. Uzalishaji halisi unahitaji ufunguo wa API wa modeli uliosanidiwa. Mock huonyesha mchakato bila kutafsiri au kuboresha.
+
+Katika Mipangilio ya macOS unaweza kuchagua Kichina cha Jadi (chaguo-msingi), Kiingereza, Kijapani au Kikorea kwa kiolesura. Kiolesura cha kivinjari kinabaki katika Kichina cha Jadi. Maelezo ya maboresho na makisio yanaombwa kutoka kwa modeli katika Kichina cha Jadi; kubadili lugha ya kiolesura hakuyatafsiri. Viungo vya lugha katika README hubadili kurasa za nyaraka pekee.
 
 **Hatua:** Ingiza/chagua → zalisha → kagua/nakili.

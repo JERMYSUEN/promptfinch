@@ -6,8 +6,10 @@
 
 ## Tentang PromptFinch
 
-PromptFinch adalah editor dan pengoptimal prompt serbaguna. Instruksi dalam bahasa apa pun dapat menjadi prompt bahasa Inggris untuk menulis, pemrograman, riset, ringkasan, dan perencanaan. Persyaratan eksplisit, bahasa jawaban yang diminta, dan teks tetap dalam kutipan dipertahankan.
+PromptFinch adalah editor dan pengoptimal prompt serbaguna. Instruksi dalam bahasa apa pun dapat menjadi prompt bahasa Inggris untuk menulis, pemrograman, riset, ringkasan, dan perencanaan. Dirancang untuk mempertahankan persyaratan eksplisit, bahasa jawaban yang diminta, dan teks tetap dalam kutipan.
 
-Tersedia ruang kerja macOS dan browser. Di aplikasi yang kompatibel, pilih teks, klik kanan, lalu pilih **Convert to an English Prompt** pada menu pendamping untuk membuka panel hasil. Generasi langsung memerlukan kunci API model. Mode simulasi hanya memperlihatkan alur, tanpa menerjemahkan atau mengoptimalkan. UI menggunakan bahasa Tionghoa Tradisional; terjemahan README ini hanya dokumentasi.
+Tersedia ruang kerja macOS dan browser. Di aplikasi yang kompatibel, pilih teks, klik kanan, lalu pilih **Convert to English prompt** pada menu pendamping untuk membuka panel hasil. Generasi langsung memerlukan kunci API model. Mode simulasi hanya memperlihatkan alur, tanpa menerjemahkan atau mengoptimalkan.
+
+Bahasa antarmuka macOS dapat dipilih di Pengaturan: Tionghoa Tradisional (bawaan), Inggris, Jepang, atau Korea. Antarmuka browser tetap menggunakan Tionghoa Tradisional. Catatan perbaikan dan asumsi diminta dari model dalam Tionghoa Tradisional dan tidak diterjemahkan saat bahasa antarmuka diubah. Tautan bahasa di README hanya beralih antarhalaman dokumentasi.
 
 **Alur:** Masukkan atau pilih → Hasilkan prompt Inggris → Tinjau hasil

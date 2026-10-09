@@ -4,19 +4,19 @@
 
 **Select. Refine. Paste.**
 
-A general-purpose prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request into clearer instructions for the model you plan to use.
+A prompt editor for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer English instructions, then review and paste them into the model you plan to use.
 
-The macOS app combines a manual workspace with a selection assistant: select text in a compatible app, right-click, choose **Convert to an English Prompt** in the companion action menu, and review the result in a nearby panel. Right-clicking alone does not generate or send content to a model. An optional browser workspace and HTTP API use the same backend.
+Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. An optional **browser workspace and HTTP API** use the same backend.
 
-The macOS app and the API's English mode produce English prompts from multilingual input. They are designed to retain explicit requirements, the requested answer language, and exact literals. This edits the instructions; it does not perform the original task. Review generated prompts before using them.
+PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API configuration. Without a key, a clearly labeled mock mode lets you try the workflow without translating or optimizing the text.
 
 ## Documentation languages
 
-Use the language links at the very top of each README to open the corresponding language page. English is the source reference. Simplified Chinese (zh-CN) and Traditional Chinese (zh-TW) include the full technical reference; the other 26 language editions currently provide translated introductions with a link to the English technical reference. These are documentation translations; the current app interface is Traditional Chinese. Documentation coverage does not mean every input language or host app has been tested. Translation improvements are welcome.
+The links at the top switch between README pages. English is the source; Simplified Chinese (zh-CN) and Traditional Chinese (zh-TW) include the full reference. The other 26 editions contain translated introductions and link to the English setup instructions. These links change the documentation, not the app's language.
 
-For English output, use the macOS app, choose **英文 Prompt** in the browser's **Prompt 指令語言** control (the browser default), or set `promptLanguage: "en"` in an API request. The browser also offers Traditional Chinese output. Existing API clients that omit this field still receive `zh-Hant` output. Localized editions do not change the app interface language.
+In the macOS app, **Settings → Interface language** offers Traditional Chinese (default), English, Japanese and Korean. The browser interface remains Traditional Chinese. Improvement and assumption notes are requested in Traditional Chinese and are not translated by the interface.
 
-Input accepts Unicode without an alphabet or source-language allowlist. Korean and Russian are required coverage languages. The 28 documentation languages are a coverage target, not proof of model quality. The [recorded multilingual verification](docs/multilingual-verification.md) distinguishes transport tests, 24 live synthetic cases across 18 languages, semantic review, and remaining limitations.
+The macOS app generates English prompt instructions. The browser defaults to English instructions and also offers Traditional Chinese. API clients use `promptLanguage: "en"` for English; omitting it retains the `zh-Hant` default. The language of the eventual answer is a separate requirement in your original prompt. Unicode input is accepted, but documentation translations do not certify model quality in every language.
 
 <a id="english"></a>
 
@@ -28,15 +28,11 @@ Input accepts Unicode without an alphabet or source-language allowlist. Korean a
 
 - Accept a rough prompt, choose a task type, and optionally name the model that will receive the result.
 - Produce a copyable prompt with improvements and assumptions shown separately. Copy and paste-back use the prompt field alone.
-- Use one macOS app for manual input, selection actions, result panels, model settings, and optional paste-back.
+- Use one macOS app for manual input, selection actions, result panels, model settings, four interface languages, and optional paste-back.
 - Handle blank input, size limits, loading, cancellation, and understandable errors.
 - Run without a model key in clearly labeled mock mode, or call a configured OpenAI-compatible model from the Node.js backend.
 
-Suggested GitHub repository name: `promptfinch`. See the [rename and compatibility notes](docs/branding.md).
-
 The task choices are general, writing, analysis, coding, summary, and marketing. Research and planning requests fit the analysis or general workflow. The optional **target model** is a prompt-editing hint, not a switch for the backend generation model; the latter is configured with `LLM_MODEL`.
-
-The interface and improvement/assumption notes are currently primarily Traditional Chinese. The documentation provides 29 language/script editions across 28 languages; it does not add translated app interfaces or certify all input languages.
 
 ### Requirements
 
@@ -53,6 +49,15 @@ Run the following commands from the project root. The examples use a POSIX shell
 
 ### Quick start
 
+Get the source, then choose either the browser demo or the macOS app:
+
+```sh
+git clone https://github.com/JERMYSUEN/promptfinch.git
+cd promptfinch
+```
+
+The macOS app is built from source; this repository does not currently provide a ready-made, notarized installer.
+
 #### Browser demo, no API key
 
 ```sh
@@ -65,7 +70,7 @@ Open [http://127.0.0.1:3000](http://127.0.0.1:3000). If `.env` already exists, r
 
 **Mock output is not translated and not semantically optimized.** It is a labeled template for checking input, loading, result display, and copy flows. It does not call a model or send prompt content to a provider.
 
-The browser defaults to English prompt instructions. Choose **繁體中文 Prompt** for the original Chinese optimization flow. This controls the instructions' language; an explicit answer language in your original request is retained. Mock mode clearly states that the source has not actually been translated.
+The browser's prompt-language selector controls the instructions' language. An explicit answer language in your original request is retained.
 
 #### Build and install the macOS app
 
@@ -78,11 +83,11 @@ npm run install:mac
 
 The build produces `build/PromptFinch.app`. The installer places it in the user's `~/Applications` directory and opens it. No separate browser server is needed: the app starts its own backend at `http://127.0.0.1:3210`.
 
-An existing `Prompt 選取助手.app` installation is migrated to `PromptFinch.app` by the installer. The signing identity, configuration path and saved preferences are retained; see the [rename notes](docs/branding.md).
+The installer also handles migration from the earlier app name; see the [rename notes](docs/branding.md).
 
 `setup:signing:mac` is a per-machine setup for a stable local signing identity. It stores the private signing key in the login Keychain; macOS may ask you to confirm access. This helps maintain the Accessibility identity across local rebuilds. It is not Developer ID signing or notarization, and signing keys must not be published. If an existing signing configuration is invalid, the build stops instead of silently replacing that identity.
 
-Without a selected model configuration, the app uses mock mode. In Settings, create or select a model configuration file, fill in your provider settings, and reload the configuration. If the app cannot locate Node, select its executable in Settings.
+Without a selected model configuration, the app uses mock mode. In Settings, create or select a model configuration file, fill in your provider settings, and reload the configuration. You can also select the interface language there. If the app cannot locate Node, select its executable in Settings.
 
 An existing configuration can also be selected at installation:
 
@@ -127,8 +132,9 @@ A local compatible service that does not require authentication can use `LLM_API
 | `LLM_TIMEOUT_MS` | `45000` | Request/response timeout; integer from 10 to 180000 milliseconds. |
 | `HOST` | `127.0.0.1` | Bind address for the standalone server. |
 | `PORT` | `3000` | Standalone server port. |
+| `ALLOWED_HOSTS` | Empty | Optional comma-separated exact host authorities for a reverse proxy, e.g. `prompts.example.com,prompts.example.com:8443`. No wildcards or URLs. |
 
-The Mac app overrides `HOST` and `PORT` to `127.0.0.1:3210`, regardless of their values in the selected configuration. The standalone browser server and native backend can run on their separate ports.
+The Mac app overrides `HOST` and `PORT` to `127.0.0.1:3210` and clears `ALLOWED_HOSTS`, regardless of their values in the selected configuration. The standalone browser server and native backend can run on their separate ports. The standalone server trusts loopback names and its non-wildcard bind hostname on the actual listening port by default. Binding to `0.0.0.0` or `::` does not trust arbitrary Host headers; remote domains and proxy ports must be listed explicitly. Forwarded host headers are not trusted.
 
 Live configuration or provider failures are reported as errors; they are not silently replaced with mock results. A `ready` value from `/api/config` means configuration is present, not that the upstream model has been successfully contacted.
 
@@ -149,11 +155,9 @@ The instructions are English, while the invitation requested from the downstream
 ### Multilingual input and coverage
 
 - Input, JSON transport, and native selection use Unicode. The 12,000 input limit counts UTF-16 code units consistently with JavaScript and Swift's UTF-16 view, rather than visible letters or grapheme clusters. Oversized requests are rejected rather than truncated. Selected UTF-16 ranges cannot split surrogate pairs. See [JavaScript length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) and [Swift UTF16View](https://developer.apple.com/documentation/swift/string/utf16view).
-- Korean Hangul, Russian Cyrillic, RTL scripts, combining marks, joiners, emoji, and mixed text are accepted without normalization or alphabet-based filtering. The browser input uses automatic text direction. The interface and review notes remain Traditional Chinese; this is not an app interface translated into 28 languages.
+- Korean Hangul, Russian Cyrillic, RTL scripts, combining marks, joiners, emoji, and mixed text are accepted without normalization or alphabet-based filtering. The browser input uses automatic text direction. Documentation language coverage is separate from the four macOS interface languages.
 - English mode separates instruction language from the downstream answer language. The model must preserve explicit answer-language requirements, negation scope, exact literals, variables, code and URLs. A narrow backend repair restores an unambiguous quoted/code literal altered only by canonical NFC normalization. It cannot reconstruct omitted or translated literals or resolve ambiguous equivalent spellings; review important strings.
-- Coverage targets are English, Chinese (Traditional/Simplified), Spanish, French, German, Portuguese, Italian, Russian, Turkish, Dutch, Polish, Ukrainian, Japanese, Korean, Hindi, Bengali, Indonesian, Vietnamese, Thai, Tamil, Telugu, Marathi, Arabic, Urdu, Persian, Swahili, Punjabi, and Filipino. No shared GitHub language standard or universal model guarantee is implied.
-- Live samples on 2026-10-09 used the existing `deepseek-flash` configuration: Korean and Russian each had short, medium and long cases; other samples covered English, both Chinese scripts, Japanese, Spanish, French, German, Portuguese, Italian, Ukrainian, Arabic, Persian, Hindi, Bengali, Thai, Vietnamese and Indonesian. A separate English-instruction case checked mixed Korean/Russian literals, NFD accents, emoji, variables and a URL. It does not substitute for Korean/Russian semantic tests.
-- This is 24 unique synthetic cases across 18 languages, with targeted reruns after findings. The final prompt corpus met the reviewed core constraints; one Japanese improvement note remains imprecise. Other target languages, other models, complex domain inputs, native RTL rendering and all host-app workflows have not been certified. Full prompts and review findings are in the [public verification record](docs/multilingual-verification.md).
+- The [multilingual verification record](docs/multilingual-verification.md) documents transport checks and 24 synthetic live-model cases across 18 languages using `deepseek-flash`, including short, medium and long Korean/Russian cases. It also records an imprecise Japanese improvement note and untested languages and hosts. These samples do not guarantee translation quality for new inputs or other models.
 
 ### HTTP API
 
@@ -182,9 +186,9 @@ The API validates input and model response structure, limits concurrent optimiza
 
 1. Open the app's manual workspace, enter or paste a request, choose a task and optional target model, then generate an English prompt.
 2. Review the prompt and separate notes. Copy the prompt, or clear the workspace to remove its input and result.
-3. For selection actions, enable Accessibility in System Settings when prompted. In a compatible input field, select text and right-click, then choose **轉為英文 Prompt** in the companion menu; the result appears nearby. The host's original context menu remains available. Cancel, a click elsewhere, keyboard input, switching apps or the 12-second timeout dismisses the offered action without generating. The assistant checks the selection again after an explicit choice. You can also use the optional selection button. Some Electron apps may show an activation notice: wait about two seconds, make a new selection, and try again.
+3. For selection actions, enable Accessibility in System Settings when prompted. In a compatible input field, select text and right-click, then choose **Convert to English prompt** in the companion menu (the label follows your app language); the result appears nearby. The host's original context menu remains available. Cancel, a click elsewhere, keyboard input, switching apps or the 12-second timeout dismisses the offered action without generating. The assistant checks the selection again after an explicit choice. You can also use the optional selection button. Some Electron apps may show an activation notice: wait about two seconds, make a new selection, and try again.
 4. Other entry points include the default Option-Command-P shortcut, macOS Services where supported, and an explicit clipboard action. Host applications must expose usable text selection; this is not universal compatibility.
-5. Optional automatic paste-back checks the source app, focused field, text, and selection before replacing the selected input. If the source can no longer be verified, the result is copied instead. The panel also offers copy and manual paste-back. Paste-back does not submit the chat message and can be disabled in Settings. Mock results are not pasted back.
+5. Optional automatic paste-back requires a trustworthy nonempty selection range and rechecks the source app, focused field and selected text before requesting a paste. If the position cannot be verified, the result is copied for manual use. Text-only selection access still permits conversion, with manual pasting. The status reports that a paste was requested; inspect the source because applications can ignore simulated key events. Clipboard restoration is reported only after its callback completes. An incomplete clipboard backup, failed temporary write or failed immediate recovery stops paste-back without automatic fallback copying; the result stays available for a deliberate copy. The panel also offers copy and manual paste-back. Paste-back does not submit the chat message and can be disabled in Settings. Mock results are not pasted back.
 
 Closing the workspace window leaves the selection assistant running in the menu bar. Quitting the app stops the backend it started. The companion menu is a separate, nonactivating action panel; it does not insert items into the host's original context menu. See the [right-click action verification](docs/context-menu-verification.md).
 
@@ -234,20 +238,11 @@ This is a local personal tool without account authentication or multi-user isola
 
 ### Validation and limitations
 
-The following checks combine the multilingual update and explicit right-click menu fix on 2026-10-09. Browser and live-model evidence belongs to the multilingual update; it was not repeated for this native-only change.
+[The latest local verification](docs/reliability-verification.md), on 2026-10-09, passed JavaScript syntax checks, 55 Node tests, 190 native checks, 10 Chrome flow tests and the macOS build/signature checks. These tests use mock or controlled providers; they do not establish real-model output quality.
 
-| Recorded check | Scope |
-| --- | --- |
-| JavaScript syntax and Node HTTP tests | Syntax passed; 49 backend tests passed, including Unicode transport, UTF-8 chunk boundaries, NFC literal restoration and non-truncating length validation. |
-| Native core / API / clipboard checks | 81 checks passed: the original 66 plus explicit menu choice, cancel/dismissal, single-use AppKit button actions and changed/expired/busy/disabled source protection. |
-| Browser flow tests | 10 Chrome tests passed, including English/Chinese switching, mixed Unicode, RTL direction, oversized emoji insertion without silent truncation, copy, errors, cancellation and 390/320px viewports. |
-| Live model samples | 24 unique cases across 18 languages, including Korean/Russian short, medium and long cases. Manually reviewed core prompts passed; one Japanese improvement note remains imprecise. |
-| Native workspace and IDEs (prior evidence) | Manual generation and clearing were previously observed. The user confirmed Codex panel recovery and subsequently reported Claude also worked, before the new menu change. This does not certify every operation in the new build. |
-| New right-click menu (user acceptance) | The user confirmed the original context menu remained, the companion menu appeared without automatic generation, and one explicit click produced an English result. |
+The user previously confirmed that the companion menu appeared without automatic generation and that one explicit click produced an English result. Physical mouse and complete copy/paste-back/cancellation behavior in Codex/Claude still need verification for this build. See the [selection verification](docs/context-menu-verification.md) and [multilingual sample review](docs/multilingual-verification.md) for their separate scopes.
 
-The new menu has user acceptance for display and one-click generation; complete copy/paste-back/cancellation checks in each host remain limited. Earlier Codex/Claude success does not certify every operation in the new build. The untested language targets and other host apps remain unverified. Browser viewport checks are not tests on physical iOS or Android devices. HTTP success and controlled-provider Unicode roundtrips are not evidence of translation quality.
-
-Not delivered or validated: OCR, a configurable global shortcut, bundled Node, automatic updates, Universal Binary builds, Developer ID signing, notarization, downloaded-binary Gatekeeper behavior, other physical macOS/CPU configurations, and a public binary release. A GitHub check workflow is included, but its remote execution has not been verified. This README does not advertise prebuilt downloads or successful release/CI badges.
+Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Known follow-up work includes conflicting requirements in Traditional Chinese output and the total timeout budget for retries.
 
 ### Development
 
@@ -268,7 +263,7 @@ npm run test:mac
 npm run build:mac
 ```
 
-`npm run dev` runs the standalone server with Node's watch mode. API tests use local fake model services; they do not establish real-model translation quality. Native tests do not substitute for physical selection/right-click interaction in each host app. The included [GitHub workflow](.github/workflows/check.yml) covers Node checks and native macOS checks/builds, without proving publication or remote CI execution.
+`npm run dev` runs the standalone server with Node's watch mode. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [GitHub workflow](.github/workflows/check.yml) runs Node checks and native macOS checks/builds. Browser tests currently run locally; check [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for the result on a particular commit.
 
 ### Contributing and license
 

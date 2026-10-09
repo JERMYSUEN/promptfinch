@@ -4,8 +4,10 @@
 
 > Bu sayfa çevrilmiş tanıtımı içerir. Tam teknik belge [English](../../README.md#english) olarak sunulur.
 
-PromptFinch, genel amaçlı bir istem düzenleyici ve iyileştiricidir. Herhangi bir dilde talimat girin veya seçin; yazma, kodlama, araştırma, özetleme ve planlama için İngilizce istem oluşturun. Açık gereksinimler, istenen yanıt dili ve tırnak içindeki sabit metinler korunur.
+PromptFinch, genel amaçlı bir istem düzenleyici ve iyileştiricidir. Herhangi bir dilde talimat girin veya seçin; yazma, kodlama, araştırma, özetleme ve planlama için İngilizce istem oluşturun. Açık gereksinimleri, istenen yanıt dilini ve tırnak içindeki sabit metinleri korumak üzere tasarlanmıştır.
 
-macOS uygulaması, elle kullanılan çalışma alanını seçim asistanıyla birleştirir; tarayıcı çalışma alanı da mevcuttur. Üretim için yapılandırılmış model API anahtarı gerekir. Simülasyon modu işleyişi gösterir; çeviri veya iyileştirme yapmaz. Arayüz şimdilik Geleneksel Çincedir; çeviriler yalnızca belgelendirmedir.
+macOS uygulaması, elle kullanılan çalışma alanını seçim asistanıyla birleştirir; tarayıcı çalışma alanı da mevcuttur. Üretim için yapılandırılmış model API anahtarı gerekir. Simülasyon modu işleyişi gösterir; çeviri veya iyileştirme yapmaz.
 
-**Akış:** metni seçin → sağ tıklayın → **Convert to an English Prompt** seçin → sonuç paneli (uyumlu uygulamalar).
+macOS arayüzü için Ayarlar’dan Geleneksel Çince (varsayılan), İngilizce, Japonca veya Korece seçilebilir. Tarayıcı arayüzü Geleneksel Çince olarak kalır. İyileştirme ve varsayım notları modelden Geleneksel Çince olarak istenir; arayüz dilini değiştirmek bu notları çevirmez. README’deki dil bağlantıları yalnızca belge sayfalarını değiştirir.
+
+**Akış:** metni seçin → sağ tıklayın → **Convert to English prompt** seçin → sonuç paneli (uyumlu uygulamalar).

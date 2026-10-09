@@ -4,8 +4,10 @@
 
 > Deze pagina bevat de vertaalde introductie. De volledige technische documentatie is beschikbaar in [English](../../README.md#english).
 
-PromptFinch is een veelzijdige prompteditor en -optimalisator. Voer instructies in of selecteer ze, in elke taal; maak Engelse prompts voor schrijven, programmeren, onderzoek, samenvattingen en planning. Expliciete eisen, gevraagde antwoordtaal en vaste tekenreeksen tussen aanhalingstekens blijven behouden.
+PromptFinch is een veelzijdige prompteditor en -optimalisator. Voer instructies in of selecteer ze, in elke taal; maak Engelse prompts voor schrijven, programmeren, onderzoek, samenvattingen en planning. Het is ontworpen om expliciete eisen, de gevraagde antwoordtaal en vaste tekenreeksen tussen aanhalingstekens te behouden.
 
-De macOS-app combineert een handmatige werkruimte met een selectieassistent; een browserwerkruimte is beschikbaar. Werkelijke generatie vereist een ingestelde API-sleutel voor het model. De simulatiemodus toont de werkwijze en vertaalt of optimaliseert niet. Interface momenteel in traditioneel Chinees; deze vertalingen dienen alleen als documentatie.
+De macOS-app combineert een handmatige werkruimte met een selectieassistent; een browserwerkruimte is beschikbaar. Werkelijke generatie vereist een ingestelde API-sleutel voor het model. De simulatiemodus toont de werkwijze en vertaalt of optimaliseert niet.
 
-**Werkwijze:** tekst selecteren → rechtsklikken → **Convert to an English Prompt** kiezen → resultatenpaneel (compatibele apps).
+De macOS-interface biedt traditioneel Chinees (standaard), Engels, Japans en Koreaans; kies de taal in de instellingen. De browserinterface blijft in traditioneel Chinees. Toelichtingen op verbeteringen en aannames worden bij het model in traditioneel Chinees aangevraagd en niet vertaald wanneer de interfacetaal verandert. De taallinks in de README wisselen alleen tussen documentatiepagina’s.
+
+**Werkwijze:** tekst selecteren → rechtsklikken → **Convert to English prompt** kiezen → resultatenpaneel (compatibele apps).

@@ -44,7 +44,7 @@ final class LocalBackend {
         if process?.isRunning == true {
             let active = try prepareBackend()
             guard let backendInstanceID else {
-                throw ToolError.message("無法確認目前後端由此 App 啟動；請重新啟動助手。")
+                throw ToolError.message(L10n.text(.unknownBackend))
             }
             return try await client.config(expectedBackendID: active.id, expectedInstanceID: backendInstanceID)
         }
@@ -58,18 +58,18 @@ final class LocalBackend {
             guard process?.isRunning == true else {
                 process = nil
                 backendInstanceID = nil
-                throw ToolError.message("本機後端未能啟動。請確認 Node.js 22 以上、設定檔格式正確，且 3210 埠未被其他程式佔用。")
+                throw ToolError.message(L10n.text(.backendStartFailed))
             }
             do { return try await client.config(expectedBackendID: active.id, expectedInstanceID: instanceID) }
             catch let error as ToolError { throw error }
             catch {
                 if process?.isRunning != true {
                     process = nil
-                    throw ToolError.message("本機後端未能啟動。請確認 Node.js 22 以上、設定檔格式正確，且 3210 埠未被其他程式佔用。")
+                    throw ToolError.message(L10n.text(.backendStartFailed))
                 }
             }
         }
-        throw ToolError.message("本機後端啟動逾時，請重新啟動工具。")
+        throw ToolError.message(L10n.text(.backendStartTimeout))
     }
 
     private func prepareBackend() throws -> (root: URL, id: String) {
@@ -80,10 +80,10 @@ final class LocalBackend {
         let linkTarget = try? manager.destinationOfSymbolicLink(atPath: current.path)
         if manager.fileExists(atPath: current.path) || linkTarget != nil {
             guard let target = linkTarget else {
-                throw ToolError.message("外部後端 current 路徑不是本工具管理的版本連結；為保護檔案，沒有覆蓋它。")
+                throw ToolError.message(L10n.text(.unmanagedBackend))
             }
             guard target.range(of: #"^releases/[a-f0-9]{64}$"#, options: .regularExpression) != nil else {
-                throw ToolError.message("外部後端版本連結格式不正確，未啟動未知程式碼。")
+                throw ToolError.message(L10n.text(.invalidBackendLink))
             }
             let root = backendRoot.appendingPathComponent(target, isDirectory: true).standardizedFileURL
             return try verifyBackend(root)
@@ -91,7 +91,7 @@ final class LocalBackend {
 
         // First launch seeds a private, replaceable support-directory copy from
         // the signed bundle. Future backend-only updates never rewrite the app.
-        guard let resources = Bundle.main.resourceURL else { throw ToolError.message("應用程式套件不完整，請重新安裝。") }
+        guard let resources = Bundle.main.resourceURL else { throw ToolError.message(L10n.text(.incompleteBundle)) }
         let seed = resources.appendingPathComponent("backend", isDirectory: true)
         let bundled = try verifyBackend(seed)
         let releases = backendRoot.appendingPathComponent("releases", isDirectory: true)
@@ -101,7 +101,7 @@ final class LocalBackend {
             try manager.copyItem(at: seed, to: release)
         }
         let external = try verifyBackend(release)
-        guard external.id == bundled.id else { throw ToolError.message("初次安裝後端版本核對失敗。") }
+        guard external.id == bundled.id else { throw ToolError.message(L10n.text(.seedMismatch)) }
         let temporary = backendRoot.appendingPathComponent(".current-\(UUID().uuidString)")
         try manager.createSymbolicLink(atPath: temporary.path, withDestinationPath: "releases/\(external.id)")
         try manager.moveItem(at: temporary, to: current)
@@ -111,11 +111,11 @@ final class LocalBackend {
     private func verifyBackend(_ root: URL) throws -> (root: URL, id: String) {
         let manifestURL = root.appendingPathComponent(".backend-id")
         guard let manifest = try? String(contentsOf: manifestURL, encoding: .utf8) else {
-            throw ToolError.message("後端版本標記遺失，請重新建置或更新後端。")
+            throw ToolError.message(L10n.text(.missingBackendID))
         }
         let expected = manifest.trimmingCharacters(in: .whitespacesAndNewlines)
         guard expected.range(of: #"^[a-f0-9]{64}$"#, options: .regularExpression) != nil else {
-            throw ToolError.message("後端版本標記格式不正確。")
+            throw ToolError.message(L10n.text(.invalidBackendID))
         }
         var hash = SHA256()
         for relative in backendFiles {
@@ -123,7 +123,7 @@ final class LocalBackend {
             guard let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]),
                   values.isRegularFile == true, values.isSymbolicLink != true,
                   let data = try? Data(contentsOf: url) else {
-                throw ToolError.message("後端檔案不完整或包含未知連結：\(relative)。")
+                throw ToolError.message(L10n.text(.invalidBackendFile, relative))
             }
             hash.update(data: Data(relative.utf8))
             hash.update(data: Data([0]))
@@ -131,7 +131,7 @@ final class LocalBackend {
             hash.update(data: Data([0]))
         }
         let actual = hash.finalize().map { String(format: "%02x", $0) }.joined()
-        guard actual == expected else { throw ToolError.message("外部後端內容與版本識別不符，請重新執行安全更新。") }
+        guard actual == expected else { throw ToolError.message(L10n.text(.backendHashMismatch)) }
         return (root, actual)
     }
 
@@ -140,7 +140,7 @@ final class LocalBackend {
         let candidates = [nodePath, "\(home)/.local/bin/node", "/opt/homebrew/bin/node", "/usr/local/bin/node"]
             + (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map { "\($0)/node" }
         guard let node = candidates.first(where: { !$0.isEmpty && FileManager.default.isExecutableFile(atPath: $0) }) else {
-            throw ToolError.message("找不到 Node.js。請安裝 Node.js 22 以上，或在設定中指定執行檔。")
+            throw ToolError.message(L10n.text(.missingNode))
         }
         let child = Process()
         child.executableURL = URL(fileURLWithPath: node)
@@ -148,7 +148,7 @@ final class LocalBackend {
         var arguments: [String] = []
         if !configurationPath.isEmpty {
             guard FileManager.default.isReadableFile(atPath: configurationPath) else {
-                throw ToolError.message("找不到所選 .env 設定檔，請在設定中重新選擇。")
+                throw ToolError.message(L10n.text(.missingEnv))
             }
             arguments.append("--env-file=\(configurationPath)")
         }
@@ -163,6 +163,8 @@ final class LocalBackend {
         environment.removeValue(forKey: "PROMPT_STUDIO_BACKEND_INSTANCE")
         environment["HOST"] = "127.0.0.1"
         environment["PORT"] = "3210"
+        // Desktop requests always stay on the loopback host allowlist.
+        environment["ALLOWED_HOSTS"] = ""
         environment["PROMPT_STUDIO_BACKEND_ID"] = backendID
         environment["PROMPT_STUDIO_BACKEND_INSTANCE"] = instanceID
         if configurationPath.isEmpty { environment["OPTIMIZER_MODE"] = "mock" }
@@ -170,7 +172,7 @@ final class LocalBackend {
         child.standardOutput = FileHandle.nullDevice
         child.standardError = FileHandle.nullDevice
         do { try child.run() }
-        catch { throw ToolError.message("本機後端無法啟動，請確認指定的 Node.js 執行檔有效。") }
+        catch { throw ToolError.message(L10n.text(.invalidNode)) }
         process = child
         backendInstanceID = instanceID
         return instanceID

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
+import { createServer, request as httpRequest } from 'node:http';
 import { createApp } from '../server.js';
 import { readConfig, validateInput, MAX_PROMPT_LENGTH } from '../lib/optimizer.js';
 
@@ -19,6 +19,33 @@ async function post(url, value, headers = {}) {
     method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(value),
   });
   return { status: response.status, data: await response.json() };
+}
+
+async function withAuthority(url, { host, origin, path = '/api/config', method = 'GET', headers = {} } = {}) {
+  const destination = new URL(url);
+  const requestHeaders = { ...headers };
+  if (host !== undefined) requestHeaders.Host = host;
+  if (origin !== undefined) requestHeaders.Origin = origin;
+  const body = method === 'POST' ? JSON.stringify({ prompt: '合成主機驗證測例', promptLanguage: 'en' }) : undefined;
+  if (body) requestHeaders['Content-Type'] = 'application/json';
+  const wireHeaders = Array.isArray(host)
+    ? Object.entries(requestHeaders).flatMap(([name, value]) => (Array.isArray(value) ? value : [value]).flatMap(item => [name, item]))
+    : requestHeaders;
+  return new Promise((resolve, reject) => {
+    const request = httpRequest({ hostname: destination.hostname, port: destination.port, path, method, headers: wireHeaders, setHost: false }, response => {
+      const chunks = [];
+      response.on('data', chunk => chunks.push(chunk));
+      response.on('end', () => {
+        // Node's HTTP parser can reject a missing Host before the app handler.
+        const text = Buffer.concat(chunks).toString('utf8');
+        try { resolve({ status: response.statusCode, data: text ? JSON.parse(text) : {} }); }
+        catch (error) { reject(error); }
+      });
+      response.on('error', reject);
+    });
+    request.on('error', reject);
+    request.end(body);
+  });
 }
 
 async function providerApp(t, handler, env = {}) {
@@ -69,6 +96,108 @@ test('設定 API 不洩漏金鑰或服務商網址，且前端文件不載入外
   assert.ok((await page.text()).includes('lang="zh-Hant"'));
   assert.equal((await fetch(`${url}/.env`)).status, 404);
   assert.equal((await fetch(`${url}/lib/optimizer.js`)).status, 404);
+});
+
+test('任意相符 Host/Origin 在讀取設定或呼叫模型前遭拒，轉送標頭不能繞過', async t => {
+  let calls = 0;
+  const url = await providerApp(t, (request, response) => {
+    calls++;
+    sendCompletion(response, validResult);
+  });
+  const port = new URL(url).port;
+  const host = `rebinding.example:${port}`;
+  for (const options of [
+    { host, origin: `http://${host}` },
+    { host, origin: `http://${host}`, path: '/api/optimize', method: 'POST' },
+    { host, path: '/api/optimize', method: 'POST' },
+    { host, path: '/api/optimize', method: 'POST', headers: { 'X-Forwarded-Host': `localhost:${port}`, Forwarded: `host=localhost:${port}` } },
+  ]) {
+    const denied = await withAuthority(url, options);
+    assert.equal(denied.status, 403);
+    assert.ok(!Object.hasOwn(denied.data, 'mode'));
+    assert.ok(!Object.hasOwn(denied.data, 'prompt'));
+    assert.equal(calls, 0);
+  }
+  assert.equal((await post(url, { prompt: '原生 API 沒有 Origin', promptLanguage: 'en' })).status, 200);
+  assert.equal(calls, 1);
+});
+
+test('自動允許本機 IPv4/IPv6/localhost 別名及設定主機，但限制為實際監聽埠', async t => {
+  const url = await app(t, { HOST: 'promptfinch.local' });
+  const port = new URL(url).port;
+  for (const hostname of ['localhost', 'LOCALHOST', '127.0.0.1', '[::1]', '[0:0:0:0:0:0:0:1]', 'promptfinch.local']) {
+    const host = `${hostname}:${port}`;
+    assert.equal((await withAuthority(url, { host, origin: `http://${host}` })).status, 200);
+    assert.equal((await withAuthority(url, { host })).status, 200);
+  }
+  assert.equal((await withAuthority(url, { host: `localhost:${port}`, origin: `http://[::1]:${port}` })).status, 403);
+  for (const hostname of ['localhost', '127.0.0.1', '[::1]', 'promptfinch.local']) {
+    assert.equal((await withAuthority(url, { host: `${hostname}:1` })).status, 403);
+    assert.equal((await withAuthority(url, { host: hostname })).status, 403);
+    assert.equal((await withAuthority(url, { host: `${hostname}:${port}`, origin: `http://${hostname}:1` })).status, 403);
+  }
+});
+
+test('萬用監聽位址不會自動允許任意 Host', async t => {
+  for (const bind of ['0.0.0.0', '::']) {
+    const url = await app(t, { HOST: bind });
+    const port = new URL(url).port;
+    assert.equal((await withAuthority(url, { host: `127.0.0.1:${port}` })).status, 200);
+    assert.equal((await withAuthority(url, { host: `remote.example:${port}` })).status, 403);
+    assert.equal((await withAuthority(url, { host: `${bind === '::' ? '[::]' : bind}:${port}` })).status, 403);
+  }
+});
+
+test('明確代理允許清單支援 HTTPS 預設埠與指定埠，且不公開允許清單', async t => {
+  const url = await app(t, { HOST: '0.0.0.0', ALLOWED_HOSTS: 'prompts.example.com, secure.example.com:443, proxy.example.com:8443' });
+  for (const [host, origin] of [
+    ['prompts.example.com', 'https://prompts.example.com'],
+    ['prompts.example.com:443', 'https://prompts.example.com'],
+    ['prompts.example.com', 'https://prompts.example.com:443'],
+    ['prompts.example.com:80', 'http://prompts.example.com'],
+    ['secure.example.com', 'https://secure.example.com'],
+    ['secure.example.com:443', 'https://secure.example.com'],
+    ['proxy.example.com:8443', 'https://proxy.example.com:8443'],
+  ]) {
+    const result = await withAuthority(url, { host, origin });
+    assert.equal(result.status, 200, `${host} / ${origin}`);
+    assert.ok(!JSON.stringify(result.data).includes('example.com'));
+    assert.ok(!Object.hasOwn(result.data, 'allowedHosts'));
+  }
+  for (const [host, origin] of [
+    ['prompts.example.com:8443', 'https://prompts.example.com:8443'],
+    ['secure.example.com', 'http://secure.example.com'],
+    ['secure.example.com:80', 'http://secure.example.com'],
+    ['proxy.example.com', 'https://proxy.example.com'],
+    ['proxy.example.com:8443', 'https://proxy.example.com'],
+    ['prompts.example.com', 'https://other.example.com'],
+  ]) assert.equal((await withAuthority(url, { host, origin })).status, 403, `${host} / ${origin}`);
+});
+
+test('缺少或格式錯誤的 Host/Origin 提供明確 400，且永不呼叫模型', async t => {
+  let calls = 0;
+  const url = await providerApp(t, (request, response) => {
+    calls++;
+    sendCompletion(response, validResult);
+  });
+  const host = new URL(url).host;
+  for (const malformed of [undefined, 'localhost:0', 'localhost:65536', 'localhost:abc', 'localhost:', 'user@localhost', 'localhost/path', 'localhost?x=1', 'localhost#x', 'local%68ost', '[::1', '::1', '[not-ip]', 'localhost,evil.example', '127.1']) {
+    assert.equal((await withAuthority(url, { host: malformed, path: '/api/optimize', method: 'POST' })).status, 400, String(malformed));
+  }
+  assert.equal((await withAuthority(url, { host: [host, host], path: '/api/optimize', method: 'POST' })).status, 400);
+  for (const origin of ['null', 'not a URL', `ftp://${host}`, `http://user:pass@${host}`, `http://${host}/`, `http://${host}/path`, `http://${host}?x=1`, `http://${host}#x`, `http://${host},https://evil.example`]) {
+    const denied = await withAuthority(url, { host, origin, path: '/api/optimize', method: 'POST' });
+    assert.equal(denied.status, 400, origin);
+    assert.ok(!Object.hasOwn(denied.data, 'prompt'));
+  }
+  assert.equal(calls, 0);
+});
+
+test('錯誤部署允許清單於啟動時拒絕，且不接受萬用字元或轉送 URL', () => {
+  assert.deepEqual(readConfig({}).allowedHosts, []);
+  for (const value of ['*', '*.example.com', 'https://example.com', 'example.com/path', 'user@example.com', 'example.com:0', 'example.com:65536', 'example.com,', '[::1']) {
+    assert.throws(() => createApp(readConfig({ ALLOWED_HOSTS: value })), /ALLOWED_HOSTS/, value);
+  }
 });
 
 test('原生 App 可用版本及執行個體識別拒絕連到舊後端程序', async t => {

@@ -4,8 +4,10 @@
 
 > Diese Seite enthält die übersetzte Einführung. Die vollständige technische Dokumentation ist auf [English](../../README.md#english) verfügbar.
 
-PromptFinch ist ein vielseitiger Prompt-Editor und -Optimierer. Eingaben oder markierte Anweisungen in jeder Sprache werden zu englischen Prompts für Schreiben, Programmieren, Recherche, Zusammenfassungen und Planung. Explizite Anforderungen, gewünschte Antwortsprache und feste Zeichenfolgen in Anführungszeichen bleiben erhalten.
+PromptFinch ist ein vielseitiger Prompt-Editor und -Optimierer. Eingaben oder markierte Anweisungen in jeder Sprache werden zu englischen Prompts für Schreiben, Programmieren, Recherche, Zusammenfassungen und Planung. Es ist darauf ausgelegt, explizite Anforderungen, die gewünschte Antwortsprache und feste Zeichenfolgen in Anführungszeichen zu erhalten.
 
-Die macOS-App verbindet manuellen Arbeitsbereich und Auswahlassistent; ein Browser-Arbeitsbereich ist verfügbar. Echte Generierung benötigt einen konfigurierten API-Schlüssel für ein Modell. Der Simulationsmodus zeigt den Ablauf, ohne zu übersetzen oder zu optimieren. Oberfläche derzeit traditionelles Chinesisch; Übersetzungen nur Dokumentation.
+Die macOS-App verbindet manuellen Arbeitsbereich und Auswahlassistent; ein Browser-Arbeitsbereich ist verfügbar. Echte Generierung benötigt einen konfigurierten API-Schlüssel für ein Modell. Der Simulationsmodus zeigt den Ablauf, ohne zu übersetzen oder zu optimieren.
 
-**Ablauf:** Text markieren → Rechtsklick → **Convert to an English Prompt** auswählen → Ergebnispanel (kompatible Apps).
+Die macOS-Oberfläche unterstützt traditionelles Chinesisch (Standard), Englisch, Japanisch und Koreanisch; die Sprache lässt sich in den Einstellungen wählen. Die Browser-Oberfläche bleibt auf traditionellem Chinesisch. Hinweise zu Verbesserungen und Annahmen werden beim Modell auf traditionellem Chinesisch angefordert und bei einem Wechsel der Oberflächensprache nicht übersetzt. Die Sprachlinks im README wechseln nur zwischen Dokumentationsseiten.
+
+**Ablauf:** Text markieren → Rechtsklick → **Convert to English prompt** auswählen → Ergebnispanel (kompatible Apps).

@@ -4,8 +4,10 @@
 
 > Ta strona zawiera przetłumaczone wprowadzenie. Pełna dokumentacja techniczna jest dostępna w wersji [English](../../README.md#english).
 
-PromptFinch to uniwersalny edytor i optymalizator promptów. Wpisz lub zaznacz instrukcje w dowolnym języku, aby otrzymać angielski prompt do pisania, programowania, badań, podsumowań i planowania. Zachowuje jawne wymagania, żądany język odpowiedzi oraz stałe ciągi znaków w cudzysłowie.
+PromptFinch to uniwersalny edytor i optymalizator promptów. Wpisz lub zaznacz instrukcje w dowolnym języku, aby otrzymać angielski prompt do pisania, programowania, badań, podsumowań i planowania. Został zaprojektowany, aby zachowywać jawne wymagania, żądany język odpowiedzi oraz stałe ciągi znaków w cudzysłowie.
 
-Aplikacja macOS łączy ręczny obszar roboczy z asystentem zaznaczania; dostępna jest także wersja przeglądarkowa. Rzeczywiste generowanie wymaga skonfigurowanego klucza API modelu. Tryb symulacji pokazuje przebieg bez tłumaczenia i optymalizacji. Interfejs: obecnie chiński tradycyjny; tłumaczenia wyłącznie dokumentacyjne.
+Aplikacja macOS łączy ręczny obszar roboczy z asystentem zaznaczania; dostępna jest także wersja przeglądarkowa. Rzeczywiste generowanie wymaga skonfigurowanego klucza API modelu. Tryb symulacji pokazuje przebieg bez tłumaczenia i optymalizacji.
 
-**Przebieg:** zaznacz tekst → kliknij prawym przyciskiem → wybierz **Convert to an English Prompt** → panel wyników (kompatybilne aplikacje).
+W ustawieniach interfejsu macOS można wybrać chiński tradycyjny (domyślny), angielski, japoński lub koreański. Interfejs przeglądarkowy pozostaje w chińskim tradycyjnym. Model otrzymuje prośbę o uwagi dotyczące ulepszeń i założeń w chińskim tradycyjnym; zmiana języka interfejsu nie tłumaczy tych uwag. Łącza językowe w README zmieniają wyłącznie stronę dokumentacji.
+
+**Przebieg:** zaznacz tekst → kliknij prawym przyciskiem → wybierz **Convert to English prompt** → panel wyników (kompatybilne aplikacje).
