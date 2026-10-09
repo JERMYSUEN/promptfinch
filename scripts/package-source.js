@@ -44,4 +44,4 @@ const args = process.platform === 'darwin' ? ['--norsrc', '--noextattr', '-c', '
 const result = spawnSync(tool, args, { cwd: release, stdio: 'inherit' });
 if (result.error) throw result.error;
 if (result.status !== 0) throw new Error('原始碼封裝失敗。');
-console.log(`已封裝 ${files.length} 個檔案：${archive}\n未包含 .env、偏好設定、App、node_modules 或截圖；尚未發布到 GitHub。`);
+console.log(`已封裝 ${files.length} 個檔案：${archive}\n未包含 .env、偏好設定、App、node_modules 或截圖。`);

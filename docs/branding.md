@@ -2,7 +2,7 @@
 
 **Select. Refine. Paste.**
 
-國際化顯示名稱：**PromptFinch**。建議 GitHub 儲存庫名稱：`promptfinch`；npm 專案名稱及來源包也使用新名稱。Finch 指小型鳥類，作為輕巧選取助手的名稱。本輪沒有建立或發布儲存庫。
+國際化顯示名稱：**PromptFinch**。公開 GitHub 儲存庫：[JERMYSUEN/promptfinch](https://github.com/JERMYSUEN/promptfinch)。npm 專案名稱及來源包也使用新名稱。Finch 指小型鳥類，作為輕巧選取助手的名稱。
 
 ## 更名範圍
 
