@@ -1,0 +1,353 @@
+[
+  {
+    "id": "en-short",
+    "language": "英文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "兩句西班牙文邀請；不提折扣",
+    "task": "writing",
+    "prompt": "Draft a polite two-sentence invitation in Spanish. Keep \"ACME-42\" unchanged. Do not mention discounts.",
+    "expected": {
+      "answerLanguage": "Spanish",
+      "literals": [
+        "ACME-42"
+      ],
+      "constraints": [
+        "兩句西班牙文邀請；不提折扣"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "zh-Hant-short",
+    "language": "繁體中文",
+    "script": "Han",
+    "complexity": "short",
+    "summary": "通知最多50字；不新增日期或連結",
+    "task": "writing",
+    "prompt": "請用繁體中文寫一則不超過50字的通知，必須原樣包含「系統維護」；不要加入日期或連結。",
+    "expected": {
+      "answerLanguage": "Traditional Chinese",
+      "literals": [
+        "系統維護"
+      ],
+      "constraints": [
+        "通知最多50字；不新增日期或連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "zh-Hans-short",
+    "language": "簡體中文",
+    "script": "Han",
+    "complexity": "short",
+    "summary": "两句欢迎语；不加入价格或优惠",
+    "task": "writing",
+    "prompt": "请用简体中文写两句欢迎语，原样保留“欢迎回来”；不要添加价格或优惠信息。",
+    "expected": {
+      "answerLanguage": "Simplified Chinese",
+      "literals": [
+        "欢迎回来"
+      ],
+      "constraints": [
+        "两句欢迎语；不加入价格或优惠"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "ja-short",
+    "language": "日文",
+    "script": "Kana/Han",
+    "complexity": "short",
+    "summary": "兩句日文指引；不新增時間或費用",
+    "task": "writing",
+    "prompt": "日本語で丁寧な案内を2文で書いてください。「設定変更」をそのまま含め、日時や料金を追加しないでください。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "設定変更"
+      ],
+      "constraints": [
+        "兩句日文指引；不新增時間或費用"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "es-short",
+    "language": "西班牙文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "兩句西班牙文邀請；保留重音；不編日期價格",
+    "task": "writing",
+    "prompt": "Escribe una invitación cordial en español de dos frases. Conserva exactamente \"café\" y no inventes fechas ni precios.",
+    "expected": {
+      "answerLanguage": "Spanish",
+      "literals": [
+        "café"
+      ],
+      "constraints": [
+        "兩句西班牙文邀請；保留重音；不編日期價格"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "fr-short",
+    "language": "法文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "法文需求指定德文答案；兩句；不提折扣",
+    "task": "writing",
+    "prompt": "Rédige une invitation de deux phrases en allemand. Conserve exactement « Bonjour-42 » et ne mentionne aucune réduction.",
+    "expected": {
+      "answerLanguage": "German",
+      "literals": [
+        "Bonjour-42"
+      ],
+      "constraints": [
+        "法文需求指定德文答案；兩句；不提折扣"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "de-short",
+    "language": "德文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "恰好兩句德文訊息；保留ß；不加連結",
+    "task": "writing",
+    "prompt": "Schreibe eine höfliche Nachricht auf Deutsch in genau zwei Sätzen. Behalte „Straße-42“ unverändert bei und füge keinen Link hinzu.",
+    "expected": {
+      "answerLanguage": "German",
+      "literals": [
+        "Straße-42"
+      ],
+      "constraints": [
+        "恰好兩句德文訊息；保留ß；不加連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "ar-short",
+    "language": "阿拉伯文",
+    "script": "Arabic RTL",
+    "complexity": "short",
+    "summary": "兩句阿拉伯文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "اكتب رسالة ترحيب بالعربية من جملتين فقط. احتفظ بالنص \"مرحبا-42\" كما هو، ولا تضف أسعارا أو روابط.",
+    "expected": {
+      "answerLanguage": "Arabic",
+      "literals": [
+        "مرحبا-42"
+      ],
+      "constraints": [
+        "兩句阿拉伯文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "fa-short",
+    "language": "波斯文",
+    "script": "Arabic RTL",
+    "complexity": "short",
+    "summary": "兩句波斯文歡迎；保留ZWNJ；不加價格連結",
+    "task": "writing",
+    "prompt": "یک پیام خوشامدگویی به فارسی در دو جمله بنویس. عبارت «خوش‌آمدید» را دقیقاً حفظ کن و قیمت یا لینک اضافه نکن.",
+    "expected": {
+      "answerLanguage": "Persian",
+      "literals": [
+        "خوش‌آمدید"
+      ],
+      "constraints": [
+        "兩句波斯文歡迎；保留ZWNJ；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "hi-short",
+    "language": "印地文",
+    "script": "Devanagari",
+    "complexity": "short",
+    "summary": "兩句印地文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "हिंदी में केवल दो वाक्यों का स्वागत संदेश लिखें। \"नमस्ते-42\" को बिल्कुल वैसा ही रखें और कीमत या लिंक न जोड़ें।",
+    "expected": {
+      "answerLanguage": "Hindi",
+      "literals": [
+        "नमस्ते-42"
+      ],
+      "constraints": [
+        "兩句印地文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "bn-short",
+    "language": "孟加拉文",
+    "script": "Bengali",
+    "complexity": "short",
+    "summary": "恰好兩句孟加拉文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "বাংলায় ঠিক দুটি বাক্যে একটি স্বাগত বার্তা লিখুন। \"স্বাগতম-42\" অপরিবর্তিত রাখুন এবং কোনো দাম বা লিংক যোগ করবেন না।",
+    "expected": {
+      "answerLanguage": "Bengali",
+      "literals": [
+        "স্বাগতম-42"
+      ],
+      "constraints": [
+        "恰好兩句孟加拉文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "th-short",
+    "language": "泰文",
+    "script": "Thai",
+    "complexity": "short",
+    "summary": "兩句泰文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "เขียนข้อความต้อนรับเป็นภาษาไทยเพียงสองประโยค คงข้อความ \"ยินดีต้อนรับ-42\" ไว้เหมือนเดิม และอย่าเพิ่มราคาหรือลิงก์",
+    "expected": {
+      "answerLanguage": "Thai",
+      "literals": [
+        "ยินดีต้อนรับ-42"
+      ],
+      "constraints": [
+        "兩句泰文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "vi-short",
+    "language": "越南文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "恰好兩句越南文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "Viết lời chào bằng tiếng Việt trong đúng hai câu. Giữ nguyên \"Chào mừng-42\" và không thêm giá hoặc liên kết.",
+    "expected": {
+      "answerLanguage": "Vietnamese",
+      "literals": [
+        "Chào mừng-42"
+      ],
+      "constraints": [
+        "恰好兩句越南文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "id-short",
+    "language": "印尼文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "恰好兩句印尼文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "Tulis pesan sambutan dalam bahasa Indonesia, tepat dua kalimat. Pertahankan \"Selamat datang-42\" persis dan jangan tambahkan harga atau tautan.",
+    "expected": {
+      "answerLanguage": "Indonesian",
+      "literals": [
+        "Selamat datang-42"
+      ],
+      "constraints": [
+        "恰好兩句印尼文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "uk-short",
+    "language": "烏克蘭文",
+    "script": "Cyrillic",
+    "complexity": "short",
+    "summary": "恰好兩句烏克蘭文歡迎；不加價格連結",
+    "task": "writing",
+    "prompt": "Напиши привітання українською рівно у двох реченнях. Збережи «Вітаємо-42» без змін і не додавай цін або посилань.",
+    "expected": {
+      "answerLanguage": "Ukrainian",
+      "literals": [
+        "Вітаємо-42"
+      ],
+      "constraints": [
+        "恰好兩句烏克蘭文歡迎；不加價格連結"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "mixed-unicode-short",
+    "language": "韓俄英混語",
+    "script": "Hangul/Cyrillic/Latin/Emoji/combining",
+    "complexity": "short",
+    "summary": "韓俄英混語；組合重音、emoji、變數、URL逐字保留",
+    "task": "writing",
+    "prompt": "Write a two-sentence welcome in Korean. Preserve these exact literals: \"안녕\", \"Привет\", \"Café\", \"👩🏽‍💻\", and \"${user_name}\". Do not translate the literals or add dates. Keep https://example.com/a?x=1&y=2 unchanged.",
+    "expected": {
+      "answerLanguage": "Korean",
+      "literals": [
+        "안녕",
+        "Привет",
+        "Café",
+        "👩🏽‍💻",
+        "${user_name}",
+        "https://example.com/a?x=1&y=2"
+      ],
+      "constraints": [
+        "韓俄英混語；組合重音、emoji、變數、URL逐字保留"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "pt-short",
+    "language": "葡萄牙文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "葡文歡迎訊息恰好兩句；保留Olá-42；不得編造日期或價格",
+    "task": "writing",
+    "prompt": "Escreva uma mensagem de boas-vindas em português com exatamente duas frases. Preserve exatamente a expressão \"Olá-42\". Não invente datas nem preços.",
+    "expected": {
+      "answerLanguage": "Portuguese",
+      "literals": [
+        "Olá-42"
+      ],
+      "constraints": [
+        "恰好兩句；葡萄牙文答案",
+        "不得編造日期或價格，不加嚴成不得包含既知資料",
+        "只產指令，不直接完成歡迎訊息"
+      ],
+      "answersTask": false
+    }
+  },
+  {
+    "id": "it-short",
+    "language": "義大利文",
+    "script": "Latin",
+    "complexity": "short",
+    "summary": "義文歡迎訊息恰好兩句；保留Caffè-42；不得編造日期或價格",
+    "task": "writing",
+    "prompt": "Scrivi un messaggio di benvenuto in italiano composto da esattamente due frasi. Mantieni invariata la stringa \"Caffè-42\". Non inventare date né prezzi.",
+    "expected": {
+      "answerLanguage": "Italian",
+      "literals": [
+        "Caffè-42"
+      ],
+      "constraints": [
+        "恰好兩句；義大利文答案",
+        "不得編造日期或價格，不加嚴成不得包含既知資料",
+        "只產指令，不直接完成歡迎訊息"
+      ],
+      "answersTask": false
+    }
+  }
+]

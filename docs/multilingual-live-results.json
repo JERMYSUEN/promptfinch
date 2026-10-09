@@ -1,0 +1,2132 @@
+{
+  "date": "2026-10-09T07:46:01.104Z",
+  "generationModel": "deepseek-flash",
+  "uniqueCases": 24,
+  "distinctLanguages": 18,
+  "optimizerSourceSHA256": "d8a7d83a1a374a02f60ad7e8f6b397ba5abec0baeb74873d9e6c076dd83ee35b",
+  "evidenceScope": "synthetic live model prompts; HTTP, literal checks and manual semantic reviews are distinct; not proof of all languages/models/host apps",
+  "runs": [
+    {
+      "phase": "baseline-representative",
+      "date": "2026-10-09T04:28:42.481Z",
+      "caseCount": 16,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "baseline-ko-ru",
+      "date": "2026-10-09T04:30:26.905Z",
+      "caseCount": 6,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "caseCount": 22,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "caseCount": 15,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "additional-languages",
+      "date": "2026-10-09T04:41:25.745Z",
+      "caseCount": 2,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "missing-source-recheck",
+      "date": "2026-10-09T04:42:51.593Z",
+      "caseCount": 1,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "final-critical-recheck",
+      "date": "2026-10-09T04:47:57.847Z",
+      "caseCount": 2,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "audience-recheck",
+      "date": "2026-10-09T07:37:37.066Z",
+      "caseCount": 1,
+      "generationModel": "deepseek-flash"
+    },
+    {
+      "phase": "audience-and-wrapper-final",
+      "date": "2026-10-09T07:41:37.961Z",
+      "caseCount": 1,
+      "generationModel": "deepseek-flash"
+    }
+  ],
+  "results": [
+    {
+      "id": "en-short",
+      "language": "英文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "兩句西班牙文邀請；不提折扣",
+      "task": "writing",
+      "prompt": "Draft a polite two-sentence invitation in Spanish. Keep \"ACME-42\" unchanged. Do not mention discounts.",
+      "expected": {
+        "answerLanguage": "Spanish",
+        "literals": [
+          "ACME-42"
+        ],
+        "constraints": [
+          "兩句西班牙文邀請；不提折扣"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 102,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Draft a polite invitation in Spanish consisting of exactly two sentences. Keep the string \"ACME-42\" unchanged and include it as-is. Do not mention discounts. Write the invitation in Spanish.",
+        "improvements": [
+          "將需求整理為可直接執行的英文指令，明確要求西班牙文輸出。",
+          "明確標示 \"ACME-42\" 必須原樣保留。",
+          "保留「不得提及折扣」的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 190,
+      "literalChecks": [
+        {
+          "text": "ACME-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1110,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 147,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 190,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "zh-Hant-short",
+      "language": "繁體中文",
+      "script": "Han",
+      "complexity": "short",
+      "summary": "通知最多50字；不新增日期或連結",
+      "task": "writing",
+      "prompt": "請用繁體中文寫一則不超過50字的通知，必須原樣包含「系統維護」；不要加入日期或連結。",
+      "expected": {
+        "answerLanguage": "Traditional Chinese",
+        "literals": [
+          "系統維護"
+        ],
+        "constraints": [
+          "通知最多50字；不新增日期或連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 42,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a notice in Traditional Chinese. The notice must be no more than 50 characters long and must include the exact text 「系統維護」 verbatim. Do not include any date or any link in the notice.",
+        "improvements": [
+          "將需求改寫為精簡明確的英文指令，保留字數上限與必含字串。",
+          "明確標示「系統維護」須原樣出現。",
+          "明確保留不得加入日期或連結的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 189,
+      "literalChecks": [
+        {
+          "text": "系統維護",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1140,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 175,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 189,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "zh-Hans-short",
+      "language": "簡體中文",
+      "script": "Han",
+      "complexity": "short",
+      "summary": "两句欢迎语；不加入价格或优惠",
+      "task": "writing",
+      "prompt": "请用简体中文写两句欢迎语，原样保留“欢迎回来”；不要添加价格或优惠信息。",
+      "expected": {
+        "answerLanguage": "Simplified Chinese",
+        "literals": [
+          "欢迎回来"
+        ],
+        "constraints": [
+          "两句欢迎语；不加入价格或优惠"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 36,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write two welcome sentences in Simplified Chinese. Keep the phrase \"欢迎回来\" exactly as written. Do not add any price or discount information.",
+        "improvements": [
+          "將需求整理為精簡英文指令。",
+          "明確保留「欢迎回来」為逐字原文。",
+          "明確保留不得加入價格或優惠資訊的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 139,
+      "literalChecks": [
+        {
+          "text": "欢迎回来",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 994,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 49,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 185,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 139,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ja-short",
+      "language": "日文",
+      "script": "Kana/Han",
+      "complexity": "short",
+      "summary": "兩句日文指引；不新增時間或費用",
+      "task": "writing",
+      "prompt": "日本語で丁寧な案内を2文で書いてください。「設定変更」をそのまま含め、日時や料金を追加しないでください。",
+      "expected": {
+        "answerLanguage": "Japanese",
+        "literals": [
+          "設定変更"
+        ],
+        "constraints": [
+          "兩句日文指引；不新增時間或費用"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 52,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "warning",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": [
+          "改善說明泛稱保留受眾，但原文沒有指定受眾；主要Prompt沒有新增受眾，說明仍需核對。"
+        ]
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a polite notice in Japanese, exactly two sentences long. The notice must include the exact string 「設定変更」. Do not add any dates, times, or prices.",
+        "improvements": [
+          "整理為精簡英文指令並保留受眾、語氣、篇幅與用字限制。",
+          "將「そのまま含め」明確化為必須原樣包含指定字串。",
+          "把「日時や料金を追加しない」寫成明確禁止條款。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 151,
+      "literalChecks": [
+        {
+          "text": "設定変更",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 971,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 143,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 153,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 151,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "es-short",
+      "language": "西班牙文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "兩句西班牙文邀請；保留重音；不編日期價格",
+      "task": "writing",
+      "prompt": "Escribe una invitación cordial en español de dos frases. Conserva exactamente \"café\" y no inventes fechas ni precios.",
+      "expected": {
+        "answerLanguage": "Spanish",
+        "literals": [
+          "café"
+        ],
+        "constraints": [
+          "兩句西班牙文邀請；保留重音；不編日期價格"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 117,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "恰好兩句、西文、café保留；只禁止編造日期價格，沒有擴成全面排除。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a cordial invitation in Spanish consisting of exactly two sentences. Keep the word \"café\" exactly as written, and do not invent any dates or prices.",
+        "improvements": [
+          "將需求整理為精簡英文指令，並保留原始輸出語言與限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 154,
+      "literalChecks": [
+        {
+          "text": "café",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 697,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 171,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 176,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 154,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "fr-short",
+      "language": "法文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "法文需求指定德文答案；兩句；不提折扣",
+      "task": "writing",
+      "prompt": "Rédige une invitation de deux phrases en allemand. Conserve exactement « Bonjour-42 » et ne mentionne aucune réduction.",
+      "expected": {
+        "answerLanguage": "German",
+        "literals": [
+          "Bonjour-42"
+        ],
+        "constraints": [
+          "法文需求指定德文答案；兩句；不提折扣"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 119,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "法文操作指令明示德文答案，沒有依來源法文改掉答案語言。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a two-sentence invitation in German. Keep the exact string « Bonjour-42 » unchanged, and do not mention any discount.",
+        "improvements": [
+          "將需求整理為精簡英文指令。",
+          "明確保留原文要求：兩句、德語作答、固定字串不變、不得提及折扣。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 123,
+      "literalChecks": [
+        {
+          "text": "Bonjour-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 764,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 120,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 123,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 123,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "de-short",
+      "language": "德文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "恰好兩句德文訊息；保留ß；不加連結",
+      "task": "writing",
+      "prompt": "Schreibe eine höfliche Nachricht auf Deutsch in genau zwei Sätzen. Behalte „Straße-42“ unverändert bei und füge keinen Link hinzu.",
+      "expected": {
+        "answerLanguage": "German",
+        "literals": [
+          "Straße-42"
+        ],
+        "constraints": [
+          "恰好兩句德文訊息；保留ß；不加連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 130,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a polite message in German in exactly two sentences. Keep “Straße-42” unchanged, and do not add any link.",
+        "improvements": [
+          "將德文指令改寫為精簡明確的英文指令，並保留德文輸出語言要求。",
+          "明確保留「Straße-42」原文不變，且不得加入任何連結。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 111,
+      "literalChecks": [
+        {
+          "text": "Straße-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1516,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 108,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 111,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ar-short",
+      "language": "阿拉伯文",
+      "script": "Arabic RTL",
+      "complexity": "short",
+      "summary": "兩句阿拉伯文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "اكتب رسالة ترحيب بالعربية من جملتين فقط. احتفظ بالنص \"مرحبا-42\" كما هو، ولا تضف أسعارا أو روابط.",
+      "expected": {
+        "answerLanguage": "Arabic",
+        "literals": [
+          "مرحبا-42"
+        ],
+        "constraints": [
+          "兩句阿拉伯文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 96,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Arabic. The message must be exactly two sentences long. Keep the text \"مرحبا-42\" exactly as written, unchanged. Do not add any prices or links.",
+        "improvements": [
+          "將指令改寫為精簡明確的英文提示，保留阿拉伯文原句與逐字保留字串。",
+          "明確標示「剛好兩句」與「不得加入價格或連結」的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 170,
+      "literalChecks": [
+        {
+          "text": "مرحبا-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1137,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 128,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 170,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "fa-short",
+      "language": "波斯文",
+      "script": "Arabic RTL",
+      "complexity": "short",
+      "summary": "兩句波斯文歡迎；保留ZWNJ；不加價格連結",
+      "task": "writing",
+      "prompt": "یک پیام خوشامدگویی به فارسی در دو جمله بنویس. عبارت «خوش‌آمدید» را دقیقاً حفظ کن و قیمت یا لینک اضافه نکن.",
+      "expected": {
+        "answerLanguage": "Persian",
+        "literals": [
+          "خوش‌آمدید"
+        ],
+        "constraints": [
+          "兩句波斯文歡迎；保留ZWNJ；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 106,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Persian in exactly two sentences. Keep the phrase «خوش‌آمدید» exactly as written. Do not add any price or any link.",
+        "improvements": [
+          "將需求整理為精簡英文指令，並保留波斯文指定用語。",
+          "明確標示答案語言為波斯文，篇幅限定為兩句。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 142,
+      "literalChecks": [
+        {
+          "text": "خوش‌آمدید",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 831,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 138,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 262,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 142,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "hi-short",
+      "language": "印地文",
+      "script": "Devanagari",
+      "complexity": "short",
+      "summary": "兩句印地文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "हिंदी में केवल दो वाक्यों का स्वागत संदेश लिखें। \"नमस्ते-42\" को बिल्कुल वैसा ही रखें और कीमत या लिंक न जोड़ें।",
+      "expected": {
+        "answerLanguage": "Hindi",
+        "literals": [
+          "नमस्ते-42"
+        ],
+        "constraints": [
+          "兩句印地文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 110,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Hindi consisting of exactly two sentences. Keep the string \"नमस्ते-42\" exactly as written, with no changes to its characters or formatting. Do not add any price or link.",
+        "improvements": [
+          "將原始需求整理為簡潔明確的英文指令。",
+          "明確標示「नमस्ते-42」須逐字保留。",
+          "確認禁用範圍僅限價格與連結，未擴大限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 196,
+      "literalChecks": [
+        {
+          "text": "नमस्ते-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 937,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 185,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 164,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 196,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "bn-short",
+      "language": "孟加拉文",
+      "script": "Bengali",
+      "complexity": "short",
+      "summary": "恰好兩句孟加拉文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "বাংলায় ঠিক দুটি বাক্যে একটি স্বাগত বার্তা লিখুন। \"স্বাগতম-42\" অপরিবর্তিত রাখুন এবং কোনো দাম বা লিংক যোগ করবেন না।",
+      "expected": {
+        "answerLanguage": "Bengali",
+        "literals": [
+          "স্বাগতম-42"
+        ],
+        "constraints": [
+          "恰好兩句孟加拉文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 114,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Bengali. The message must be exactly two sentences long. Keep the literal string \"স্বাগতম-42\" unchanged. Do not add any prices or links.",
+        "improvements": [
+          "將要求整理為精簡明確的英文指令，保留孟加拉語輸出要求。",
+          "明確標示「স্বাগতম-42」須逐字保留不變。",
+          "保留「恰好兩句」與「不加入價格或連結」的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 163,
+      "literalChecks": [
+        {
+          "text": "স্বাগতম-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1480,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 125,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 163,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "th-short",
+      "language": "泰文",
+      "script": "Thai",
+      "complexity": "short",
+      "summary": "兩句泰文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "เขียนข้อความต้อนรับเป็นภาษาไทยเพียงสองประโยค คงข้อความ \"ยินดีต้อนรับ-42\" ไว้เหมือนเดิม และอย่าเพิ่มราคาหรือลิงก์",
+      "expected": {
+        "answerLanguage": "Thai",
+        "literals": [
+          "ยินดีต้อนรับ-42"
+        ],
+        "constraints": [
+          "兩句泰文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 112,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Thai, exactly two sentences long. Keep the text \"ยินดีต้อนรับ-42\" unchanged. Do not add prices or links.",
+        "improvements": [
+          "將需求整理為精簡英文指令，並保留泰文常值與「僅兩句」的篇幅限制。",
+          "明確要求答案以泰文撰寫，同時保留不得加入價格或連結的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 131,
+      "literalChecks": [
+        {
+          "text": "ยินดีต้อนรับ-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1197,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 161,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 158,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 131,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "vi-short",
+      "language": "越南文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "恰好兩句越南文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "Viết lời chào bằng tiếng Việt trong đúng hai câu. Giữ nguyên \"Chào mừng-42\" và không thêm giá hoặc liên kết.",
+      "expected": {
+        "answerLanguage": "Vietnamese",
+        "literals": [
+          "Chào mừng-42"
+        ],
+        "constraints": [
+          "恰好兩句越南文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 108,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a greeting in Vietnamese in exactly two sentences. Keep the literal string \"Chào mừng-42\" unchanged and do not add any prices or links.",
+        "improvements": [
+          "將需求整理成單一明確指令，保留越南語作答與兩句限制。",
+          "強調 \"Chào mừng-42\" 必須原樣保留。",
+          "明確禁止加入價格或連結。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 141,
+      "literalChecks": [
+        {
+          "text": "Chào mừng-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 905,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 129,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 141,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "id-short",
+      "language": "印尼文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "恰好兩句印尼文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "Tulis pesan sambutan dalam bahasa Indonesia, tepat dua kalimat. Pertahankan \"Selamat datang-42\" persis dan jangan tambahkan harga atau tautan.",
+      "expected": {
+        "answerLanguage": "Indonesian",
+        "literals": [
+          "Selamat datang-42"
+        ],
+        "constraints": [
+          "恰好兩句印尼文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 142,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Indonesian. It must be exactly two sentences. Keep the string \"Selamat datang-42\" exactly as written, unchanged. Do not add any price or any link.",
+        "improvements": [
+          "將需求整理為明確的英文指令，並保留印尼語輸出與「Selamat datang-42」原文。",
+          "明確標示「恰好兩句」的篇幅限制，以及不得新增價格或連結。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 173,
+      "literalChecks": [
+        {
+          "text": "Selamat datang-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1057,
+      "runPhase": "first-fix",
+      "date": "2026-10-09T04:34:16.656Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 156,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 173,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "uk-short",
+      "language": "烏克蘭文",
+      "script": "Cyrillic",
+      "complexity": "short",
+      "summary": "恰好兩句烏克蘭文歡迎；不加價格連結",
+      "task": "writing",
+      "prompt": "Напиши привітання українською рівно у двох реченнях. Збережи «Вітаємо-42» без змін і не додавай цін або посилань.",
+      "expected": {
+        "answerLanguage": "Ukrainian",
+        "literals": [
+          "Вітаємо-42"
+        ],
+        "constraints": [
+          "恰好兩句烏克蘭文歡迎；不加價格連結"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 113,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "已覆核英文指令、原文明示答案語言、句數／篇幅、固定字串與禁止條件；沒有直接完成原任務。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a greeting in Ukrainian in exactly two sentences. Keep the string «Вітаємо-42» unchanged, and do not add any prices or links.",
+        "improvements": [
+          "將需求改寫為精簡英文指令，並保留確切句數與指定字串。",
+          "明確保留「不添加價格或連結」的限制範圍。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 131,
+      "literalChecks": [
+        {
+          "text": "Вітаємо-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 673,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 131,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 169,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 131,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "mixed-unicode-short",
+      "language": "韓俄英混語",
+      "script": "Hangul/Cyrillic/Latin/Emoji/combining",
+      "complexity": "short",
+      "summary": "韓俄英混語；組合重音、emoji、變數、URL逐字保留",
+      "task": "writing",
+      "prompt": "Write a two-sentence welcome in Korean. Preserve these exact literals: \"안녕\", \"Привет\", \"Café\", \"👩🏽‍💻\", and \"${user_name}\". Do not translate the literals or add dates. Keep https://example.com/a?x=1&y=2 unchanged.",
+      "expected": {
+        "answerLanguage": "Korean",
+        "literals": [
+          "안녕",
+          "Привет",
+          "Café",
+          "👩🏽‍💻",
+          "${user_name}",
+          "https://example.com/a?x=1&y=2"
+        ],
+        "constraints": [
+          "韓俄英混語；組合重音、emoji、變數、URL逐字保留"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 216,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "操作指令本身是英文；此例只驗证韓俄literal、NFD重音、emoji、變數、URL逐字保留，不能替代韓俄語意實測。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a two-sentence welcome in Korean. Include these exact literals, unchanged: \"안녕\", \"Привет\", \"Café\", \"👩🏽‍💻\", and \"${user_name}\". Do not translate these literals, and do not add any dates. Keep the URL https://example.com/a?x=1&y=2 unchanged.",
+        "improvements": [
+          "將需求整理為精簡英文指令。",
+          "明確列出所有須逐字保留的字面量與網址。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 249,
+      "literalChecks": [
+        {
+          "text": "안녕",
+          "preserved": true
+        },
+        {
+          "text": "Привет",
+          "preserved": true
+        },
+        {
+          "text": "Café",
+          "preserved": true
+        },
+        {
+          "text": "👩🏽‍💻",
+          "preserved": true
+        },
+        {
+          "text": "${user_name}",
+          "preserved": true
+        },
+        {
+          "text": "https://example.com/a?x=1&y=2",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1395,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-representative",
+          "date": "2026-10-09T04:28:42.481Z",
+          "status": 200,
+          "resultUTF16Length": 239,
+          "literalFailures": 1
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 243,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 249,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ko-short-summary",
+      "language": "韓文",
+      "script": "Hangul",
+      "complexity": "short",
+      "task": "summary",
+      "summary": "將會議紀錄摘要成三行，回答使用韓文，標題須原樣保留「팀 회의 요약」。",
+      "prompt": "회의록을 세 줄로 요약해 줘. 결과는 한국어로, 제목은 \"팀 회의 요약\" 그대로 써 줘.",
+      "expected": {
+        "answerLanguage": "Korean",
+        "literals": [
+          "팀 회의 요약"
+        ],
+        "constraints": [
+          "原任務為摘要會議紀錄；生成器只交付英文指令，不能自行寫出會議摘要。",
+          "摘要正文恰好三行；標題額外獨立呈現，避免標題佔用三行正文。",
+          "指令本體用英文；執行指令後的摘要必須用韓文。",
+          "未提供會議紀錄，以 [MEETING_NOTES] 占位；不能編造會議內容。"
+        ],
+        "manualAcceptance": [
+          "英文 Prompt 明確區分韓文標題與三行韓文摘要正文。",
+          "沒有虛構人物、日期、決議或具體會議內容。"
+        ]
+      },
+      "sourceUTF16Length": 49,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "來源缺漏會先索取會議紀錄；標題與三行正文分開，韓文答案與原樣標題保留。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "If [MEETING_NOTES] has not been provided, ask the user for the meeting minutes before summarizing. Otherwise, write the title \"팀 회의 요약\" as given, followed by exactly three lines of summary body. Write the summary in Korean.",
+        "improvements": [
+          "將需求整理為精簡英文指令，保留標題與三行摘要的格式。",
+          "加入缺少會議紀錄時先向使用者索取來源的指示。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 223,
+      "literalChecks": [
+        {
+          "text": "팀 회의 요약",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 4146,
+      "runPhase": "final-critical-recheck",
+      "date": "2026-10-09T04:47:57.847Z",
+      "history": [
+        {
+          "phase": "baseline-ko-ru",
+          "date": "2026-10-09T04:30:26.905Z",
+          "status": 200,
+          "resultUTF16Length": 124,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 349,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 242,
+          "literalFailures": 0
+        },
+        {
+          "phase": "missing-source-recheck",
+          "date": "2026-10-09T04:42:51.593Z",
+          "status": 200,
+          "resultUTF16Length": 301,
+          "literalFailures": 0
+        },
+        {
+          "phase": "final-critical-recheck",
+          "date": "2026-10-09T04:47:57.847Z",
+          "status": 200,
+          "resultUTF16Length": 223,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ko-medium-customer-email",
+      "language": "韓文",
+      "script": "Hangul",
+      "complexity": "medium",
+      "task": "writing",
+      "summary": "為延遲兩天的配送撰寫客戶通知信，保留訂單編號，使用平和禮貌的韓文；不得責怪客戶、編造原因或承諾未核准的退款補償。",
+      "prompt": "배송이 이틀 늦어진 고객에게 안내 메일을 쓰려고 해. 주문 번호는 PS-001이고, 고객 이름과 새 배송일은 아직 확인되지 않았어. 고객에게 책임을 돌리지 말고, 변명처럼 들리지 않는 차분하고 공손한 말투로 써 줘. 환불이나 보상은 승인되지 않았으니 약속하면 안 돼. 제목은 \"배송 안내\"를 그대로 사용하고, 본문은 한국어로 5~7문장으로 작성해 줘. 고객 이름과 새 배송일에는 각각 [CUSTOMER_NAME], [NEW_DELIVERY_DATE]를 넣어 줘. 확인되지 않은 배송 지연 사유는 지어내지 말아 줘.",
+      "expected": {
+        "answerLanguage": "Korean",
+        "literals": [
+          "PS-001",
+          "배송 안내",
+          "[CUSTOMER_NAME]",
+          "[NEW_DELIVERY_DATE]"
+        ],
+        "constraints": [
+          "配送延遲兩天，不是預計兩天後必定送達。",
+          "信件主旨原樣保留「배송 안내」；正文使用韓文，共 5 至 7 句。",
+          "語氣平和、禮貌，不把責任歸於客戶，不用推託理由。",
+          "退款與補償未核准，不得承諾。",
+          "客戶姓名、新配送日期及延遲原因均尚未確認；指定的兩個占位符必須原樣保留。",
+          "英文 Prompt 要求下游寫信，生成器不直接代寫信。"
+        ],
+        "manualAcceptance": [
+          "固定主旨、訂單編號與占位符精確保留。",
+          "沒有加入保證到貨日、折扣、贈品、退款或查不到的物流原因。"
+        ]
+      },
+      "sourceUTF16Length": 287,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "配送已延遲兩天、5–7句正文、固定主旨、兩個佔位符、禁止究責／未核准補償／編造原因均保留。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a shipping notification email in Korean to a customer whose delivery is two days late. Use order number PS-001.\n\nUse these placeholders exactly as written: [CUSTOMER_NAME] for the customer's name and [NEW_DELIVERY_DATE] for the new delivery date.\n\nThe subject line must be exactly: 배송 안내\n\nThe email body must be 5–7 sentences in Korean (this sentence-count limit applies only to the body, not the subject line).\n\nWrite in a calm and polite tone. Do not blame the customer, and do not make it sound like an excuse. Do not promise a refund or any compensation, since none has been approved. Do not invent or speculate about the reason for the delivery delay, because the reason is unconfirmed.",
+        "improvements": [
+          "將原需求整合為英文指令，保留韓文主旨與韓文正文的語言要求。",
+          "明確標示 [CUSTOMER_NAME] 與 [NEW_DELIVERY_DATE] 為需原樣保留的佔位符。",
+          "將 5~7 句的限制明確綁定於正文，並排除主旨。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 697,
+      "literalChecks": [
+        {
+          "text": "PS-001",
+          "preserved": true
+        },
+        {
+          "text": "배송 안내",
+          "preserved": true
+        },
+        {
+          "text": "[CUSTOMER_NAME]",
+          "preserved": true
+        },
+        {
+          "text": "[NEW_DELIVERY_DATE]",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1903,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-ko-ru",
+          "date": "2026-10-09T04:30:26.905Z",
+          "status": 200,
+          "resultUTF16Length": 686,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 716,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 697,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ko-long-research-comparison",
+      "language": "韓文",
+      "script": "Hangul",
+      "complexity": "long",
+      "task": "analysis",
+      "summary": "調查自備 Key 的開源 Prompt 工具，比較 OpenRouter、Gemini 免費方案與本機模型。區分 API 免費、限額與完整營運成本；必須核對官方資料，缺少資料時用占位符，不編造數字或承諾永久免費。",
+      "prompt": "오픈소스 프로젝트를 공개하려고 하는데, 각 사용자가 자기 API 키를 넣어 영어 프롬프트를 생성하도록 만들고 싶어. 무료 API를 쓰면 정말 비용이 0인지 초보자도 이해할 수 있게 비교하는 조사 보고서가 필요해. OpenRouter의 무료 모델, Gemini의 무료 이용 구간, 사용자의 컴퓨터에서 실행하는 로컬 모델을 비교 대상으로 삼아 줘. 비교 항목은 API 요금, 일일·분당 한도, 계정별·프로젝트별 한도 차이, 개인정보 처리, 상업적 사용 조건, 로컬 실행에 필요한 메모리와 전력 비용이야. \"무료\"를 \"무제한\"과 같은 뜻으로 쓰지 말고, API 요금이 0인 경우와 전체 운영비가 0인 경우를 구분해 줘.\n\n최신 요금이나 한도는 공식 문서를 확인할 수 있을 때만 숫자로 써 줘. 문서 확인 날짜를 표시하고, 링크를 각 주장 가까이에 붙여 줘. 브라우징을 할 수 없다면 확인하지 못했다고 밝히고 [CURRENT_QUOTA], [VERIFIED_DATE]처럼 표시해 줘. 알려지지 않은 수치, 라이선스 조건, 성능이나 지원 언어를 지어내면 안 돼. 특정 회사의 무료 정책이 앞으로도 유지된다고 약속하지 말아 줘.\n\n결과는 한국어로 작성하되, 표의 열 이름은 \"Option\", \"API cost\", \"Limits\", \"Local cost\"를 그대로 사용해 줘. 마지막에는 공유 API 키 없이 배포하는 방법과, 무료 한도가 소진되었을 때 유료 모델로 자동 전환하지 않고 멈추는 방법을 각각 설명해 줘. API 키나 실제 개인 데이터는 예시에 넣지 말고, 설정값이 필요한 자리는 [API_KEY], [BASE_URL], [MODEL_ID]로 남겨 줘. 프로젝트의 지원 OS와 사용자 수는 아직 정해지지 않았으니 임의로 가정하지 말아 줘.",
+      "expected": {
+        "answerLanguage": "Korean",
+        "literals": [
+          "OpenRouter",
+          "Gemini",
+          "Option",
+          "API cost",
+          "Limits",
+          "Local cost",
+          "[CURRENT_QUOTA]",
+          "[VERIFIED_DATE]",
+          "[API_KEY]",
+          "[BASE_URL]",
+          "[MODEL_ID]"
+        ],
+        "constraints": [
+          "比較對象恰為三種指定方式，不任意變更或省略。",
+          "完整保留價格、日／分鐘限額、帳號／專案配額、隱私、商用條件及本機記憶體與電力成本等比較軸。",
+          "查核最新數字時使用官方資料、查核日期與靠近主張的來源連結。",
+          "不能瀏覽時明示未查核，保留指定占位符；不得猜測數字、授權、性能或支援語言。",
+          "報告用韓文，表格四個英文欄名保持原樣。",
+          "結尾說明使用者自備 Key，以及免費限額用完停止、不自動轉付費。",
+          "不得在例子放真實金鑰或個資；不假定尚未決定的 OS 或使用者人數。",
+          "生成器輸出可重用的英文研究指令，不直接提交比較報告。"
+        ],
+        "manualAcceptance": [
+          "保留所有條件分支；沒有直接填入生成器自己猜的即時額度。",
+          "未將英文表格欄名誤譯成韓文，未將韓文回答要求改成英文。",
+          "英文 Prompt 沒有新增共用服務、免費永久有效或偷偷付費備援。"
+        ]
+      },
+      "sourceUTF16Length": 861,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "保留初學者受眾、三方案與全部比較軸、條件式官方查核／日期／來源、缺瀏覽佔位符、不共用Key、不轉付費、未知OS／人數、韓文與英文表頭。最後一輪没有冗餘原文外框。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Research and write a comparison report in Korean for a beginner audience on whether \"free\" API options really cost zero, to support an open-source project in which each user supplies their own API key to generate English prompts.\n\nCompare these three options:\n- OpenRouter free models\n- Gemini free tier\n- Local models run on the user's own computer\n\nComparison criteria (use all of them):\n- API pricing\n- Daily and per-minute limits\n- Differences between per-account and per-project limits\n- Privacy/data handling\n- Commercial-use terms\n- Memory required for local execution and electricity cost\n\nImportant definitions and constraints:\n- Do not treat \"free\" as a synonym for \"unlimited.\"\n- Clearly distinguish the case where the API price is 0 from the case where the total operating cost is 0.\n- Use numbers for current pricing or limits only when you can check the official documentation. Show the date on which you verified the documentation, and place links close to each claim.\n- If you cannot browse, state clearly that you could not verify, and mark the relevant places with placeholders such as [CURRENT_QUOTA] and [VERIFIED_DATE].\n- Do not invent unknown figures, license terms, performance, or supported languages.\n- Do not promise that any specific company's free policy will continue in the future.\n\nDeliverable format:\n- Write the report in Korean.\n- Include a table whose column names are exactly: \"Option\", \"API cost\", \"Limits\", \"Local cost\".\n- At the end, explain (1) how to distribute the project without sharing a common API key, and (2) how to stop instead of automatically switching to a paid model when the free quota is exhausted.\n\nExamples and configuration:\n- Do not put API keys or real personal data in any example.\n- Leave places that need configuration values as [API_KEY], [BASE_URL], and [MODEL_ID].\n\nDo not arbitrarily assume the project's supported OS or number of users, because these are not yet decided. If you need to know these in order to give a recommendation, ask only for the minimum necessary details that affect the conclusion; do not turn it into a general questionnaire. Use browsing or research tools if available to verify current pricing and limits against official sources; if access is unavailable, state that limitation rather than pretending to have searched or inventing facts or sources.",
+        "improvements": [
+          "將韓文需求整理為精簡英文指令，並保留所有比較項目與限制。",
+          "明確要求報告以韓語撰寫，表格欄名維持指定英文原樣。",
+          "保留查證日期、連結位置與無法瀏覽時的替代標記要求。",
+          "保留不得捏造數據、不得保證免費政策延續、不得假設 OS 與用戶數的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 2342,
+      "literalChecks": [
+        {
+          "text": "OpenRouter",
+          "preserved": true
+        },
+        {
+          "text": "Gemini",
+          "preserved": true
+        },
+        {
+          "text": "Option",
+          "preserved": true
+        },
+        {
+          "text": "API cost",
+          "preserved": true
+        },
+        {
+          "text": "Limits",
+          "preserved": true
+        },
+        {
+          "text": "Local cost",
+          "preserved": true
+        },
+        {
+          "text": "[CURRENT_QUOTA]",
+          "preserved": true
+        },
+        {
+          "text": "[VERIFIED_DATE]",
+          "preserved": true
+        },
+        {
+          "text": "[API_KEY]",
+          "preserved": true
+        },
+        {
+          "text": "[BASE_URL]",
+          "preserved": true
+        },
+        {
+          "text": "[MODEL_ID]",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 3599,
+      "runPhase": "audience-and-wrapper-final",
+      "date": "2026-10-09T07:41:37.961Z",
+      "history": [
+        {
+          "phase": "baseline-ko-ru",
+          "date": "2026-10-09T04:30:26.905Z",
+          "status": 200,
+          "resultUTF16Length": 1980,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 1756,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 1798,
+          "literalFailures": 0
+        },
+        {
+          "phase": "audience-recheck",
+          "date": "2026-10-09T07:37:37.066Z",
+          "status": 200,
+          "resultUTF16Length": 2971,
+          "literalFailures": 0
+        },
+        {
+          "phase": "audience-and-wrapper-final",
+          "date": "2026-10-09T07:41:37.961Z",
+          "status": 200,
+          "resultUTF16Length": 2342,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ru-short-planning",
+      "language": "俄文",
+      "script": "Cyrillic",
+      "complexity": "short",
+      "task": "general",
+      "summary": "安排週末的居家清潔計畫，每天 30 分鐘、不購買任何用品；用俄文列表回答。",
+      "prompt": "Составь план уборки квартиры на выходные: по 30 минут в день, без покупок. Ответь по-русски, списком.",
+      "expected": {
+        "answerLanguage": "Russian",
+        "literals": [],
+        "constraints": [
+          "對象是清潔公寓，不是搬家、整理軟體或購物。",
+          "週末每天安排 30 分鐘；不把總共 30 分鐘誤當兩天共用。",
+          "使用現有用品，不安排任何購買項目。",
+          "下游答案使用俄文列表。",
+          "公寓大小未指定，指令可以要求依實際大小調整，不編造房間數。",
+          "生成器只交付英文規劃指令，不直接列出清潔計畫。"
+        ],
+        "manualAcceptance": [
+          "俄文回答與列表格式要求仍在英文 Prompt 中。",
+          "沒有增加專業清潔設備、付費服務或超出每天 30 分鐘的時程。"
+        ]
+      },
+      "sourceUTF16Length": 101,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "週末每天30分鐘、無購物、俄文列表保留，沒有編造公寓大小。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Create a weekend apartment cleaning plan: 30 minutes per day, with no shopping. Write your answer in Russian, as a list.",
+        "improvements": [
+          "將需求整理為精簡的英文指令，並保留每日 30 分鐘、不購物與清單格式等限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 120,
+      "literalChecks": [],
+      "elapsedMs": 1150,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-ko-ru",
+          "date": "2026-10-09T04:30:26.905Z",
+          "status": 200,
+          "resultUTF16Length": 258,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 161,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 120,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ru-medium-python-csv",
+      "language": "俄文",
+      "script": "Cyrillic",
+      "complexity": "medium",
+      "task": "coding",
+      "summary": "用 Python 3.12 標準函式庫處理 CSV，按相同 order_id 加總 total，用 Decimal 保持金額精度。跳過無效行並報告行號，附兩個小型檢查例子；說明使用俄文，欄名與路徑占位符不翻譯。",
+      "prompt": "Напиши скрипт на Python 3.12, который читает CSV-файл [INPUT_CSV] с колонками \"order_id\" и \"total\" и сохраняет результат в [OUTPUT_CSV]. Если один order_id встречается несколько раз, сложи суммы total. Десятичный разделитель в исходных данных — точка; используй Decimal, чтобы не терять точность денежных значений. Строки с пустым order_id или некорректной суммой пропускай и показывай их номера в сообщении об ошибках. Не используй сторонние библиотеки. Объяснение дай по-русски, имена колонок не переводи. Добавь два небольших примера проверки, но не выдумывай содержимое моих файлов.",
+      "expected": {
+        "answerLanguage": "Russian explanation; executable code identifiers as specified",
+        "literals": [
+          "Python 3.12",
+          "CSV",
+          "[INPUT_CSV]",
+          "[OUTPUT_CSV]",
+          "order_id",
+          "total",
+          "Decimal"
+        ],
+        "constraints": [
+          "從指定輸入 CSV 讀取、將聚合結果寫到指定輸出 CSV。",
+          "相同 order_id 的 total 相加；不是刪除重複行或只取最後一筆。",
+          "輸入金額小數分隔符為點，使用 Decimal，不用浮點數。",
+          "跳過空 order_id 與金額無效的行，錯誤報告包含那些行的行號。",
+          "只用 Python 3.12 標準函式庫，不安裝 pandas 或其他第三方依賴。",
+          "說明用俄文，欄名與占位符原樣保留，加入恰好兩個小型驗證例子。",
+          "測試資料明示為自行建立的例子，不宣稱讀過使用者檔案。",
+          "英文 Prompt 指示下游完成程式任務，生成器本身不能交付完整程式當作 Prompt。"
+        ],
+        "manualAcceptance": [
+          "Decimal、欄名、Python 版本、兩個測試與標準函式庫限制全數保留。",
+          "英文 Prompt 沒有給出假讀檔結果，也沒有直接執行 CSV 聚合。"
+        ]
+      },
+      "sourceUTF16Length": 586,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "Python3.12、Decimal、相同ID加總、無效行／行號、標準庫、兩個合成範例與俄文說明均保留；不再因路徑佔位符阻擋撰寫。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a Python 3.12 script that reads a CSV file at the path [INPUT_CSV] with the columns \"order_id\" and \"total\", and writes the result to [OUTPUT_CSV].\n\nRequirements:\n- If the same order_id appears more than once, sum its total values.\n- The decimal separator in the input data is a period. Use Decimal to avoid losing precision in monetary values.\n- Skip rows where order_id is empty or the amount is invalid, and report the row numbers of the skipped rows in an error message.\n- Do not use any third-party libraries (standard library only).\n\nDeliverable:\n- Provide the complete script.\n- Write the explanation in Russian.\n- Do not translate the column names; keep \"order_id\" and \"total\" exactly as given.\n- Include two small verification examples, but do not invent the contents of the user's actual files. Use clearly labeled synthetic sample data for these examples and state that it is synthetic.",
+        "improvements": [
+          "將程式需求整理為清楚的英文指令，保留 Python 3.12、Decimal、輸入輸出 CSV、錯誤訊息與禁用第三方函式庫等條件。",
+          "保留「解釋用俄文、欄位名稱不翻譯」的明確語言要求，未誤列為假設。",
+          "要求驗證範例使用明確標示的合成資料，避免虛構使用者檔案內容。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 902,
+      "literalChecks": [
+        {
+          "text": "Python 3.12",
+          "preserved": true
+        },
+        {
+          "text": "CSV",
+          "preserved": true
+        },
+        {
+          "text": "[INPUT_CSV]",
+          "preserved": true
+        },
+        {
+          "text": "[OUTPUT_CSV]",
+          "preserved": true
+        },
+        {
+          "text": "order_id",
+          "preserved": true
+        },
+        {
+          "text": "total",
+          "preserved": true
+        },
+        {
+          "text": "Decimal",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 2125,
+      "runPhase": "final-critical-recheck",
+      "date": "2026-10-09T04:47:57.847Z",
+      "history": [
+        {
+          "phase": "baseline-ko-ru",
+          "date": "2026-10-09T04:30:26.905Z",
+          "status": 200,
+          "resultUTF16Length": 799,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 690,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 617,
+          "literalFailures": 0
+        },
+        {
+          "phase": "final-critical-recheck",
+          "date": "2026-10-09T04:47:57.847Z",
+          "status": 200,
+          "resultUTF16Length": 902,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "ru-long-video-script",
+      "language": "俄文",
+      "script": "Cyrillic",
+      "complexity": "long",
+      "task": "writing",
+      "summary": "為文字選取轉英文 Prompt 的開源工具設計 30 秒示範影片腳本，四段固定時間，俄文解說與配音、固定英文表頭與結尾字串。不能編造既有介面、增加中間按鈕、展示執行原任務、洩漏資料或宣稱完美無限免費。",
+      "prompt": "Нужен сценарий 30-секундного демонстрационного видео для открытого инструмента, который превращает выделенный текст в английский промпт. Целевая аудитория — люди без опыта программирования. Видео должно показывать только текстовое поле, выделение текста, правый клик и окно с готовым промптом. Не добавляй промежуточную кнопку и не показывай автоматическое выполнение исходной задачи. Имя продукта пока не утверждено: используй [PRODUCT_NAME]. Макет интерфейса тоже ещё не готов: оставь [UI_REFERENCE] и не выдавай выдуманный экран за существующий.\n\nРаздели ролик на четыре сцены: 0–5, 5–12, 12–22 и 22–30 секунд. Для каждой сцены опиши действие на экране, короткий текст для озвучки и надпись. Общая длительность должна быть ровно 30 секунд. Формат — таблица с названиями колонок \"Time\", \"Scene\", \"Voiceover\", \"On-screen text\". Все пояснения и озвучка должны быть на русском; финальная надпись \"Try it locally\" должна остаться на английском и без изменений.\n\nСтиль спокойный и понятный, без жаргона, обещаний идеальной точности и заявлений о бесплатном неограниченном использовании. Не показывай реальные API-ключи, личные сообщения, чужие логотипы или лица. Во всех демонстрационных полях используй вымышленные несекретные данные и помечай их как пример. Не добавляй музыку, если права на неё не подтверждены. Если для точного сценария не хватает данных, перечисли максимум три конкретных вопроса отдельно от таблицы; не подменяй отсутствующую информацию предположениями. Нужен только сценарий и список вопросов, если они необходимы, а не готовое видео и не программный код.",
+      "expected": {
+        "answerLanguage": "Russian explanations and voiceover; specified English headers and final caption unchanged",
+        "literals": [
+          "[PRODUCT_NAME]",
+          "[UI_REFERENCE]",
+          "0–5",
+          "5–12",
+          "12–22",
+          "22–30",
+          "Time",
+          "Scene",
+          "Voiceover",
+          "On-screen text",
+          "Try it locally"
+        ],
+        "constraints": [
+          "腳本對象是沒有程式背景的觀眾，描述文字選取轉英文 Prompt 的工具。",
+          "畫面流程為輸入欄、選取、右鍵、完成的 Prompt 浮窗；不增加中間按鈕、不執行原任務。",
+          "四場景區間維持 0–5、5–12、12–22、22–30 秒，總長恰好 30 秒。",
+          "每場景要有畫面動作、短配音與畫面字幕；四個英文表頭原樣保留。",
+          "說明與配音使用俄文，結尾「Try it locally」保持英文原樣。",
+          "未決定的產品名與 UI 用指定占位符，不捏造既有畫面。",
+          "平和易懂，不承諾完美準確或無限制免費。",
+          "不展示真實 Key、私訊、他人標誌或人臉；示例資料為無敏感內容的虛構資料，且明示為例子。",
+          "未確認音樂權利時不加音樂；資訊不足最多列出三個具體問題，不猜測缺少的資訊。",
+          "下游只交付腳本及必要問題，英文 Prompt 不能被錯誤改成直接產影片或程式碼。"
+        ],
+        "manualAcceptance": [
+          "英文 Prompt 保留全部數字、順序、禁止事項、占位符及指定字串。",
+          "沒有完成版腳本、影片生成結果或憑空捏造的實際 UI。",
+          "英語指令與下游俄文輸出要求的區別清楚。"
+        ]
+      },
+      "sourceUTF16Length": 1576,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "四段原時間、30秒、英文表頭與結尾、俄文解說、右鍵無中間按鈕、必要最多3問與各項禁止條件保留；僅產腳本指令。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a 30-second demo video script for an open tool that turns selected text into an English prompt. The target audience is people with no programming experience.\n\nDeliverables (only these two items):\n1. The script as a table.\n2. If data needed for an accurate script is missing, a list of at most three specific questions, placed separately from the table. Do not substitute assumptions for missing information.\n\nDo not produce a finished video or any program code.\n\nScene breakdown — use exactly these four scenes and durations:\n- 0–5 seconds\n- 5–12 seconds\n- 12–22 seconds\n- 22–30 seconds\nTotal duration must be exactly 30 seconds.\n\nTable format: columns named \"Time\", \"Scene\", \"Voiceover\", \"On-screen text\". For each scene, describe the on-screen action, provide a short voiceover line, and provide the on-screen text.\n\nVisual content restrictions:\n- Show only: a text field, text selection, a right-click, and a window containing the finished prompt.\n- Do not add an intermediate button.\n- Do not show the original task being executed automatically.\n- The product name is not yet approved: use [PRODUCT_NAME].\n- The interface mockup is not ready: keep [UI_REFERENCE] and do not present a made-up screen as if it already exists.\n- Do not show real API keys, personal messages, third-party logos, or faces.\n- In all demo fields use fictional, non-sensitive data and label it as an example.\n\nTone and claims:\n- Calm and easy to understand, no jargon.\n- No promises of perfect accuracy.\n- No claims of free unlimited use.\n- Do not add music unless its rights are confirmed.\n\nLanguage requirements:\n- All explanations and voiceover must be in Russian.\n- The final on-screen text \"Try it locally\" must remain in English and unchanged.",
+        "improvements": [
+          "將俄文需求整理為條列式英文指令，保留四場景時間碼與表格欄位名稱。",
+          "明確區分兩項交付物（腳本表格與最多三個問題），並禁止輸出影片或程式碼。",
+          "集中列出視覺限制、語氣限制與語言要求，避免與交付格式混淆。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 1734,
+      "literalChecks": [
+        {
+          "text": "[PRODUCT_NAME]",
+          "preserved": true
+        },
+        {
+          "text": "[UI_REFERENCE]",
+          "preserved": true
+        },
+        {
+          "text": "0–5",
+          "preserved": true
+        },
+        {
+          "text": "5–12",
+          "preserved": true
+        },
+        {
+          "text": "12–22",
+          "preserved": true
+        },
+        {
+          "text": "22–30",
+          "preserved": true
+        },
+        {
+          "text": "Time",
+          "preserved": true
+        },
+        {
+          "text": "Scene",
+          "preserved": true
+        },
+        {
+          "text": "Voiceover",
+          "preserved": true
+        },
+        {
+          "text": "On-screen text",
+          "preserved": true
+        },
+        {
+          "text": "Try it locally",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 2916,
+      "runPhase": "notes-and-negation-recheck",
+      "date": "2026-10-09T04:40:17.354Z",
+      "history": [
+        {
+          "phase": "baseline-ko-ru",
+          "date": "2026-10-09T04:30:26.905Z",
+          "status": 200,
+          "resultUTF16Length": 1827,
+          "literalFailures": 0
+        },
+        {
+          "phase": "first-fix",
+          "date": "2026-10-09T04:34:16.656Z",
+          "status": 200,
+          "resultUTF16Length": 1589,
+          "literalFailures": 0
+        },
+        {
+          "phase": "notes-and-negation-recheck",
+          "date": "2026-10-09T04:40:17.354Z",
+          "status": 200,
+          "resultUTF16Length": 1734,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "pt-short",
+      "language": "葡萄牙文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "葡文歡迎訊息恰好兩句；保留Olá-42；不得編造日期或價格",
+      "task": "writing",
+      "prompt": "Escreva uma mensagem de boas-vindas em português com exatamente duas frases. Preserve exatamente a expressão \"Olá-42\". Não invente datas nem preços.",
+      "expected": {
+        "answerLanguage": "Portuguese",
+        "literals": [
+          "Olá-42"
+        ],
+        "constraints": [
+          "恰好兩句；葡萄牙文答案",
+          "不得編造日期或價格，不加嚴成不得包含既知資料",
+          "只產指令，不直接完成歡迎訊息"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 148,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "兩句、葡文、Olá-42、不得編造日期價格，未擴大禁止範圍。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Portuguese. The message must consist of exactly two sentences. Include the exact expression \"Olá-42\" verbatim. Do not invent any dates or prices.",
+        "improvements": [
+          "將需求整理為精簡英文指令，並保留葡萄牙文作答語言與 \"Olá-42\" 原始字面。",
+          "明確標示「恰好兩句」與「不得虛構日期或價格」的範圍。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 172,
+      "literalChecks": [
+        {
+          "text": "Olá-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1223,
+      "runPhase": "additional-languages",
+      "date": "2026-10-09T04:41:25.745Z",
+      "history": [
+        {
+          "phase": "additional-languages",
+          "date": "2026-10-09T04:41:25.745Z",
+          "status": 200,
+          "resultUTF16Length": 172,
+          "literalFailures": 0
+        }
+      ]
+    },
+    {
+      "id": "it-short",
+      "language": "義大利文",
+      "script": "Latin",
+      "complexity": "short",
+      "summary": "義文歡迎訊息恰好兩句；保留Caffè-42；不得編造日期或價格",
+      "task": "writing",
+      "prompt": "Scrivi un messaggio di benvenuto in italiano composto da esattamente due frasi. Mantieni invariata la stringa \"Caffè-42\". Non inventare date né prezzi.",
+      "expected": {
+        "answerLanguage": "Italian",
+        "literals": [
+          "Caffè-42"
+        ],
+        "constraints": [
+          "恰好兩句；義大利文答案",
+          "不得編造日期或價格，不加嚴成不得包含既知資料",
+          "只產指令，不直接完成歡迎訊息"
+        ],
+        "answersTask": false
+      },
+      "sourceUTF16Length": 151,
+      "semanticReview": {
+        "reviewer": "Codex依固定測例逐項人工語意覆核；不是母語專家或IDE實機驗收",
+        "promptStatus": "pass",
+        "englishInstructions": true,
+        "intentPreserved": true,
+        "answerLanguagePreserved": true,
+        "negativeScopePreserved": true,
+        "doesNotPerformTask": true,
+        "literalStatus": "pass",
+        "notesStatus": "pass",
+        "findings": "兩句、義文、Caffè-42、不得編造日期價格，未擴大禁止範圍。",
+        "limitations": []
+      },
+      "status": 200,
+      "result": {
+        "prompt": "Write a welcome message in Italian consisting of exactly two sentences. Keep the string \"Caffè-42\" unchanged, exactly as written. Do not invent dates or prices.",
+        "improvements": [
+          "將需求整理為精簡英文指令。",
+          "明確要求 \"Caffè-42\" 保持原樣不變。",
+          "保留不得捏造日期或價格的限制。"
+        ],
+        "assumptions": [],
+        "mode": "live",
+        "generationModel": "deepseek-flash",
+        "promptLanguage": "en"
+      },
+      "resultUTF16Length": 160,
+      "literalChecks": [
+        {
+          "text": "Caffè-42",
+          "preserved": true
+        }
+      ],
+      "elapsedMs": 1320,
+      "runPhase": "additional-languages",
+      "date": "2026-10-09T04:41:25.745Z",
+      "history": [
+        {
+          "phase": "additional-languages",
+          "date": "2026-10-09T04:41:25.745Z",
+          "status": 200,
+          "resultUTF16Length": 160,
+          "literalFailures": 0
+        }
+      ]
+    }
+  ]
+}

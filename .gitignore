@@ -1,0 +1,16 @@
+node_modules/
+.env
+test-results/
+playwright-report/
+artifacts/
+.DS_Store
+build/
+release/
+*.env
+*.env.*
+!.env.example
+!.env.deepseek.example
+!*.env.example
+HANDOFF.md
+docs/verification.md
+docs/macos-verification.md
