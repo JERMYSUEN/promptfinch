@@ -4,7 +4,7 @@
 
 A general-purpose prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request into clearer instructions for the model you plan to use.
 
-The macOS app combines a manual workspace with a selection assistant: select text in a compatible app, right-click, choose **轉為英文 Prompt** in the companion action menu, and review the result in a nearby panel. Right-clicking alone does not generate or send content to a model. An optional browser workspace and HTTP API use the same backend.
+The macOS app combines a manual workspace with a selection assistant: select text in a compatible app, right-click, choose **Convert to an English Prompt** in the companion action menu, and review the result in a nearby panel. Right-clicking alone does not generate or send content to a model. An optional browser workspace and HTTP API use the same backend.
 
 The macOS app and the API's English mode produce English prompts from multilingual input. They are designed to retain explicit requirements, the requested answer language, and exact literals. This edits the instructions; it does not perform the original task. Review generated prompts before using them.
 
