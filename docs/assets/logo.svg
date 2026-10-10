@@ -1,22 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 104" width="420" height="104">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 118" width="480" height="118">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2A6B59"/>
-      <stop offset="1" stop-color="#1F5344"/>
+    <radialGradient id="disc" cx="0.38" cy="0.32" r="0.85">
+      <stop offset="0" stop-color="#152A42"/>
+      <stop offset="1" stop-color="#0B1626"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2979FF"/>
+      <stop offset="1" stop-color="#26C6DA"/>
     </linearGradient>
+    <linearGradient id="bird" gradientUnits="userSpaceOnUse" x1="0" y1="30" x2="0" y2="82">
+      <stop offset="0" stop-color="#6FD4FF"/>
+      <stop offset="1" stop-color="#1E6FD9"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="0.55" stop-color="#2E9BF0"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <path id="spark" d="M0 -4.6 L1.1 -1.1 L4.6 0 L1.1 1.1 L0 4.6 L-1.1 1.1 L-4.6 0 L-1.1 -1.1 Z"/>
   </defs>
-  <rect x="2" y="2" width="416" height="100" rx="26" fill="url(#bg)"/>
-  <path d="M 42 36 L 64 53 L 42 70" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 70 70 H 94" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
-  <g transform="translate(-2,-2)">
-    <path d="M 110 49 C 116 43 122 41 126.5 42 C 122.5 47 118.5 51 114.5 54 Z" fill="#D9A02F"/>
-    <ellipse cx="101" cy="55.5" rx="14.5" ry="11.5" fill="#F2B33D" transform="rotate(-14 101 55.5)"/>
-    <circle cx="95" cy="38.5" r="9" fill="#F2B33D"/>
-    <path d="M 101 34 L 110.5 37.5 L 101 41 Z" fill="#E08A2E"/>
-    <circle cx="95" cy="37.5" r="2.2" fill="#245F4F"/>
-    <path d="M 97 56.5 Q 104 51 110.5 54" fill="none" stroke="#D9A02F" stroke-width="2.5" stroke-linecap="round"/>
+
+  <circle cx="61" cy="59" r="58" fill="none" stroke="#2979FF" stroke-opacity="0.14" stroke-width="8"/>
+  <circle cx="61" cy="59" r="51" fill="url(#disc)"/>
+  <circle cx="61" cy="59" r="54" fill="none" stroke="url(#ring)" stroke-width="3"/>
+
+  <use href="#spark" x="33" y="30" fill="#9BE7FF"/>
+  <use href="#spark" x="99" y="66" transform="translate(99,66) scale(0.65) translate(-99,-66)" fill="#FFFFFF"/>
+  <use href="#spark" x="90" y="28" transform="translate(90,28) scale(0.5) translate(-90,-28)" fill="#26C6DA"/>
+  <g stroke="#D6F0FF" stroke-width="2.4" stroke-linecap="round" fill="none">
+    <path d="M 95 38 L 89 44 L 95 50"/>
+    <path d="M 100 36 L 94 52"/>
+    <path d="M 104 38 L 110 44 L 104 50"/>
   </g>
-  <text x="158" y="67" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="600" letter-spacing="-0.5">
-    <tspan fill="#FFFFFF">Prompt</tspan><tspan fill="#FFC94D" font-weight="700">Finch</tspan>
-  </text>
+
+  <path d="M 46 66 C 36 68 27 74 23 82 C 33 82 43 78 49 72 Z" fill="#1E88E5"/>
+  <g fill="url(#bird)">
+    <ellipse cx="57" cy="64" rx="18" ry="15"/>
+    <circle cx="57" cy="44" r="12"/>
+  </g>
+  <path d="M 46 57 C 53 49 66 49 70 58 C 66 69 52 71 44 64 C 43 61 44 59 46 57 Z" fill="#1E88E5"/>
+  <path d="M 68 41.5 L 75.5 45 L 68 48.5 Z" fill="#E3F2FD"/>
+  <circle cx="63" cy="40.5" r="3" fill="#FFFFFF"/>
+  <circle cx="63.4" cy="40.5" r="1.5" fill="#0B1626"/>
+  <path d="M 51 34 L 49 28 L 54 31.5 L 55.5 25.5 L 59.5 31.5 Z" fill="#4FC3F7"/>
+
+  <g stroke="#E3F2FD" stroke-width="2.5" stroke-linecap="round">
+    <path d="M 54 79 L 52 89"/>
+    <path d="M 62 79 L 64 89"/>
+  </g>
+  <g stroke="#EAF6FF" stroke-width="3.2" stroke-linecap="round" fill="none">
+    <path d="M 38 93 H 84"/>
+    <path d="M 38 93 V 88.5"/>
+    <path d="M 84 93 V 88.5"/>
+  </g>
+  <circle cx="50" cy="93" r="2.4" fill="#0E1B2C"/>
+  <circle cx="59" cy="93" r="2.4" fill="#0E1B2C"/>
+  <circle cx="68" cy="93" r="2.4" fill="#0E1B2C"/>
+  <circle cx="78" cy="93" r="2.4" fill="#66BB6A"/>
+
+  <g>
+    <path d="M 28 94 C 27 89 27 84 28 80" stroke="#5BC46A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M 28 87 C 23 86 20 82 21 78 C 26 79 28 83 28 87 Z" fill="#66BB6A"/>
+    <path d="M 28 85 C 33 83 36 79 35 75 C 30 76 28 80 28 85 Z" fill="#81C784"/>
+  </g>
+
+  <text x="132" y="75" font-family="Nunito, Quicksand, ui-rounded, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="46" font-weight="800" letter-spacing="-1" fill="url(#word)">promptfinch</text>
 </svg>
