@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 104" width="420" height="104">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A6B59"/>
+      <stop offset="1" stop-color="#1F5344"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="416" height="100" rx="26" fill="url(#bg)"/>
+  <path d="M 42 36 L 64 53 L 42 70" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 70 70 H 94" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
+  <g transform="translate(-2,-2)">
+    <path d="M 110 49 C 116 43 122 41 126.5 42 C 122.5 47 118.5 51 114.5 54 Z" fill="#D9A02F"/>
+    <ellipse cx="101" cy="55.5" rx="14.5" ry="11.5" fill="#F2B33D" transform="rotate(-14 101 55.5)"/>
+    <circle cx="95" cy="38.5" r="9" fill="#F2B33D"/>
+    <path d="M 101 34 L 110.5 37.5 L 101 41 Z" fill="#E08A2E"/>
+    <circle cx="95" cy="37.5" r="2.2" fill="#245F4F"/>
+    <path d="M 97 56.5 Q 104 51 110.5 54" fill="none" stroke="#D9A02F" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <text x="158" y="67" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="600" letter-spacing="-0.5">
+    <tspan fill="#FFFFFF">Prompt</tspan><tspan fill="#FFC94D" font-weight="700">Finch</tspan>
+  </text>
+</svg>
