@@ -57,9 +57,9 @@ const baseText = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const baseH3 = headingCount(baseText, "### ");
 const baseH4 = headingCount(baseText, "#### ");
 const baseH2 = headingCount(baseText, "## ");
-
-
-
+// Chinese references flatten the English reference wrapper: its H3 sections
+// become H2, while introductory H2 sections (including Demo) remain H2.
+const fullReferenceH2 = baseH3 + baseH2 - 1;
 const fullStyle = ["zh-CN", "zh-TW"];
 const versionRe = /\b\d+\.\d+\.\d+\b(?<!\.\d)(?!\.\d)/g;
 const staleVersions = [];
@@ -91,7 +91,7 @@ for (const lang of expected) {
   const h4 = headingCount(text, "#### ");
   const content = text.split(/\r?\n/).slice(1).join("").replace(/\s/g, "").length;
   if (fullStyle.includes(lang)) {
-    if (h2 !== baseH3 + 1) ok.push(`h2 ${h2} != base h3 sections + zh title (${baseH3}+1=${baseH3 + 1})`);
+    if (h2 !== fullReferenceH2) ok.push(`h2 ${h2} != base reference sections + introductory sections (${baseH3}+${baseH2}-1=${fullReferenceH2})`);
     if (h3 !== baseH4) ok.push(`h3 ${h3} != base h4 (${baseH4})`);
     if (content < 3000) ok.push(`content ${content} chars < 3000 (full reference drifted)`);
   } else {

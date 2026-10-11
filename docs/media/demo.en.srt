@@ -1,0 +1,88 @@
+1
+00:00:00,000 --> 00:00:06,000
+PromptFinch
+Select. Refine. Paste.
+
+2
+00:00:06,000 --> 00:00:10,000
+A manual workspace for
+clearer English prompts.
+
+3
+00:00:10,000 --> 00:00:14,000
+Start with your goal, tone,
+and constraints.
+
+4
+00:00:14,000 --> 00:00:18,000
+Include the answer language
+and exact strings to preserve.
+
+5
+00:00:18,000 --> 00:00:22,000
+Choose a task and an optional
+target-model hint.
+
+6
+00:00:22,000 --> 00:00:26,000
+The hint does not switch
+the backend generation model.
+
+7
+00:00:26,000 --> 00:00:30,000
+Actual model result
+deepseek-flash
+
+8
+00:00:30,000 --> 00:00:34,000
+Check the answer language
+and exact strings, such as ACME-42.
+
+9
+00:00:34,000 --> 00:00:37,000
+Check the audience, tone,
+limits, and exclusions.
+
+10
+00:00:37,000 --> 00:00:41,000
+Copy includes only the prompt,
+not the improvement notes.
+
+11
+00:00:41,000 --> 00:00:44,000
+Review improvement notes
+separately.
+
+12
+00:00:44,000 --> 00:00:48,000
+Copy the prompt and check
+the success message.
+
+13
+00:00:48,000 --> 00:00:52,000
+Paste into a test document.
+
+14
+00:00:52,000 --> 00:00:55,000
+This edits instructions;
+it does not perform the task.
+
+15
+00:00:55,000 --> 00:01:00,000
+Four native interface languages:
+Traditional Chinese, English, Japanese, Korean.
+
+16
+00:01:00,000 --> 00:01:04,000
+Interface language and answer language
+are separate.
+
+17
+00:01:04,000 --> 00:01:08,000
+Live: your model API.
+Mock: workflow only.
+
+18
+00:01:08,000 --> 00:01:12,000
+Source on GitHub:
+github.com/JERMYSUEN/promptfinch
