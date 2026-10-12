@@ -12,16 +12,6 @@ Use the **macOS app** as a manual workspace or a selection assistant: select tex
 
 PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API configuration. Without a key, a clearly labeled mock mode lets you try the workflow without translating or optimizing the text.
 
-## Demo
-
-[![Preview the PromptFinch manual-workspace demo](docs/media/demo.gif)](docs/media/promptfinch-demo.mp4)
-
-[Watch or download the 72-second MP4](docs/media/promptfinch-demo.mp4) · [English subtitles](docs/media/demo.en.srt) · [Traditional Chinese subtitles](docs/media/demo.zh-TW.srt)
-
-This silent, captioned walkthrough uses actual app captures and a live `deepseek-flash` result. It shows a Chinese request becoming an English prompt, separate improvement notes, copying and pasting into a test document, and the four interface languages. The captures are edited; the film does not show continuous generation timing or the right-click and IDE workflows.
-
-The [production notes](docs/media/demo-script.md) describe the captured sequence. The [production guide (Traditional Chinese)](docs/demo-video.zh-TW.md) also includes an outline for a longer recording and README embedding examples.
-
 ## Documentation languages
 
 The links at the top switch between README pages. English is the source; Simplified Chinese (zh-CN) and Traditional Chinese (zh-TW) include the full reference. The other 26 editions contain translated introductions and link to the English setup instructions. These links change the documentation, not the app's language.

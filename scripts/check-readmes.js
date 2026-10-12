@@ -58,7 +58,7 @@ const baseH3 = headingCount(baseText, "### ");
 const baseH4 = headingCount(baseText, "#### ");
 const baseH2 = headingCount(baseText, "## ");
 // Chinese references flatten the English reference wrapper: its H3 sections
-// become H2, while introductory H2 sections (including Demo) remain H2.
+// become H2, while introductory H2 sections remain H2.
 const fullReferenceH2 = baseH3 + baseH2 - 1;
 const fullStyle = ["zh-CN", "zh-TW"];
 const versionRe = /\b\d+\.\d+\.\d+\b(?<!\.\d)(?!\.\d)/g;

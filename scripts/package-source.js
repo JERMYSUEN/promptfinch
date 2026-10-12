@@ -21,9 +21,7 @@ const files = [
   'scripts/build-macos.js', 'scripts/setup-signing-macos.js', 'scripts/verify-signing-macos.js', 'scripts/install-macos.js', 'scripts/app-lifecycle.js', 'scripts/terminate-macos-app.swift', 'scripts/update-macos-backend.js', 'scripts/backend-release.js', 'scripts/test-macos.js', 'scripts/package-source.js', 'scripts/verify-multilingual.js',
   'macos/Info.plist', 'macos/Icon.swift', 'macos/Sources/Localization.swift', 'macos/Sources/Core.swift', 'macos/Sources/Backend.swift',
   'macos/Sources/Selection.swift', 'macos/Sources/Watcher.swift', 'macos/Sources/App.swift', 'macos/Tests/CoreTests.swift', 'macos/Tests/WorkspaceTests.swift', 'macos/Tests/ServiceSmoke.swift',
-  'docs/design.md', 'docs/macos.md', 'docs/reliability-verification.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', 'docs/demo-video.zh-TW.md', '.github/workflows/check.yml',
-  'docs/media/promptfinch-demo.mp4', 'docs/media/demo.gif', 'docs/media/demo-thumbnail.png',
-  'docs/media/demo.en.srt', 'docs/media/demo.zh-TW.srt', 'docs/media/demo-script.md',
+  'docs/design.md', 'docs/macos.md', 'docs/reliability-verification.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', '.github/workflows/check.yml',
   'docs/assets/logo.svg', 'scripts/check-readmes.js',
   ...readmeLocales.map((locale) => `docs/readme/README.${locale}.md`),
 ];
@@ -52,4 +50,4 @@ const args = process.platform === 'darwin' ? ['--norsrc', '--noextattr', '-c', '
 const result = spawnSync(tool, args, { cwd: release, stdio: 'inherit' });
 if (result.error) throw result.error;
 if (result.status !== 0) throw new Error('原始碼封裝失敗。');
-console.log(`已封裝 ${files.length} 個檔案：${archive}\n包含已發布的示範素材；未包含 .env、偏好設定、App、node_modules 或原始擷取畫面。`);
+console.log(`已封裝 ${files.length} 個檔案：${archive}\n未包含 .env、偏好設定、App、node_modules、示範影片素材或原始擷取畫面。`);

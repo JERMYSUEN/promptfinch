@@ -12,16 +12,6 @@ PromptFinch 是適用於寫作、程式開發、研究、摘要與規劃的 Prom
 
 PromptFinch 會編輯指令，不會執行指令描述的任務。它以保留需求、指定的答案語言與固定字串為設計目標。真正優化需要自行設定模型 API；沒有金鑰時，可用明確標示的 mock 模式試用操作流程，但不會翻譯或優化文字。
 
-## 示範影片
-
-[![PromptFinch 手動工作台示範預覽](../media/demo.gif)](../media/promptfinch-demo.mp4)
-
-[觀看或下載 72 秒 MP4](../media/promptfinch-demo.mp4) · [英文字幕](../media/demo.en.srt) · [繁體中文字幕](../media/demo.zh-TW.srt)
-
-這段影片沒有旁白，附有英文字幕，採用實際 App 畫面與 `deepseek-flash` 真實生成結果。內容包含中文需求整理為英文 Prompt、獨立的優化說明、複製並貼入測試文件，以及四種介面語言。畫面經過剪輯，不代表連續生成耗時；本片尚未包含右鍵與 IDE 操作流程。
-
-[製作紀錄](../media/demo-script.md) 說明實際收錄的片段；[影片製作指南（繁體中文）](../demo-video.zh-TW.md) 另提供較完整的錄製腳本與 README 嵌入範例。
-
 ## 文件語言
 
 最上方連結可切換 README 頁面。英文是原始版本；簡體中文（zh-CN）與繁體中文（zh-TW）包含完整參考內容。其他 26 個版本提供翻譯介紹，並連結至英文設定指引。這些連結切換文件，不會更改 App 語言。
