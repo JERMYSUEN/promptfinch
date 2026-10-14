@@ -12,6 +12,12 @@ Use the **macOS app** as a manual workspace or a selection assistant: select tex
 
 PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API configuration. Without a key, a clearly labeled mock mode lets you try the workflow without translating or optimizing the text.
 
+## Demo
+
+![PromptFinch selection workflow with synthetic sample text](docs/media/demo-selection.gif)
+
+A 15-second illustrated workflow: select text, choose conversion, review the English prompt, then copy and paste. All content is synthetic. This animation recreates the interaction; it is not a recording of a live model request.
+
 ## Documentation languages
 
 The links at the top switch between README pages. English is the source; Simplified Chinese (zh-CN) and Traditional Chinese (zh-TW) include the full reference. The other 26 editions contain translated introductions and link to the English setup instructions. These links change the documentation, not the app's language.

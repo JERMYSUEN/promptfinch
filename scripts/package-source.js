@@ -23,6 +23,7 @@ const files = [
   'macos/Sources/Selection.swift', 'macos/Sources/Watcher.swift', 'macos/Sources/App.swift', 'macos/Tests/CoreTests.swift', 'macos/Tests/WorkspaceTests.swift', 'macos/Tests/ServiceSmoke.swift',
   'docs/design.md', 'docs/macos.md', 'docs/reliability-verification.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', '.github/workflows/check.yml',
   'docs/assets/logo.svg', 'scripts/check-readmes.js',
+  'docs/media/demo-selection.gif',
   ...readmeLocales.map((locale) => `docs/readme/README.${locale}.md`),
 ];
 // Audit before copying, not after a private file could enter a release.
@@ -50,4 +51,4 @@ const args = process.platform === 'darwin' ? ['--norsrc', '--noextattr', '-c', '
 const result = spawnSync(tool, args, { cwd: release, stdio: 'inherit' });
 if (result.error) throw result.error;
 if (result.status !== 0) throw new Error('原始碼封裝失敗。');
-console.log(`已封裝 ${files.length} 個檔案：${archive}\n未包含 .env、偏好設定、App、node_modules、示範影片素材或原始擷取畫面。`);
+console.log(`已封裝 ${files.length} 個檔案：${archive}\n包含使用合成內容重製的示範 GIF；未包含 .env、偏好設定、App、node_modules 或原始錄影／擷取畫面。`);
