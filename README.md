@@ -14,9 +14,9 @@ PromptFinch edits instructions; it does not carry out the task described in them
 
 ## Demo
 
-![PromptFinch selection workflow with synthetic sample text](docs/media/demo-selection.gif)
+![Using PromptFinch from the Codex desktop composer with synthetic sample text](docs/media/demo-selection.gif)
 
-A 15-second illustrated workflow: select text, choose conversion, review the English prompt, then copy and paste. All content is synthetic. This animation recreates the interaction; it is not a recording of a live model request.
+A 15-second recreation of the Codex desktop workflow: select a draft in the composer, right-click, choose conversion in PromptFinch's companion action menu, review the English prompt, then copy and paste it into Codex. The companion menu is provided by PromptFinch, not built into Codex. The interface and sample content are synthetic, with no personal inputs; this is not a screen recording or a live model request.
 
 ## Documentation languages
 

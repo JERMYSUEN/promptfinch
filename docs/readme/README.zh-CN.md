@@ -14,9 +14,9 @@ PromptFinch 会编辑指令，不会执行指令描述的任务。它以保留�
 
 ## 演示动图
 
-![PromptFinch 文本选择转换流程，使用合成示例文本](../media/demo-selection.gif)
+![在 Codex 桌面输入框使用 PromptFinch，使用合成示例文本](../media/demo-selection.gif)
 
-15 秒操作示意：选择文本、选择转换、查看英文 Prompt，再复制粘贴。全部内容均为合成示例；此动图重现交互效果，并非实时模型请求的录屏。
+15 秒 Codex 桌面操作示意：在输入框选中草稿、点击右键，在 PromptFinch 辅助操作菜单选择转换，查看英文 Prompt 后复制粘贴回 Codex。辅助菜单由 PromptFinch 提供，并非 Codex 内置功能。界面与示例内容均为合成，未使用个人输入；此动图并非屏幕录制或实时模型请求。
 
 ## 文档语言
 
