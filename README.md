@@ -30,7 +30,7 @@ The macOS app generates English prompt instructions. The browser defaults to Eng
 
 ## English technical reference
 
-[Quick start](#quick-start) · [Model configuration](#model-configuration) · [HTTP API](#http-api) · [macOS workflow](#macos-workflow) · [Privacy](#privacy-and-data-handling) · [Validation and limitations](#validation-and-limitations) · [Development](#development)
+[Quick start](#quick-start) · [Model configuration](#model-configuration) · [HTTP API](#http-api) · [macOS workflow](#macos-workflow) · [Terminal / CLI](#terminal-and-cli-selection) · [Privacy](#privacy-and-data-handling) · [Validation and limitations](#validation-and-limitations) · [Development](#development)
 
 ### What it does
 
@@ -166,6 +166,7 @@ The instructions are English, while the invitation requested from the downstream
 - Korean Hangul, Russian Cyrillic, RTL scripts, combining marks, joiners, emoji, and mixed text are accepted without normalization or alphabet-based filtering. The browser input uses automatic text direction. Documentation language coverage is separate from the four macOS interface languages.
 - English mode separates instruction language from the downstream answer language. The model must preserve explicit answer-language requirements, negation scope, exact literals, variables, code and URLs. A narrow backend repair restores an unambiguous quoted/code literal altered only by canonical NFC normalization. It cannot reconstruct omitted or translated literals or resolve ambiguous equivalent spellings; review important strings.
 - The [multilingual verification record](docs/multilingual-verification.md) documents transport checks and 24 synthetic live-model cases across 18 languages using `deepseek-flash`, including short, medium and long Korean/Russian cases. It also records an imprecise Japanese improvement note and untested languages and hosts. These samples do not guarantee translation quality for new inputs or other models.
+- The [paired multilingual evaluation](docs/multilingual-parity-verification.md) uses the same requirements across 29 locales (28 languages, with separate Chinese scripts), plus language-inference, mixed-language, quoted-source and conditional-scope cases. It separates automated checks from model-output review and records remaining limitations.
 
 ### HTTP API
 
@@ -210,6 +211,14 @@ npm run update:mac-backend
 
 The updater stages and validates a candidate with a mock HTTP check, closes the app normally, checks the port, switches the backend version, and restarts the app. If startup fails, it attempts rollback. It does not change the selected model configuration or terminate an unrelated port listener. Swift or native UI changes still require `build:mac` and `install:mac`.
 
+### Terminal and CLI selection
+
+For Claude Code or Codex CLI in macOS Terminal, select displayed text, right-click, and choose **Convert to English prompt** in the companion menu when the terminal exposes readable selected text. Right-clicking alone does not generate or submit anything.
+
+Recognized terminal selections use **copy-only delivery**, even when automatic paste-back is enabled elsewhere. Review the result, then paste it into the intended CLI input and submit it yourself. A terminal highlight is not an editable input range, so PromptFinch does not replace it or inject a paste into the terminal.
+
+See the [Terminal guide](docs/terminal.md) for setup, fallback steps and verification scope. The user confirmed that the companion menu and English generation worked in Apple Terminal. Separate Claude Code/Codex CLI configurations and the remaining clipboard, manual-paste and cancellation checks still need manual acceptance testing.
+
 ### Architecture
 
 ```text
@@ -246,7 +255,7 @@ This is a local personal tool without account authentication or multi-user isola
 
 ### Validation and limitations
 
-[The latest local verification](docs/reliability-verification.md), on 2026-10-09, passed JavaScript syntax checks, 55 Node tests, 190 native checks, 10 Chrome flow tests and the macOS build/signature checks. These tests use mock or controlled providers; they do not establish real-model output quality.
+[The previous reliability verification](docs/reliability-verification.md), on 2026-10-09, passed JavaScript syntax checks, 55 Node tests, 190 native checks, 10 Chrome flow tests and the macOS build/signature checks. For the Terminal change on 2026-10-11, syntax checks, 55 Node tests, 233 native checks, README/link checks and the macOS build/signature checks passed; the updated app was installed. Browser flow tests were not rerun for this native change. Automated tests use mock or controlled providers; they do not establish real-model output quality.
 
 The user previously confirmed that the companion menu appeared without automatic generation and that one explicit click produced an English result. Physical mouse and complete copy/paste-back/cancellation behavior in Codex/Claude still need verification for this build. See the [selection verification](docs/context-menu-verification.md) and [multilingual sample review](docs/multilingual-verification.md) for their separate scopes.
 

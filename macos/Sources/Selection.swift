@@ -13,6 +13,17 @@ struct SelectionCapture {
     let pid: pid_t
     let element: AXUIElement
     let range: SelectionRange?
+    let isTerminal: Bool
+
+    init(text: String, bounds: CGRect?, pid: pid_t, element: AXUIElement,
+         range: SelectionRange?, isTerminal: Bool = false) {
+        self.text = text
+        self.bounds = bounds
+        self.pid = pid
+        self.element = element
+        self.range = range
+        self.isTerminal = isTerminal
+    }
 
     // Text-only accessibility clients can still offer conversion. A missing
     // range, however, cannot establish where an automatic paste will land.
@@ -23,15 +34,43 @@ struct SelectionCapture {
             && range.location <= Int.max - range.length
     }
 
+    // A terminal's highlighted screen range does not identify an editable
+    // prompt buffer. Command-V sends data to its running program instead.
+    var canPasteBack: Bool { hasReliableRange && !isTerminal }
+
     func matchesForConversion(as current: SelectionCapture) -> Bool {
         pid == current.pid && CFEqual(element, current.element)
             && text.utf16.elementsEqual(current.text.utf16) && range == current.range
+            && isTerminal == current.isTerminal
     }
 
     // Refuse paste-back when the field, text or exact UTF-16 range changed.
     // nil == nil is adequate for conversion, but never for replacing text.
     func stillTargetsSameSelection(as current: SelectionCapture) -> Bool {
-        hasReliableRange && current.hasReliableRange && matchesForConversion(as: current)
+        canPasteBack && current.canPasteBack && matchesForConversion(as: current)
+    }
+}
+
+// Only explicit terminal metadata is used. An IDE bundle or a field whose
+// contents mention a terminal must not change ordinary editor paste behavior.
+enum TerminalSelectionPolicy {
+    static func isTerminal(bundleID: String?, role: String?, identifier: String? = nil,
+                           description: String? = nil, title: String? = nil) -> Bool {
+        guard let role, ["AXTextArea", "AXTextField", "AXTextView", "AXStaticText"].contains(role) else { return false }
+        if role != "AXTextField", ["com.apple.Terminal", "com.googlecode.iterm2"].contains(bundleID ?? "") { return true }
+        if identifier == "xterm-helper-textarea" { return true }
+        return [description, title].compactMap { $0 }.contains(where: isTerminalLabel)
+    }
+
+    private static func isTerminalLabel(_ label: String) -> Bool {
+        // xterm uses a terminal-input label; VS Code overrides it with a
+        // numbered terminal label followed by optional accessibility help.
+        // These exact labels cover the app's supported languages plus zh-CN.
+        let firstLine = label.components(separatedBy: .newlines).first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if ["Terminal input", "終端機輸入", "终端输入", "ターミナル入力", "터미널 입력"].contains(firstLine) { return true }
+        return firstLine.range(of: "^(?:Terminal|終端機?|终端|ターミナル|터미널) [0-9]+(?:$|[,，、])",
+                               options: .regularExpression) != nil
     }
 }
 
@@ -95,6 +134,15 @@ enum TextSelection {
         }
         let role = read(kAXRoleAttribute as String, from: element).value as? String
         return role == (kAXStaticTextRole as String)
+    }
+
+    static func isTerminalTarget(_ element: AXUIElement, pid: pid_t) -> Bool {
+        TerminalSelectionPolicy.isTerminal(
+            bundleID: NSRunningApplication(processIdentifier: pid)?.bundleIdentifier,
+            role: read(kAXRoleAttribute as String, from: element).value as? String,
+            identifier: read("AXIdentifier", from: element).value as? String,
+            description: read(kAXDescriptionAttribute as String, from: element).value as? String,
+            title: read(kAXTitleAttribute as String, from: element).value as? String)
     }
 
     static func readCapture() throws -> SelectionCapture {
@@ -314,7 +362,7 @@ enum TextSelection {
     private static func makeCapture(_ text: String, element: AXUIElement, pid: pid_t,
                                     range: SelectionRange?) -> SelectionCapture {
         SelectionCapture(text: text, bounds: selectionBounds(of: element, range: range), pid: pid,
-                         element: element, range: range)
+                         element: element, range: range, isTerminal: isTerminalTarget(element, pid: pid))
     }
 
     private static func read(_ name: String, from element: AXUIElement) -> AXAttribute {

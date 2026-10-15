@@ -18,12 +18,15 @@ const files = [
   'server.js', 'lib/optimizer.js', 'public/index.html', 'public/app.js', 'public/style.css', 'public/favicon.svg',
   'playwright.config.js', 'tests/server.test.js', 'tests/backend-release.test.js', 'tests/multilingual.test.js', 'tests/ui/workspace.spec.js',
   'tests/fixtures/multilingual-inputs.json', 'tests/fixtures/multilingual-ko-ru.json',
+  'tests/fixtures/multilingual-parity.json', 'tests/fixtures/multilingual-language-edges.json', 'tests/multilingual-runner.test.js',
   'scripts/build-macos.js', 'scripts/setup-signing-macos.js', 'scripts/verify-signing-macos.js', 'scripts/install-macos.js', 'scripts/app-lifecycle.js', 'scripts/terminate-macos-app.swift', 'scripts/update-macos-backend.js', 'scripts/backend-release.js', 'scripts/test-macos.js', 'scripts/package-source.js', 'scripts/verify-multilingual.js',
   'macos/Info.plist', 'macos/Icon.swift', 'macos/Sources/Localization.swift', 'macos/Sources/Core.swift', 'macos/Sources/Backend.swift',
   'macos/Sources/Selection.swift', 'macos/Sources/Watcher.swift', 'macos/Sources/App.swift', 'macos/Tests/CoreTests.swift', 'macos/Tests/WorkspaceTests.swift', 'macos/Tests/ServiceSmoke.swift',
   'docs/design.md', 'docs/macos.md', 'docs/reliability-verification.md', 'docs/multilingual-verification.md', 'docs/multilingual-live-results.json', 'docs/context-menu-verification.md', 'docs/branding.md', '.github/workflows/check.yml',
   'docs/assets/logo.svg', 'scripts/check-readmes.js',
   'docs/media/demo-selection.gif',
+  'docs/terminal.md',
+  'docs/multilingual-parity-verification.md', 'docs/multilingual-parity-results.json',
   ...readmeLocales.map((locale) => `docs/readme/README.${locale}.md`),
 ];
 // Audit before copying, not after a private file could enter a release.

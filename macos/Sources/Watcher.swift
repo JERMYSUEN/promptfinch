@@ -81,6 +81,8 @@ final class SelectionWatcher {
     private let actionMenu = SelectionActionMenu()
     private let frontmostPID: () -> pid_t?
     private let captureForAction: (pid_t, CGPoint, UInt64, String) -> SelectionCapture?
+    private let captureOutcome: (pid_t?, CGPoint, UInt64, String) -> TextSelection.CaptureOutcome
+    private let dismissContextMenu: (pid_t) -> Void
     private let now: () -> Date
     private let presentPanel: (NSPanel) -> Void
     private var barSessionID: UUID?
@@ -104,6 +106,7 @@ final class SelectionWatcher {
     private var pendingRightEventSequence: UInt64?
     private var pendingRightFrontPID: pid_t?
     private var pendingRightAwaitedInspectSequence: UInt64?
+    private var pendingRightRequiresTerminalRefresh = false
     private var pendingRightFinishWorkItem: DispatchWorkItem?
     private var nextEventSequence: UInt64 = 0
 
@@ -112,6 +115,8 @@ final class SelectionWatcher {
     init(floatingBar: FloatingBarPanel? = nil,
          frontmostPID: @escaping () -> pid_t? = { NSWorkspace.shared.frontmostApplication?.processIdentifier },
          captureForAction: ((pid_t, CGPoint, UInt64, String) -> SelectionCapture?)? = nil,
+         captureOutcome: ((pid_t?, CGPoint, UInt64, String) -> TextSelection.CaptureOutcome)? = nil,
+         dismissContextMenu: ((pid_t) -> Void)? = nil,
          now: @escaping () -> Date = Date.init,
          presentPanel: ((NSPanel) -> Void)? = nil) {
         self.panel = floatingBar ?? FloatingBarPanel()
@@ -119,6 +124,10 @@ final class SelectionWatcher {
         self.captureForAction = captureForAction ?? {
             TextSelection.capture(expectedPID: $0, eventSequence: $2, phase: $3, hitTestPoint: $1)
         }
+        self.captureOutcome = captureOutcome ?? {
+            TextSelection.captureOutcome(expectedPID: $0, eventSequence: $2, phase: $3, hitTestPoint: $1)
+        }
+        self.dismissContextMenu = dismissContextMenu ?? { PasteBack.dismissContextMenu(processID: $0) }
         self.now = now
         self.presentPanel = presentPanel ?? { $0.orderFrontRegardless() }
     }
@@ -240,6 +249,7 @@ final class SelectionWatcher {
                 if actionMenu.isVisible && actionMenu.frame.contains(appKitLocation) { break }
                 hideActionMenu(reason: "outside-click")
             }
+            clearPendingRightClick()
             guard frontPID != ProcessInfo.processInfo.processIdentifier,
                   !(panel.isVisible && panel.frame.contains(appKitLocation)) else { break }
             let sequence = makeEventSequence()
@@ -255,7 +265,7 @@ final class SelectionWatcher {
         case .rightMouseUp where Self.rightTrigger:
             let sequence = makeEventSequence()
             DebugLog.write("event seq=\(sequence) kind=right-up gesture=\(pendingRightEventSequence.map(String.init) ?? "nil") frontPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier.description ?? "nil")")
-            finishRightClick(location: location, eventSequence: sequence)
+            scheduleRightClickFinish(location: location, eventSequence: sequence)
         case .rightMouseUp:
             DebugLog.write("event seq=\(makeEventSequence()) kind=right-up right-trigger=off")
             clearPendingRightClick()
@@ -397,8 +407,7 @@ final class SelectionWatcher {
         }
         pendingRightAwaitedInspectSequence = awaitingSequence
 
-        let outcome = TextSelection.captureOutcome(expectedPID: frontPID, eventSequence: eventSequence,
-                                                   phase: "right-down", hitTestPoint: location)
+        let outcome = captureOutcome(frontPID, location, eventSequence, "right-down")
         switch outcome {
         case let .selected(fresh) where fresh.pid == frontPID
                 && fresh.pid != ProcessInfo.processInfo.processIdentifier
@@ -421,9 +430,9 @@ final class SelectionWatcher {
             if awaitingSequence != nil {
                 DebugLog.write("right seq=\(eventSequence) selection=waiting-for-current-inspect inspectSeq=\(awaitingSequence!) frontPID=\(frontPID.map(String.init) ?? "nil")")
             } else {
-                pendingRightClickAllowed = false
                 pendingRightAwaitedInspectSequence = nil
-                DebugLog.write("right seq=\(eventSequence) ignored=explicitly-empty-selection frontPID=\(frontPID.map(String.init) ?? "nil")")
+                pendingRightRequiresTerminalRefresh = true
+                DebugLog.write("right seq=\(eventSequence) selection=waiting-for-fresh-terminal-inspect frontPID=\(frontPID.map(String.init) ?? "nil")")
             }
         case .unavailable:
             if awaitingSequence != nil {
@@ -441,15 +450,63 @@ final class SelectionWatcher {
                 pendingRightAwaitedInspectSequence = nil
                 DebugLog.write("right seq=\(eventSequence) selection=recent-cache capturePID=\(recentCapture.pid) sourceSeq=\(recentCaptureSequence.map(String.init) ?? "-") selectedUTF16=\(recentCapture.text.utf16.count)")
             } else {
-                pendingRightClickAllowed = false
                 pendingRightAwaitedInspectSequence = nil
-                DebugLog.write("right seq=\(eventSequence) ignored=no-readable-selection frontPID=\(frontPID.map(String.init) ?? "nil")")
+                pendingRightRequiresTerminalRefresh = true
+                DebugLog.write("right seq=\(eventSequence) selection=waiting-for-fresh-terminal-inspect frontPID=\(frontPID.map(String.init) ?? "nil")")
             }
         case .selected:
             pendingRightClickAllowed = false
             pendingRightAwaitedInspectSequence = nil
             DebugLog.write("right seq=\(eventSequence) ignored=selection-from-other-process frontPID=\(frontPID.map(String.init) ?? "nil")")
         }
+    }
+
+    // xterm prepares its selected helper textarea while opening the host menu,
+    // after our listen-only mouse-down event. Inspect once after mouse-up. An
+    // initially empty/unavailable source can be recovered only as a fresh,
+    // positively identified terminal selection, never from the old cache.
+    private func scheduleRightClickFinish(location: CGPoint, eventSequence: UInt64) {
+        guard pendingRightClickAllowed, let gestureSequence = pendingRightEventSequence else {
+            clearPendingRightClick(); return
+        }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.pendingRightEventSequence == gestureSequence,
+                  self.pendingRightClickAllowed else { return }
+            guard self.frontmostPID() == self.pendingRightFrontPID else {
+                self.clearPendingRightClick(); return
+            }
+            self.pendingRightFinishWorkItem = nil
+            let outcome = self.captureOutcome(self.pendingRightFrontPID, location, gestureSequence, "right-up-fresh")
+            switch outcome {
+            case let .selected(fresh):
+                let previous = self.pendingRightCapture
+                if fresh.pid == self.pendingRightFrontPID,
+                   fresh.pid != ProcessInfo.processInfo.processIdentifier,
+                   !fresh.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                   (!self.pendingRightRequiresTerminalRefresh || fresh.isTerminal),
+                   previous.map({ $0.matchesForConversion(as: fresh) }) ?? true {
+                    self.pendingRightCapture = fresh
+                    self.pendingRightRequiresTerminalRefresh = false
+                } else {
+                    self.pendingRightCapture = nil
+                }
+            case .explicitlyEmpty:
+                self.invalidateRecentCandidate(for: self.pendingRightFrontPID,
+                                               reason: "right-up-empty-selection", inspectSequence: gestureSequence)
+                self.pendingRightCapture = nil
+                self.pendingRightAwaitedInspectSequence = nil
+            case .accessibilityActivated, .accessibilityActivationPending:
+                self.clearPendingRightClick(); return
+            case .unavailable:
+                // A host menu may own focus; the original offered capture is
+                // still re-read and exactly verified after an explicit choice.
+                break
+            }
+            self.finishRightClick(location: location, eventSequence: eventSequence)
+        }
+        pendingRightFinishWorkItem?.cancel()
+        pendingRightFinishWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
 
     private func finishRightClick(location: CGPoint, eventSequence: UInt64, allowDelayedRetry: Bool = true) {
@@ -462,7 +519,7 @@ final class SelectionWatcher {
             clearPendingRightClick()
             return
         }
-        let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        let frontPID = frontmostPID()
         guard frontPID == pendingRightFrontPID,
               let capture = pendingRightCapture,
               capture.pid == frontPID,
@@ -508,7 +565,7 @@ final class SelectionWatcher {
             self.menuHideWorkItem?.cancel()
             self.menuHideWorkItem = nil
             // Dismiss the host menu only after an explicit conversion choice.
-            PasteBack.dismissContextMenu(processID: capture.pid)
+            self.dismissContextMenu(capture.pid)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
                 guard let self, self.menuSessionID == session else { return }
                 let current = self.captureForAction(capture.pid, mouse, eventSequence, "right-menu-confirm")
@@ -528,7 +585,7 @@ final class SelectionWatcher {
             }
         }, onCancel: { [weak self] in self?.hideActionMenu(reason: "cancel-chosen") })
         actionMenu.placeAbove(pointer: TextSelection.appKitPoint(fromQuartz: mouse))
-        actionMenu.orderFrontRegardless()
+        presentPanel(actionMenu)
         DebugLog.write("right-menu seq=\(eventSequence) offered capturePID=\(capture.pid) generation=not-started")
         let item = DispatchWorkItem { [weak self] in
             guard let self, self.menuSessionID == session else { return }
@@ -647,7 +704,23 @@ final class SelectionWatcher {
         pendingRightEventSequence = nil
         pendingRightFrontPID = nil
         pendingRightAwaitedInspectSequence = nil
+        pendingRightRequiresTerminalRefresh = false
     }
+
+    #if PROMPTFINCH_TESTS
+    func rightClickForTesting(location: CGPoint = .zero, sequence: UInt64 = 1) {
+        beginRightClick(location: location, eventSequence: sequence, frontPID: frontmostPID())
+        scheduleRightClickFinish(location: location, eventSequence: sequence + 1)
+    }
+
+    var hasRightClickMenuForTesting: Bool { menuSessionID != nil }
+
+    func leftMouseDownForTesting() { process(type: .leftMouseDown, location: .zero) }
+
+    func chooseRightClickForTesting() {
+        actionMenu.contentView?.subviews.compactMap { $0 as? NSButton }.first?.performClick(nil)
+    }
+    #endif
 }
 
 @MainActor
@@ -1245,9 +1318,10 @@ final class PasteBackCoordinator {
 
     func paste(_ text: String, expectedTarget: SelectionCapture?,
                onRestore: ((ClipboardRestoreOutcome) -> Void)? = nil) -> PasteBackOutcome {
-        guard authorized(), let expectedTarget, expectedTarget.hasReliableRange,
+        guard authorized(), let expectedTarget, expectedTarget.canPasteBack,
               frontmostPID() == expectedTarget.pid,
               let current = capture(expectedTarget.pid),
+              current.canPasteBack,
               expectedTarget.stillTargetsSameSelection(as: current),
               !isKnownReadOnly(current.element),
               frontmostPID() == expectedTarget.pid else { return .notAttempted }

@@ -150,6 +150,39 @@ struct CoreTests {
         let emojiCapture = SelectionCapture(text: "😀", bounds: nil, pid: 77, element: appElement,
                                             range: SelectionRange(location: 10, length: 2))
         check(emojiCapture.hasReliableRange, "paste validation uses UTF-16 rather than character count")
+        let terminalCapture = SelectionCapture(text: firstCapture.text, bounds: nil, pid: 77,
+                                               element: appElement, range: range, isTerminal: true)
+        check(terminalCapture.hasReliableRange && !terminalCapture.canPasteBack,
+              "a terminal screen range never authorizes paste to the running program")
+        check(terminalCapture.matchesForConversion(as: terminalCapture)
+              && !terminalCapture.stillTargetsSameSelection(as: terminalCapture),
+              "unchanged terminal selection allows conversion but not replacement")
+        check(!firstCapture.matchesForConversion(as: terminalCapture),
+              "changing editor classification to terminal invalidates the offered source")
+        check(TerminalSelectionPolicy.isTerminal(bundleID: "com.apple.Terminal", role: "AXTextArea"),
+              "built-in Terminal screen is recognized without a localized name")
+        check(TerminalSelectionPolicy.isTerminal(bundleID: "com.googlecode.iterm2", role: "AXTextArea"),
+              "iTerm screen is recognized independently of the running CLI")
+        check(!TerminalSelectionPolicy.isTerminal(bundleID: "com.apple.Terminal", role: "AXTextField", title: "Search"),
+              "native terminal search and preference fields remain ordinary text fields")
+        check(!TerminalSelectionPolicy.isTerminal(bundleID: "com.microsoft.VSCode", role: "AXTextArea", title: "Editor"),
+              "an IDE bundle does not disable normal editor replacement")
+        check(!TerminalSelectionPolicy.isTerminal(bundleID: nil, role: "AXTextArea", description: "Explain Terminal input"),
+              "terminal words in an ordinary label are not enough to classify a source")
+        check(!TerminalSelectionPolicy.isTerminal(bundleID: nil, role: "AXButton", description: "Terminal input"),
+              "terminal labels on nontext controls do not classify a source")
+        check(TerminalSelectionPolicy.isTerminal(bundleID: nil, role: "AXTextArea", identifier: "xterm-helper-textarea"),
+              "an explicit xterm helper identifier marks stdin rather than a prompt editor")
+        for label in ["Terminal input", "終端機輸入", "终端输入", "ターミナル入力", "터미널 입력",
+                      "Terminal 1, zsh\nUse accessibility help", "終端 2", "終端機 3，Claude Code",
+                      "终端 4，zsh", "ターミナル 5、zsh", "터미널 6, zsh"] {
+            check(TerminalSelectionPolicy.isTerminal(bundleID: "com.microsoft.VSCode", role: "AXTextArea", description: label),
+                  "source-specific xterm/VS Code terminal labels are recognized across supported locales")
+        }
+        for label in ["Terminal", "Terminal settings", "Terminal 2 notes", "Open Terminal 1", "終端機的說明"] {
+            check(!TerminalSelectionPolicy.isTerminal(bundleID: "com.microsoft.VSCode", role: "AXTextArea", description: label),
+                  "ordinary IDE fields are not inferred from generic terminal wording")
+        }
 
         check(SelectionMenuPolicy.canConvert(sourceMatches: true, sourcePID: 77, frontPID: 77,
                                               enabled: true, busy: false, age: 1),
@@ -314,6 +347,7 @@ struct CoreTests {
         check(clipboardBehavior[1], "empty clipboard is restored after paste")
         check(clipboardBehavior[2], "consecutive pastes restore the original clipboard")
         for (value, message) in await testPasteBackFlow() { check(value, message) }
+        for (value, message) in await testTerminalRightClickFlow() { check(value, message) }
         await checkWorkspacePasteFeedback(check: { value, message in check(value, message) })
         print("Swift 核心、本機 API、選取目標與剪貼簿競態：\(checks) 項檢查通過。")
     }
@@ -458,6 +492,119 @@ private func testClipboardRestoreBehavior() async -> [Bool] {
 }
 
 @MainActor
+private func testTerminalRightClickFlow() async -> [(Bool, String)] {
+    let originalDomain = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+    var domain = originalDomain
+    domain[SelectionWatcher.rightKey] = true
+    UserDefaults.standard.setVolatileDomain(domain, forName: UserDefaults.argumentDomain)
+    defer { UserDefaults.standard.setVolatileDomain(originalDomain, forName: UserDefaults.argumentDomain) }
+
+    let element = AXUIElementCreateApplication(getpid())
+    let terminal = SelectionCapture(text: "選取的測試需求", bounds: nil, pid: 77, element: element,
+                                    range: SelectionRange(location: 10, length: 7), isTerminal: true)
+    var results: [(Bool, String)] = []
+    var foreground: pid_t? = 77
+    var initial: TextSelection.CaptureOutcome = .explicitlyEmpty
+    var fresh: TextSelection.CaptureOutcome = .selected(terminal)
+    var confirmed: SelectionCapture? = terminal
+    var conversions = 0
+    var dismissals = 0
+    var phases: [String] = []
+    let watcher = SelectionWatcher(frontmostPID: { foreground }, captureForAction: { _, _, _, _ in confirmed },
+                                   captureOutcome: { _, _, _, phase in
+                                       phases.append(phase)
+                                       return phase == "right-down" ? initial : fresh
+                                   }, dismissContextMenu: { _ in dismissals += 1 },
+                                   presentPanel: { _ in })
+    watcher.onSelection = { _, _, _ in conversions += 1 }
+    defer { watcher.invalidatePendingActions() }
+    func settle() async { try? await Task.sleep(nanoseconds: 180_000_000) }
+    func reset() {
+        watcher.invalidatePendingActions()
+        foreground = 77
+        initial = .explicitlyEmpty
+        fresh = .selected(terminal)
+        confirmed = terminal
+        phases = []
+        conversions = 0
+        dismissals = 0
+    }
+
+    watcher.rightClickForTesting()
+    await settle()
+    results.append((watcher.hasRightClickMenuForTesting && phases == ["right-down", "right-up-fresh"]
+                    && conversions == 0 && dismissals == 0,
+                    "fresh terminal selection prepared by the host right-click offers a menu without generating or sending keys"))
+    watcher.chooseRightClickForTesting()
+    await settle()
+    results.append((conversions == 1 && dismissals == 1 && !watcher.hasRightClickMenuForTesting,
+                    "terminal conversion requires one explicit menu choice and unchanged source confirmation"))
+
+    reset()
+    fresh = .explicitlyEmpty
+    watcher.rightClickForTesting()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting && conversions == 0,
+                    "cleared terminal selection staying empty offers no stale action"))
+    reset()
+    fresh = .unavailable
+    watcher.rightClickForTesting()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting && conversions == 0,
+                    "an initially unavailable terminal never recovers text from the clipboard or old cache"))
+    reset()
+    fresh = .selected(SelectionCapture(text: terminal.text, bounds: nil, pid: 77, element: element,
+                                       range: terminal.range))
+    watcher.rightClickForTesting()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting,
+                    "initially empty ordinary editor cannot be recovered by the terminal-specific retry"))
+    reset()
+    initial = .selected(terminal)
+    fresh = .selected(SelectionCapture(text: "另一個需求", bounds: nil, pid: 77, element: element,
+                                       range: terminal.range, isTerminal: true))
+    watcher.rightClickForTesting()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting,
+                    "text changed between terminal mouse-down and fresh inspection discards the offered action"))
+    reset()
+    fresh = .selected(SelectionCapture(text: terminal.text, bounds: nil, pid: 78, element: element,
+                                       range: terminal.range, isTerminal: true))
+    watcher.rightClickForTesting()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting,
+                    "fresh terminal capture from another process is rejected"))
+    reset()
+    watcher.rightClickForTesting()
+    foreground = 78
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting && phases == ["right-down"],
+                    "switching foreground before delayed terminal inspection prevents a source read"))
+    reset()
+    watcher.rightClickForTesting()
+    watcher.keyboardInputReceived()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting && phases == ["right-down"],
+                    "typing while awaiting terminal capture cancels the gesture"))
+    reset()
+    watcher.rightClickForTesting()
+    watcher.leftMouseDownForTesting()
+    await settle()
+    results.append((!watcher.hasRightClickMenuForTesting && phases == ["right-down"],
+                    "a new mouse gesture cancels the deferred terminal right-click read"))
+    reset()
+    watcher.rightClickForTesting()
+    await settle()
+    confirmed = SelectionCapture(text: terminal.text, bounds: nil, pid: 77, element: element,
+                                  range: SelectionRange(location: 20, length: 7), isTerminal: true)
+    watcher.chooseRightClickForTesting()
+    await settle()
+    results.append((conversions == 0 && !watcher.hasRightClickMenuForTesting,
+                    "moving the terminal selection after offering its menu prevents sending it to the model"))
+    return results
+}
+
+@MainActor
 private func testPasteBackFlow() async -> [(Bool, String)] {
     let board = NSPasteboard(name: NSPasteboard.Name("org.promptfinch.paste-flow.\(UUID().uuidString)"))
     defer { board.clearContents(); board.releaseGlobally() }
@@ -493,6 +640,18 @@ private func testPasteBackFlow() async -> [(Bool, String)] {
     results.append((request() == .notAttempted && inspections == 0 && sent == 0,
                     "changed foreground app rejects paste before accessing source"))
     foreground = 77
+    let terminal = SelectionCapture(text: source.text, bounds: nil, pid: 77, element: element,
+                                    range: source.range, isTerminal: true)
+    let countBeforeTerminalPaste = board.changeCount
+    let inspectionsBeforeTerminalPaste = inspections
+    current = terminal
+    results.append((request(terminal) == .notAttempted && sent == 0
+                    && inspections == inspectionsBeforeTerminalPaste
+                    && board.changeCount == countBeforeTerminalPaste,
+                    "terminal targets reject even reliable ranges before source inspection, clipboard preparation or keys"))
+    results.append((request(source) == .notAttempted && sent == 0
+                    && board.changeCount == countBeforeTerminalPaste,
+                    "a formerly editable target recaptured as terminal cannot send paste data"))
     let textOnly = SelectionCapture(text: source.text, bounds: nil, pid: 77, element: element, range: nil)
     current = textOnly
     results.append((request(textOnly) == .notAttempted && sent == 0 && board.string(forType: .string) == "original",

@@ -31,6 +31,7 @@ enum L10n {
         case pasteRequestedNewCopy
         case pasteRequestedRestoreFailed
         case unsafeTargetCopied
+        case terminalCopied
         case pastePermissionCopied
         case clipboardUnavailable
         case providerInvalid
@@ -94,6 +95,7 @@ enum L10n {
         case explicitActionHelp
         case autoPaste
         case selectionHelp
+        case terminalHelp
         case runtime
         case chooseNode
         case localPrivacy
@@ -198,6 +200,7 @@ enum L10n {
         .pasteRequestedNewCopy: ["已送出貼上操作，並保留你較新的剪貼簿內容。請確認來源文字。", "Paste requested. Your newer clipboard content was kept. Check the source text.", "貼り付け操作を送信しました。新しくコピーした内容は保持しています。元のテキストを確認してください。", "붙여넣기를 요청했습니다. 새로 복사한 클립보드 내용은 유지했습니다. 원래 텍스트를 확인하세요."],
         .pasteRequestedRestoreFailed: ["已送出貼上操作，但剪貼簿還原失敗。請確認來源文字與剪貼簿。", "Paste requested, but clipboard restoration failed. Check the source text and clipboard.", "貼り付け操作を送信しましたが、クリップボードの復元に失敗しました。元のテキストとクリップボードを確認してください。", "붙여넣기를 요청했지만 클립보드 복원에 실패했습니다. 원래 텍스트와 클립보드를 확인하세요."],
         .unsafeTargetCopied: ["無法安全確認貼回位置，已複製 Prompt，請手動 ⌘V。", "Cannot safely verify the paste target. The prompt was copied; paste manually with ⌘V.", "貼り付け先を安全に確認できません。プロンプトをコピーしました。⌘V で手動貼り付けしてください。", "붙여넣을 위치를 안전하게 확인할 수 없습니다. 프롬프트를 복사했으니 ⌘V로 직접 붙여넣으세요."],
+        .terminalCopied: ["英文 Prompt 已複製；終端選取不直接貼回。請貼入 CLI 輸入區後自行送出。", "Prompt copied. Terminal selections are not replaced. Paste into the CLI input, then submit when ready.", "プロンプトをコピーしました。ターミナルの選択範囲は置換しません。CLI の入力欄へ貼り付け、確認後に送信してください。", "프롬프트를 복사했습니다. 터미널 선택 영역은 바꾸지 않습니다. CLI 입력란에 붙여넣고 확인한 뒤 전송하세요."],
         .pastePermissionCopied: ["缺少輔助使用權限，已複製 Prompt，請手動 ⌘V。", "Accessibility permission is missing. The prompt was copied; paste manually with ⌘V.", "アクセシビリティ権限がありません。プロンプトをコピーしました。⌘V で手動貼り付けしてください。", "손쉬운 사용 권한이 없습니다. 프롬프트를 복사했으니 ⌘V로 직접 붙여넣으세요."],
         .clipboardUnavailable: ["無法安全準備剪貼簿，已停止貼回。請檢查剪貼簿，並自行複製結果。", "Cannot safely prepare the clipboard. Paste-back stopped. Check the clipboard and copy the result manually.", "クリップボードを安全に準備できないため、貼り付けを停止しました。クリップボードを確認し、結果を手動でコピーしてください。", "클립보드를 안전하게 준비할 수 없어 붙여넣기를 중단했습니다. 클립보드를 확인하고 결과를 직접 복사하세요."],
         .providerInvalid: ["模型回傳的內容不完整或格式不符；沒有使用部分結果。請重新優化。", "The model returned incomplete or invalid content; no partial result was used. Try refining again.", "モデルの応答が不完全または形式不正です。部分的な結果は使いませんでした。再度改善を実行してください。", "모델 응답이 불완전하거나 형식이 올바르지 않습니다. 부분 결과는 사용하지 않았습니다. 다시 최적화하세요."],
@@ -255,12 +258,13 @@ enum L10n {
         .permissionHelp: ["%@ 右鍵「服務」不需要這項權限。少數軟體不提供選取文字，可改用剪貼簿。", "%@ The Services menu does not need this permission. If an app cannot expose selected text, use the clipboard.", "%@ 「サービス」メニューにはこの権限は不要です。選択テキストを取得できない App ではクリップボードを使ってください。", "%@ 서비스 메뉴에는 이 권한이 필요하지 않습니다. 앱에서 선택한 텍스트를 읽을 수 없다면 클립보드를 사용하세요."],
         .openAccessibility: ["開啟輔助使用設定", "Open Accessibility settings", "アクセシビリティ設定を開く", "손쉬운 사용 설정 열기"],
         .recheckPermission: ["重新檢查權限", "Check permission again", "権限を再確認", "권한 다시 확인"],
-        .selectionHeading: ["一鍵轉換（IDE 輸入框適用）", "One-click conversion (for IDE inputs)", "ワンクリック変換（IDE 入力欄対応）", "원클릭 변환(IDE 입력란 지원)"],
+        .selectionHeading: ["選取文字轉換", "Selected-text conversion", "選択テキストの変換", "선택한 텍스트 변환"],
         .showFloatingButton: ["選取文字後顯示浮動按鈕", "Show a floating button after selecting text", "テキスト選択後にフローティングボタンを表示", "텍스트 선택 후 플로팅 버튼 표시"],
         .showRightClickMenu: ["選取文字後按右鍵顯示操作選單", "Show an action menu when right-clicking selected text", "選択テキストの右クリック時に操作メニューを表示", "선택한 텍스트를 우클릭하면 작업 메뉴 표시"],
         .explicitActionHelp: ["只有點選「轉為英文 Prompt」才會生成；原軟體的右鍵選單仍保留。", "Generation starts only when you choose “Convert to English prompt”. The app's original context menu stays available.", "「英語のプロンプトに変換」を選んだときだけ生成します。元の App の右クリックメニューも使えます。", "“영어 프롬프트로 변환”을 선택해야 생성됩니다. 원래 앱의 우클릭 메뉴도 사용할 수 있습니다."],
-        .autoPaste: ["生成後自動貼回選取位置", "Automatically paste back to the selection", "生成後に選択位置へ自動貼り付け", "생성 후 선택 위치에 자동 붙여넣기"],
+        .autoPaste: ["生成後自動貼回可編輯的選取文字", "Automatically replace editable selections after generation", "生成後に編集可能な選択範囲へ自動貼り付け", "생성 후 편집 가능한 선택 영역에 자동 붙여넣기"],
         .selectionHelp: ["選取可讀取的文字後按右鍵，再點選「轉為英文 Prompt」，才會關閉原選單並生成附近的結果浮窗，依設定貼回選取處。未選取文字時，原右鍵選單保持正常。需要輔助使用權限。", "Select readable text, right-click, then choose “Convert to English prompt”. Only then does the original menu close and a nearby result panel appear, with paste-back based on your setting. Right-clicking without a selection works normally. Accessibility permission is required.", "取得可能なテキストを選択し、右クリックして「英語のプロンプトに変換」を選びます。その後、元のメニューが閉じ、近くに結果が表示されます。設定に応じて選択位置へ貼り付けます。未選択時の右クリックは通常どおりです。アクセシビリティ権限が必要です。", "읽을 수 있는 텍스트를 선택하고 우클릭한 뒤 “영어 프롬프트로 변환”을 선택하세요. 그때 원래 메뉴가 닫히고 근처에 결과 창이 나타나며, 설정에 따라 선택 위치에 붙여넣습니다. 선택하지 않은 상태의 우클릭은 평소대로 작동합니다. 손쉬운 사용 권한이 필요합니다."],
+        .terminalHelp: ["Terminal／CLI 的反白文字用於轉換與複製，不自動貼回。請在 Claude Code 或 Codex CLI 的輸入區手動貼上，再自行送出。終端須提供可讀取的選取文字。", "Terminal/CLI selections are converted and copied, without automatic paste-back. Paste into the Claude Code or Codex CLI input yourself, then submit. The terminal must expose readable selected text.", "ターミナル／CLI の選択テキストは変換してコピーし、自動貼り付けはしません。Claude Code または Codex CLI の入力欄に手動で貼り付けて送信してください。選択テキストを取得できるターミナルが必要です。", "터미널/CLI의 선택 텍스트는 변환 후 복사하며 자동으로 붙여넣지 않습니다. Claude Code 또는 Codex CLI 입력란에 직접 붙여넣고 전송하세요. 터미널에서 선택한 텍스트를 읽을 수 있어야 합니다."],
         .runtime: ["執行環境：Node.js 22 以上", "Runtime: Node.js 22 or later", "実行環境：Node.js 22 以降", "실행 환경: Node.js 22 이상"],
         .chooseNode: ["指定 Node 執行檔…", "Choose Node executable…", "Node 実行ファイルを指定…", "Node 실행 파일 선택…"],
         .localPrivacy: ["本機服務固定使用 127.0.0.1:3210；原本網頁工作台的 3000 埠仍可獨立使用。只保存介面語言、設定檔位置、操作偏好、用途和目標模型，不保存原文、結果或剪貼簿紀錄。", "The local service uses 127.0.0.1:3210; the browser workspace can still use port 3000 independently. Only language, config paths, operation preferences, purpose and target model are saved. Input, results and clipboard history are not saved.", "ローカルサービスは 127.0.0.1:3210 を使用し、ブラウザー版はポート 3000 で別に利用できます。保存するのは表示言語、設定パス、操作設定、用途、対象モデルのみです。入力・結果・クリップボード履歴は保存しません。", "로컬 서비스는 127.0.0.1:3210을 사용하며 브라우저 작업 공간은 3000 포트에서 별도로 사용할 수 있습니다. 언어, 설정 경로, 동작 설정, 용도와 대상 모델만 저장합니다. 입력, 결과와 클립보드 기록은 저장하지 않습니다."],

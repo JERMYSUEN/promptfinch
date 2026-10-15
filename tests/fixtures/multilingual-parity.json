@@ -1,0 +1,1116 @@
+[
+  {
+    "id": "nimbus-notices-provided-en",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "en",
+    "task": "writing",
+    "prompt": "Write exactly 3 feature-update notices for Nimbus Notes in Japanese, using a friendly tone. Each notice must have a title and a body of at most 60 characters, not words; the title does not count toward the 60-character body limit. Return the notices as a JSON array with the keys \"title\" and \"body\" unchanged. Keep the product name \"Nimbus Notes\" exactly as written. Do not invent dates or prices. The only confirmed new feature is offline search; do not invent any other features. If feature information is missing, ask one essential question and stop until I answer, rather than making up features or writing the notices.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-zh-Hant",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "zh-Hant",
+    "task": "writing",
+    "prompt": "請用日文為 Nimbus Notes 寫恰好 3 則功能更新通知，語氣友善。每則包含標題與正文，正文最多 60 個字元（不是 60 個詞），標題不計入這 60 個字元。以 JSON 陣列輸出，鍵名 \"title\"、\"body\" 逐字保留，不要翻譯；產品名 \"Nimbus Notes\" 也須原樣保留。不得編造日期或價格。目前唯一已確認的新功能是新增離線搜尋，不要虛構其他功能。如果缺少產品功能資訊，先問我一個關鍵問題並暫停，等我回答後再繼續，不可自行編造功能或直接寫出通知。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-zh-Hans",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "zh-Hans",
+    "task": "writing",
+    "prompt": "请用日语为 Nimbus Notes 写恰好 3 则功能更新通知，语气友善。每则包含标题与正文，正文最多 60 个字符（不是 60 个词），标题不计入这 60 个字符。以 JSON 数组输出，键名 \"title\"、\"body\" 逐字保留，不要翻译；产品名 \"Nimbus Notes\" 也须原样保留。不得编造日期或价格。目前唯一已确认的新功能是新增离线搜索，不要虚构其他功能。如果缺少产品功能信息，先问我一个关键问题并暂停，等我回答后再继续，不可自行编造功能或直接写出通知。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-ja",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "ja",
+    "task": "writing",
+    "prompt": "Nimbus Notes の機能更新のお知らせを、親しみやすい口調の日本語でちょうど 3 件書いてください。各お知らせにタイトルと本文を付け、本文は 60 文字以内（60 単語ではありません）にしてください。タイトルは本文の 60 文字に数えません。JSON 配列で出力し、キー \"title\" と \"body\" は翻訳せず、そのまま使ってください。製品名 \"Nimbus Notes\" もそのまま保持してください。日付や価格を捏造しないでください。確認済みの新機能はオフライン検索の追加だけです。他の機能を作り上げないでください。機能情報が不足している場合は、重要な質問を 1 つして、私が回答するまで作業を止めてください。機能を推測したり、先にお知らせを書いたりしないでください。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-ko",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "ko",
+    "task": "writing",
+    "prompt": "Nimbus Notes의 기능 업데이트 공지를 친근한 말투의 일본어로 정확히 3개 작성해 주세요. 각 공지에는 제목과 본문이 있어야 하며, 본문은 60자 이내로 해 주세요. 60단어가 아니라 60자이고, 제목은 본문의 글자 수에 포함하지 않습니다. JSON 배열로 출력하고, 키 \"title\"과 \"body\"는 번역하지 말고 그대로 사용해 주세요. 제품명 \"Nimbus Notes\"도 정확히 유지해 주세요. 날짜나 가격을 지어내지 마세요. 확인된 새 기능은 오프라인 검색 추가뿐이니 다른 기능을 만들어 내지 마세요. 기능 정보가 없다면 핵심 질문을 하나만 한 뒤 제 답변을 기다리며 멈춰 주세요. 기능을 추측하거나 공지를 먼저 작성하지 마세요.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-ru",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "ru",
+    "task": "writing",
+    "prompt": "Напиши ровно 3 уведомления об обновлении функций Nimbus Notes на японском языке, в дружелюбном тоне. У каждого уведомления должны быть заголовок и основной текст длиной не более 60 символов, не слов; заголовок в эти 60 символов не входит. Верни уведомления в виде JSON-массива с ключами \"title\" и \"body\", не изменяя и не переводя их. Название продукта \"Nimbus Notes\" также сохрани точно. Не выдумывай даты или цены. Единственная подтверждённая новая функция — добавленный офлайн-поиск; не придумывай других возможностей. Если информации о функциях нет, задай один ключевой вопрос и остановись до моего ответа, не выдумывая функции и не составляя уведомления заранее.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-es",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "es",
+    "task": "writing",
+    "prompt": "Escribe exactamente 3 avisos sobre la actualización de funciones de Nimbus Notes en japonés, con un tono amable. Cada aviso debe tener un título y un cuerpo de como máximo 60 caracteres, no palabras; el título no cuenta para ese límite. Devuelve los avisos en un arreglo JSON con las claves \"title\" y \"body\" sin modificarlas ni traducirlas. Conserva exactamente el nombre \"Nimbus Notes\". No inventes fechas ni precios. La única función nueva confirmada es la búsqueda sin conexión; no inventes otras funciones. Si falta información sobre las funciones, hazme una sola pregunta clave y detente hasta que responda, sin inventar funciones ni redactar los avisos de antemano.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-fr",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "fr",
+    "task": "writing",
+    "prompt": "Rédige exactement 3 annonces de mise à jour des fonctionnalités de Nimbus Notes en japonais, sur un ton amical. Chaque annonce doit comporter un titre et un corps de 60 caractères maximum, et non de 60 mots ; le titre ne compte pas dans cette limite. Présente les annonces sous forme de tableau JSON avec les clés \"title\" et \"body\" inchangées et non traduites. Conserve exactement le nom \"Nimbus Notes\". N’invente ni dates ni prix. La seule nouvelle fonctionnalité confirmée est l’ajout de la recherche hors ligne ; n’en invente pas d’autres. Si les informations sur les fonctionnalités manquent, pose-moi une seule question essentielle et arrête-toi jusqu’à ma réponse, sans inventer de fonctionnalités ni rédiger les annonces à l’avance.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-de",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "de",
+    "task": "writing",
+    "prompt": "Schreibe genau 3 Mitteilungen zu Funktionsupdates von Nimbus Notes auf Japanisch und in freundlichem Ton. Jede Mitteilung soll einen Titel und einen Text mit höchstens 60 Zeichen haben, nicht 60 Wörtern; der Titel zählt nicht zu diesen 60 Zeichen. Gib die Mitteilungen als JSON-Array aus und behalte die Schlüssel \"title\" und \"body\" unverändert und unübersetzt bei. Bewahre auch den Produktnamen \"Nimbus Notes\" exakt. Erfinde keine Datumsangaben oder Preise. Die einzige bestätigte neue Funktion ist die hinzugefügte Offline-Suche; erfinde keine weiteren Funktionen. Falls Angaben zu den Funktionen fehlen, stelle mir eine einzige entscheidende Frage und warte auf meine Antwort. Erfinde dabei keine Funktionen und schreibe die Mitteilungen nicht vorab.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-pt",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "pt",
+    "task": "writing",
+    "prompt": "Escreva exatamente 3 avisos de atualização de funcionalidades do Nimbus Notes em japonês, com um tom amigável. Cada aviso deve ter um título e um corpo com no máximo 60 caracteres, não palavras; o título não entra nesse limite. Apresente os avisos num array JSON, mantendo as chaves \"title\" e \"body\" sem alterações nem tradução. Preserve exatamente o nome \"Nimbus Notes\". Não invente datas nem preços. A única funcionalidade nova confirmada é a pesquisa offline; não invente outras funcionalidades. Se faltarem informações sobre as funcionalidades, faça uma única pergunta essencial e pare até eu responder, sem inventar funcionalidades nem escrever os avisos antecipadamente.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-it",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "it",
+    "task": "writing",
+    "prompt": "Scrivi esattamente 3 avvisi sugli aggiornamenti delle funzionalità di Nimbus Notes in giapponese, con un tono amichevole. Ogni avviso deve avere un titolo e un corpo di al massimo 60 caratteri, non parole; il titolo non rientra in questo limite. Restituisci gli avvisi come array JSON con le chiavi \"title\" e \"body\" invariate e non tradotte. Mantieni esattamente il nome \"Nimbus Notes\". Non inventare date né prezzi. L’unica nuova funzionalità confermata è l’aggiunta della ricerca offline; non inventarne altre. Se mancano informazioni sulle funzionalità, fammi una sola domanda essenziale e fermati fino alla mia risposta, senza inventare funzionalità né scrivere in anticipo gli avvisi.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-uk",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "uk",
+    "task": "writing",
+    "prompt": "Напиши рівно 3 повідомлення про оновлення функцій Nimbus Notes японською мовою, у дружньому тоні. Кожне повідомлення має містити заголовок і основний текст не довший за 60 символів, не слів; заголовок не входить до цих 60 символів. Поверни повідомлення як JSON-масив із ключами \"title\" і \"body\", не змінюючи й не перекладаючи їх. Назву продукту \"Nimbus Notes\" також збережи точно. Не вигадуй дат або цін. Єдина підтверджена нова функція — доданий офлайн-пошук; інших функцій не вигадуй. Якщо інформації про функції немає, постав мені одне ключове запитання й зупинись до моєї відповіді, не вигадуючи функцій і не пишучи повідомлень заздалегідь.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-ar",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "ar",
+    "task": "writing",
+    "prompt": "اكتب باليابانية 3 إشعارات بالضبط عن تحديث ميزات Nimbus Notes، بنبرة ودية. يجب أن يتضمن كل إشعار عنواناً ومتناً لا يتجاوز 60 محرفاً، وليس 60 كلمة؛ ولا يُحتسب العنوان ضمن هذا الحد. أعد الإشعارات في مصفوفة JSON مع إبقاء المفتاحين \"title\" و\"body\" كما هما دون ترجمة. حافظ أيضاً على اسم المنتج \"Nimbus Notes\" حرفياً. لا تختلق تواريخ أو أسعاراً. الميزة الجديدة الوحيدة المؤكدة هي إضافة البحث دون اتصال؛ لا تختلق ميزات أخرى. إذا لم تتوفر معلومات عن الميزات، فاسألني سؤالاً أساسياً واحداً وتوقف حتى أجيب، دون اختلاق ميزات أو كتابة الإشعارات مسبقاً.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-fa",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "fa",
+    "task": "writing",
+    "prompt": "برای Nimbus Notes دقیقاً 3 اعلان دربارهٔ به‌روزرسانی قابلیت‌ها به زبان ژاپنی و با لحنی دوستانه بنویس. هر اعلان باید عنوان و متنی با حداکثر 60 نویسه، نه 60 واژه، داشته باشد؛ عنوان در این محدودیت حساب نمی‌شود. اعلان‌ها را به‌صورت آرایهٔ JSON برگردان و کلیدهای \"title\" و \"body\" را بدون تغییر یا ترجمه نگه دار. نام محصول \"Nimbus Notes\" را نیز دقیقاً حفظ کن. تاریخ یا قیمت ساختگی ننویس. تنها قابلیت جدید تأییدشده، اضافه شدن جست‌وجوی آفلاین است؛ قابلیت دیگری از خودت نساز. اگر اطلاعات قابلیت‌ها موجود نبود، فقط یک سؤال کلیدی از من بپرس و تا پاسخ من توقف کن؛ قابلیت‌ها را حدس نزن و اعلان‌ها را از قبل ننویس.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-hi",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "hi",
+    "task": "writing",
+    "prompt": "Nimbus Notes की सुविधाओं के अपडेट के बारे में जापानी में ठीक 3 सूचनाएँ लिखें। लहजा मित्रवत रखें। हर सूचना में एक शीर्षक और अधिकतम 60 अक्षरों (characters, शब्द नहीं) का मुख्य पाठ हो; शीर्षक को इन 60 अक्षरों में न गिनें। सूचनाएँ JSON सरणी में दें और \"title\" तथा \"body\" कुंजियों को बिना बदले या अनुवाद किए रखें। उत्पाद का नाम \"Nimbus Notes\" भी बिल्कुल वैसा ही रखें। तारीखें या कीमतें न गढ़ें। एकमात्र पुष्टि की गई नई सुविधा ऑफ़लाइन खोज का जुड़ना है; दूसरी सुविधाएँ न गढ़ें। यदि सुविधाओं की जानकारी न हो, तो एक महत्वपूर्ण सवाल पूछकर मेरे जवाब तक रुकें; सुविधाएँ न गढ़ें और सूचनाएँ पहले से न लिखें।",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-bn",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "bn",
+    "task": "writing",
+    "prompt": "Nimbus Notes-এর ফিচার আপডেট নিয়ে জাপানি ভাষায় ঠিক 3টি বিজ্ঞপ্তি লিখুন, বন্ধুত্বপূর্ণ ভঙ্গিতে। প্রতিটি বিজ্ঞপ্তিতে একটি শিরোনাম ও সর্বোচ্চ 60 অক্ষরের (characters, শব্দ নয়) মূল লেখা থাকবে; শিরোনাম এই 60 অক্ষরের হিসাবে পড়বে না। বিজ্ঞপ্তিগুলি JSON অ্যারে হিসেবে দিন এবং \"title\" ও \"body\" কী দুটি অপরিবর্তিত রাখুন, অনুবাদ করবেন না। পণ্যের নাম \"Nimbus Notes\"-ও হুবহু রাখুন। তারিখ বা দাম বানিয়ে লিখবেন না। নিশ্চিত হওয়া একমাত্র নতুন ফিচার হলো অফলাইন অনুসন্ধান যোগ হওয়া; অন্য ফিচার বানাবেন না। ফিচারের তথ্য না থাকলে আমাকে একটি গুরুত্বপূর্ণ প্রশ্ন করে আমার উত্তর না পাওয়া পর্যন্ত থামুন; ফিচার বানিয়ে বা আগেভাগে বিজ্ঞপ্তি লিখবেন না।",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-th",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "th",
+    "task": "writing",
+    "prompt": "เขียนประกาศอัปเดตฟีเจอร์ของ Nimbus Notes เป็นภาษาญี่ปุ่นให้ครบ 3 ประกาศ ด้วยน้ำเสียงเป็นมิตร แต่ละประกาศต้องมีหัวข้อและเนื้อหาที่ไม่เกิน 60 ตัวอักษร ไม่ใช่ 60 คำ โดยไม่นับหัวข้อรวมในขีดจำกัดนี้ ส่งประกาศเป็นอาร์เรย์ JSON และคงคีย์ \"title\" กับ \"body\" ไว้ตามเดิมโดยไม่แปล คงชื่อผลิตภัณฑ์ \"Nimbus Notes\" ให้ตรงทุกตัวอักษร อย่าแต่งวันที่หรือราคาขึ้นเอง ฟีเจอร์ใหม่ที่ยืนยันแล้วมีเพียงการเพิ่มการค้นหาแบบออฟไลน์ อย่าแต่งฟีเจอร์อื่น หากไม่มีข้อมูลฟีเจอร์ ให้ถามคำถามสำคัญฉันเพียงหนึ่งข้อแล้วหยุดรอคำตอบ อย่าเดาฟีเจอร์หรือเขียนประกาศล่วงหน้า",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-vi",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "vi",
+    "task": "writing",
+    "prompt": "Viết đúng 3 thông báo cập nhật tính năng cho Nimbus Notes bằng tiếng Nhật, với giọng điệu thân thiện. Mỗi thông báo phải có tiêu đề và phần nội dung tối đa 60 ký tự, không phải 60 từ; tiêu đề không tính vào giới hạn này. Trả về một mảng JSON với các khóa \"title\" và \"body\" giữ nguyên, không dịch. Giữ nguyên chính xác tên sản phẩm \"Nimbus Notes\". Không bịa ngày tháng hoặc giá. Tính năng mới duy nhất đã được xác nhận là bổ sung tìm kiếm ngoại tuyến; không bịa thêm tính năng khác. Nếu thiếu thông tin về tính năng, hãy hỏi tôi một câu hỏi quan trọng rồi dừng lại chờ tôi trả lời, không tự đoán tính năng hay viết trước các thông báo.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-id",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "id",
+    "task": "writing",
+    "prompt": "Tulis tepat 3 pemberitahuan pembaruan fitur Nimbus Notes dalam bahasa Jepang dengan nada ramah. Setiap pemberitahuan harus memiliki judul dan isi paling banyak 60 karakter, bukan kata; judul tidak dihitung dalam batas 60 karakter itu. Kembalikan pemberitahuan sebagai array JSON dengan kunci \"title\" dan \"body\" tetap persis, tanpa diterjemahkan. Pertahankan juga nama produk \"Nimbus Notes\" secara persis. Jangan mengarang tanggal atau harga. Satu-satunya fitur baru yang telah dikonfirmasi adalah penambahan pencarian offline; jangan mengarang fitur lain. Jika informasi fitur belum tersedia, ajukan satu pertanyaan penting kepada saya lalu berhenti sampai saya menjawab, tanpa mengarang fitur atau menulis pemberitahuan lebih dahulu.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-tr",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "tr",
+    "task": "writing",
+    "prompt": "Nimbus Notes için Japonca, samimi bir üslupla tam 3 özellik güncellemesi duyurusu yaz. Her duyuruda bir başlık ve en fazla 60 karakterlik bir gövde olsun; sınır 60 kelime değil, karakterdir ve başlık bu sınıra dahil değildir. Duyuruları JSON dizisi olarak döndür; \"title\" ve \"body\" anahtarlarını çevirmeden, aynen koru. \"Nimbus Notes\" ürün adını da birebir koru. Tarih veya fiyat uydurma. Doğrulanmış tek yeni özellik, çevrimdışı aramanın eklenmesidir; başka özellikler uydurma. Özellik bilgisi eksikse bana tek bir temel soru sor ve yanıtımı bekleyerek dur; özellik tahmin etme veya duyuruları önceden yazma.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-nl",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "nl",
+    "task": "writing",
+    "prompt": "Schrijf precies 3 meldingen over functie-updates van Nimbus Notes in het Japans, op een vriendelijke toon. Elke melding moet een titel en een hoofdtekst van maximaal 60 tekens hebben, geen 60 woorden; de titel telt niet mee voor die limiet. Geef de meldingen terug als JSON-array met de sleutels \"title\" en \"body\" ongewijzigd en onvertaald. Behoud ook de productnaam \"Nimbus Notes\" exact. Verzin geen datums of prijzen. De enige bevestigde nieuwe functie is de toevoeging van offline zoeken; verzin geen andere functies. Ontbreekt informatie over de functies, stel mij dan één essentiële vraag en stop totdat ik antwoord, zonder functies te verzinnen of alvast meldingen te schrijven.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-pl",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "pl",
+    "task": "writing",
+    "prompt": "Napisz dokładnie 3 powiadomienia o aktualizacji funkcji Nimbus Notes po japońsku, w przyjaznym tonie. Każde powiadomienie ma zawierać tytuł i treść o długości najwyżej 60 znaków, nie słów; tytuł nie wlicza się do tego limitu. Zwróć powiadomienia jako tablicę JSON z kluczami \"title\" i \"body\" bez zmian i bez tłumaczenia. Zachowaj też dokładnie nazwę produktu \"Nimbus Notes\". Nie wymyślaj dat ani cen. Jedyną potwierdzoną nową funkcją jest dodane wyszukiwanie offline; nie wymyślaj innych funkcji. Jeśli brakuje informacji o funkcjach, zadaj mi jedno kluczowe pytanie i zatrzymaj się do mojej odpowiedzi, bez wymyślania funkcji ani wcześniejszego pisania powiadomień.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-ta",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "ta",
+    "task": "writing",
+    "prompt": "Nimbus Notes இன் அம்சப் புதுப்பிப்புகளைப் பற்றி ஜப்பானிய மொழியில் சரியாக 3 அறிவிப்புகளை நட்பான தொனியில் எழுதுங்கள். ஒவ்வொரு அறிவிப்பிலும் தலைப்பும், அதிகபட்சம் 60 எழுத்துகள் (characters, சொற்கள் அல்ல) கொண்ட உட்பகுதியும் இருக்க வேண்டும்; தலைப்பு இந்த 60 எழுத்து வரம்பில் சேராது. அறிவிப்புகளை JSON வரிசையாகத் தாருங்கள். \"title\", \"body\" ஆகிய விசைகளை மாற்றவோ மொழிபெயர்க்கவோ வேண்டாம். தயாரிப்பின் பெயரான \"Nimbus Notes\" என்பதையும் அப்படியே வைத்திருங்கள். தேதிகளையோ விலைகளையோ கற்பனை செய்து எழுத வேண்டாம். உறுதிப்படுத்தப்பட்ட ஒரே புதிய அம்சம் ஆஃப்லைன் தேடல் சேர்க்கப்பட்டதுதான்; வேறு அம்சங்களை உருவாக்க வேண்டாம். அம்சத் தகவல் இல்லாவிட்டால், ஒரு முக்கியமான கேள்வியை மட்டும் என்னிடம் கேட்டுவிட்டு என் பதில் வரும் வரை நிறுத்துங்கள்; அம்சங்களை ஊகிக்கவோ அறிவிப்புகளை முன்கூட்டியே எழுதவோ வேண்டாம்.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-te",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "te",
+    "task": "writing",
+    "prompt": "Nimbus Notes ఫీచర్ అప్‌డేట్‌ల గురించి జపనీస్‌లో సరిగ్గా 3 ప్రకటనలను స్నేహపూర్వక శైలిలో రాయండి. ప్రతి ప్రకటనలో ఒక శీర్షిక, గరిష్ఠంగా 60 అక్షరాల (characters, పదాలు కాదు) ప్రధాన పాఠ్యం ఉండాలి; శీర్షికను ఈ 60 అక్షరాల పరిమితిలో లెక్కించవద్దు. ప్రకటనలను JSON అరేగా ఇవ్వండి. \"title\", \"body\" కీలు మార్చకుండా, అనువదించకుండా అలాగే ఉంచండి. ఉత్పత్తి పేరు \"Nimbus Notes\" కూడా యథాతథంగా ఉంచండి. తేదీలు లేదా ధరలను కల్పించవద్దు. నిర్ధారించిన ఏకైక కొత్త ఫీచర్ ఆఫ్‌లైన్ శోధనను జోడించడం; ఇతర ఫీచర్‌లను కల్పించవద్దు. ఫీచర్ సమాచారం లేకపోతే నన్ను ఒక ముఖ్యమైన ప్రశ్న మాత్రమే అడిగి, నా సమాధానం వచ్చేవరకు ఆగండి; ఫీచర్‌లను ఊహించవద్దు, ముందుగానే ప్రకటనలను రాయవద్దు.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-mr",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "mr",
+    "task": "writing",
+    "prompt": "Nimbus Notes च्या वैशिष्ट्यांच्या अद्यतनांबद्दल जपानी भाषेत नेमक्या 3 सूचना मैत्रीपूर्ण शैलीत लिहा. प्रत्येक सूचनेत शीर्षक आणि जास्तीत जास्त 60 अक्षरांचा (characters, शब्द नव्हे) मुख्य मजकूर असावा; शीर्षक या 60 अक्षरांच्या मर्यादेत मोजू नका. सूचना JSON अ‍ॅरेमध्ये द्या आणि \"title\" व \"body\" या की जशाच्या तशा ठेवा, त्यांचे भाषांतर करू नका. उत्पादनाचे नाव \"Nimbus Notes\" देखील तंतोतंत ठेवा. तारखा किंवा किंमती बनवू नका. ऑफलाइन शोधाची भर हेच एकमेव खात्री झालेले नवीन वैशिष्ट्य आहे; इतर वैशिष्ट्ये बनवू नका. वैशिष्ट्यांची माहिती नसेल तर मला एक महत्त्वाचा प्रश्न विचारून माझे उत्तर येईपर्यंत थांबा; वैशिष्ट्यांचा अंदाज लावू नका किंवा सूचना आधीच लिहू नका.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-ur",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "ur",
+    "task": "writing",
+    "prompt": "Nimbus Notes کی خصوصیات کی تازہ کاری کے بارے میں جاپانی زبان میں بالکل 3 اطلاعات دوستانہ انداز میں لکھیں۔ ہر اطلاع میں ایک عنوان اور زیادہ سے زیادہ 60 حروف (characters، الفاظ نہیں) پر مشتمل متن ہو؛ عنوان ان 60 حروف کی حد میں شمار نہ ہو۔ اطلاعات JSON ارے کی شکل میں دیں، اور \"title\" اور \"body\" کلیدوں کو بدلے یا ترجمہ کیے بغیر جوں کا توں رکھیں۔ مصنوعے کا نام \"Nimbus Notes\" بھی بالکل اسی طرح رکھیں۔ تاریخیں یا قیمتیں گھڑ کر نہ لکھیں۔ صرف ایک نئی خصوصیت کی تصدیق ہوئی ہے: آف لائن تلاش کا اضافہ؛ کوئی دوسری خصوصیت نہ گھڑیں۔ اگر خصوصیات کی معلومات موجود نہ ہوں تو مجھ سے صرف ایک اہم سوال پوچھ کر میرے جواب تک رک جائیں؛ خصوصیات کا اندازہ نہ لگائیں اور اطلاعات پہلے سے نہ لکھیں۔",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-sw",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "sw",
+    "task": "writing",
+    "prompt": "Andika arifa 3 hasa kuhusu masasisho ya vipengele vya Nimbus Notes kwa Kijapani, kwa sauti ya kirafiki. Kila arifa iwe na kichwa na maudhui yasiyozidi vibambo 60, si maneno 60; kichwa hakihesabiwi katika kikomo hicho. Rudisha arifa kama safu ya JSON, ukihifadhi funguo \"title\" na \"body\" bila kuzibadili wala kuzitafsiri. Hifadhi pia jina la bidhaa \"Nimbus Notes\" kama lilivyo. Usibuni tarehe au bei. Kipengele kipya pekee kilichothibitishwa ni kuongezwa kwa utafutaji bila mtandao; usibuni vipengele vingine. Taarifa za vipengele zikikosekana, niulize swali moja muhimu kisha simama hadi nijibu, bila kubuni vipengele au kuandika arifa mapema.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-pa",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "pa",
+    "task": "writing",
+    "prompt": "Nimbus Notes ਦੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਦੇ ਅੱਪਡੇਟ ਬਾਰੇ ਜਪਾਨੀ ਵਿੱਚ ਠੀਕ 3 ਸੂਚਨਾਵਾਂ ਦੋਸਤਾਨਾ ਲਹਿਜ਼ੇ ਵਿੱਚ ਲਿਖੋ। ਹਰ ਸੂਚਨਾ ਵਿੱਚ ਇੱਕ ਸਿਰਲੇਖ ਅਤੇ ਵੱਧ ਤੋਂ ਵੱਧ 60 ਅੱਖਰਾਂ (characters, ਸ਼ਬਦ ਨਹੀਂ) ਦਾ ਮੁੱਖ ਪਾਠ ਹੋਵੇ; ਸਿਰਲੇਖ ਨੂੰ ਇਸ 60 ਅੱਖਰਾਂ ਦੀ ਹੱਦ ਵਿੱਚ ਨਾ ਗਿਣੋ। ਸੂਚਨਾਵਾਂ JSON ਐਰੇ ਵਜੋਂ ਦਿਓ ਅਤੇ \"title\" ਤੇ \"body\" ਕੁੰਜੀਆਂ ਨੂੰ ਬਿਨਾਂ ਬਦਲੇ ਜਾਂ ਅਨੁਵਾਦ ਕੀਤੇ ਜਿਉਂ ਦਾ ਤਿਉਂ ਰੱਖੋ। ਉਤਪਾਦ ਦਾ ਨਾਂ \"Nimbus Notes\" ਵੀ ਬਿਲਕੁਲ ਇਸੇ ਤਰ੍ਹਾਂ ਰੱਖੋ। ਮਿਤੀਆਂ ਜਾਂ ਕੀਮਤਾਂ ਘੜ ਕੇ ਨਾ ਲਿਖੋ। ਇੱਕੋ ਪੁਸ਼ਟੀ ਕੀਤੀ ਨਵੀਂ ਵਿਸ਼ੇਸ਼ਤਾ ਆਫ਼ਲਾਈਨ ਖੋਜ ਦਾ ਜੋੜਿਆ ਜਾਣਾ ਹੈ; ਹੋਰ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨਾ ਘੜੋ। ਜੇ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਦੀ ਜਾਣਕਾਰੀ ਨਾ ਹੋਵੇ ਤਾਂ ਮੈਨੂੰ ਸਿਰਫ਼ ਇੱਕ ਮੁੱਖ ਸਵਾਲ ਪੁੱਛ ਕੇ ਮੇਰੇ ਜਵਾਬ ਤੱਕ ਰੁਕੋ; ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਦਾ ਅੰਦਾਜ਼ਾ ਨਾ ਲਾਓ ਅਤੇ ਸੂਚਨਾਵਾਂ ਪਹਿਲਾਂ ਹੀ ਨਾ ਲਿਖੋ।",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-provided-fil",
+    "group": "nimbus-notices-provided-feature",
+    "locale": "fil",
+    "task": "writing",
+    "prompt": "Sumulat ng eksaktong 3 abiso tungkol sa pag-update ng mga tampok ng Nimbus Notes sa wikang Hapones, sa palakaibigang tono. Bawat abiso ay dapat may pamagat at katawan na hindi lalampas sa 60 character, hindi 60 salita; hindi kasama ang pamagat sa limitasyong ito. Ibalik ang mga abiso bilang JSON array at panatilihing eksakto ang mga key na \"title\" at \"body\", nang hindi isinasalin. Panatilihin din nang eksakto ang pangalan ng produkto na \"Nimbus Notes\". Huwag mag-imbento ng mga petsa o presyo. Ang tanging kumpirmadong bagong tampok ay ang idinagdag na offline na paghahanap; huwag mag-imbento ng ibang tampok. Kung walang impormasyon tungkol sa mga tampok, magtanong muna sa akin ng isang mahalagang tanong at huminto hanggang sumagot ako; huwag manghula ng mga tampok o magsulat muna ng mga abiso.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "The only supplied product fact is that offline search has been added; preserve it and do not invent other capabilities.",
+        "Feature information is already supplied in this case, so the conditional missing-information branch must not replace the requested notices with an unnecessary question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [
+        "Nimbus Notes has added offline search."
+      ],
+      "needsClarification": false
+    }
+  },
+  {
+    "id": "nimbus-notices-missing-zh-Hant",
+    "group": "nimbus-notices-missing-feature",
+    "locale": "zh-Hant",
+    "task": "writing",
+    "prompt": "請用日文為 Nimbus Notes 寫恰好 3 則功能更新通知，語氣友善。每則有標題與正文，正文最多 60 個字元（不是詞），標題不計入。通知要以 JSON 陣列輸出，鍵名 \"title\" 和 \"body\" 不翻譯；產品名 \"Nimbus Notes\" 原樣保留。不得編造日期或價格。我還沒有提供任何產品功能資訊。請先問我一個關鍵問題，然後暫停等待回答。現在不要寫通知，也不要虛構功能。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "No product feature facts are supplied in this case. The downstream model must ask exactly one essential question and pause until an answer arrives.",
+        "The clarification branch comes before the notice-writing branch; the JSON-array requirement describes the later notices and must not trigger fabricated notices now.",
+        "The optimizer preserves the instruction to clarify later; it must not itself answer the original task or replace the reusable English prompt with a standalone question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [],
+      "needsClarification": true
+    }
+  },
+  {
+    "id": "nimbus-notices-missing-ja",
+    "group": "nimbus-notices-missing-feature",
+    "locale": "ja",
+    "task": "writing",
+    "prompt": "Nimbus Notes の機能更新のお知らせを、親しみやすい日本語でちょうど 3 件書いてください。各お知らせにタイトルと本文を付け、本文は 60 文字以内（単語数ではありません）とし、タイトルは文字数に含めません。お知らせは JSON 配列で出力し、キー \"title\" と \"body\" は翻訳せず、製品名 \"Nimbus Notes\" もそのまま保持してください。日付や価格を捏造しないでください。製品の機能情報はまだ何も提供していません。まず重要な質問を 1 つして、回答を待ってください。今はお知らせを書かず、機能も作り上げないでください。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "No product feature facts are supplied in this case. The downstream model must ask exactly one essential question and pause until an answer arrives.",
+        "The clarification branch comes before the notice-writing branch; the JSON-array requirement describes the later notices and must not trigger fabricated notices now.",
+        "The optimizer preserves the instruction to clarify later; it must not itself answer the original task or replace the reusable English prompt with a standalone question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [],
+      "needsClarification": true
+    }
+  },
+  {
+    "id": "nimbus-notices-missing-ko",
+    "group": "nimbus-notices-missing-feature",
+    "locale": "ko",
+    "task": "writing",
+    "prompt": "Nimbus Notes의 기능 업데이트 공지를 친근한 일본어로 정확히 3개 작성해 주세요. 각 공지는 제목과 본문으로 구성하고, 본문은 단어 수가 아니라 글자 수로 60자 이내로 하되 제목은 포함하지 마세요. 공지는 JSON 배열로 출력하고 키 \"title\"과 \"body\"는 번역하지 마세요. 제품명 \"Nimbus Notes\"도 그대로 유지하고 날짜나 가격을 지어내지 마세요. 아직 제품 기능 정보를 전혀 제공하지 않았습니다. 먼저 핵심 질문을 하나만 하고 답변을 기다리며 멈춰 주세요. 지금은 공지를 쓰거나 기능을 만들어 내지 마세요.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "No product feature facts are supplied in this case. The downstream model must ask exactly one essential question and pause until an answer arrives.",
+        "The clarification branch comes before the notice-writing branch; the JSON-array requirement describes the later notices and must not trigger fabricated notices now.",
+        "The optimizer preserves the instruction to clarify later; it must not itself answer the original task or replace the reusable English prompt with a standalone question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [],
+      "needsClarification": true
+    }
+  },
+  {
+    "id": "nimbus-notices-missing-ru",
+    "group": "nimbus-notices-missing-feature",
+    "locale": "ru",
+    "task": "writing",
+    "prompt": "Напиши ровно 3 уведомления об обновлении функций Nimbus Notes на японском языке, в дружелюбном тоне. Каждое должно иметь заголовок и основной текст не длиннее 60 символов, не слов; заголовок не входит в этот лимит. Верни уведомления как JSON-массив, не переводя ключи \"title\" и \"body\" и сохранив название \"Nimbus Notes\" точно. Не выдумывай даты или цены. Информацию о функциях продукта я пока не предоставил. Сначала задай мне один ключевой вопрос, затем остановись и жди ответа. Пока не пиши уведомления и не придумывай функции.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "No product feature facts are supplied in this case. The downstream model must ask exactly one essential question and pause until an answer arrives.",
+        "The clarification branch comes before the notice-writing branch; the JSON-array requirement describes the later notices and must not trigger fabricated notices now.",
+        "The optimizer preserves the instruction to clarify later; it must not itself answer the original task or replace the reusable English prompt with a standalone question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [],
+      "needsClarification": true
+    }
+  },
+  {
+    "id": "nimbus-notices-missing-fr",
+    "group": "nimbus-notices-missing-feature",
+    "locale": "fr",
+    "task": "writing",
+    "prompt": "Rédige exactement 3 annonces de mise à jour des fonctionnalités de Nimbus Notes en japonais, sur un ton amical. Chaque annonce doit avoir un titre et un corps de 60 caractères maximum, et non de 60 mots ; le titre est exclu de cette limite. Fournis les annonces dans un tableau JSON, sans traduire les clés \"title\" et \"body\", et conserve exactement le nom \"Nimbus Notes\". N’invente ni dates ni prix. Je n’ai encore fourni aucune information sur les fonctionnalités du produit. Pose-moi d’abord une seule question essentielle, puis arrête-toi et attends ma réponse. Ne rédige pas encore les annonces et n’invente pas de fonctionnalités.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "No product feature facts are supplied in this case. The downstream model must ask exactly one essential question and pause until an answer arrives.",
+        "The clarification branch comes before the notice-writing branch; the JSON-array requirement describes the later notices and must not trigger fabricated notices now.",
+        "The optimizer preserves the instruction to clarify later; it must not itself answer the original task or replace the reusable English prompt with a standalone question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [],
+      "needsClarification": true
+    }
+  },
+  {
+    "id": "nimbus-notices-missing-ar",
+    "group": "nimbus-notices-missing-feature",
+    "locale": "ar",
+    "task": "writing",
+    "prompt": "اكتب باليابانية 3 إشعارات بالضبط عن تحديث ميزات Nimbus Notes بنبرة ودية. يجب أن يتضمن كل إشعار عنواناً ومتناً لا يتجاوز 60 محرفاً، وليس 60 كلمة، ولا يُحتسب العنوان ضمن هذا الحد. أعد الإشعارات في مصفوفة JSON دون ترجمة المفتاحين \"title\" و\"body\"، واحتفظ باسم \"Nimbus Notes\" حرفياً. لا تختلق تواريخ أو أسعاراً. لم أقدّم بعد أي معلومات عن ميزات المنتج. اسألني أولاً سؤالاً أساسياً واحداً ثم توقف وانتظر إجابتي. لا تكتب الإشعارات الآن ولا تختلق ميزات.",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "literals": [
+        "Nimbus Notes",
+        "title",
+        "body"
+      ],
+      "constraints": [
+        "The downstream notices must be in Japanese; the optimized reusable instructions must be in English.",
+        "Request exactly 3 feature-update notices for Nimbus Notes, not 3 distinct new product features.",
+        "Each body is at most 60 characters, not 60 words; the title is excluded from this body limit.",
+        "The notices must be a JSON array with exact, untranslated keys title and body.",
+        "Use a friendly tone and preserve the exact product name Nimbus Notes.",
+        "Do not invent dates or prices; do not strengthen this into a ban on supplied or verified dates or prices.",
+        "If feature information is missing, ask exactly one essential question, then wait for the answer without inventing features or writing notices.",
+        "The optimizer must return a reusable English prompt, not perform the original notice-writing task.",
+        "No product feature facts are supplied in this case. The downstream model must ask exactly one essential question and pause until an answer arrives.",
+        "The clarification branch comes before the notice-writing branch; the JSON-array requirement describes the later notices and must not trigger fabricated notices now.",
+        "The optimizer preserves the instruction to clarify later; it must not itself answer the original task or replace the reusable English prompt with a standalone question."
+      ],
+      "answersTask": false,
+      "sourceFacts": [],
+      "needsClarification": true
+    }
+  }
+]

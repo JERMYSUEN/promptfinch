@@ -6,7 +6,10 @@ import { createApp } from '../server.js';
 import { readConfig, validateInput, restoreLiteralEncoding } from '../lib/optimizer.js';
 
 const fixtures = JSON.parse(await readFile(new URL('./fixtures/multilingual-inputs.json', import.meta.url), 'utf8'));
+const parityFixtures = JSON.parse(await readFile(new URL('./fixtures/multilingual-parity.json', import.meta.url), 'utf8'));
+const languageEdgeFixtures = JSON.parse(await readFile(new URL('./fixtures/multilingual-language-edges.json', import.meta.url), 'utf8'));
 const sources = [...fixtures.map(c => c.prompt),
+  ...languageEdgeFixtures.map(c => c.prompt),
   '한국어로 두 문장을 쓰고 "안녕하세요-42"와 ${user_name}을 그대로 보존하세요.',
   'Напиши два предложения по-русски. Сохрани "Привет-42" и https://example.com/a?x=1&y=2 без изменений.',
   '한글 Cafe\u0301 اَلْعَرَبِيَّة خوش‌آمدید 👩🏽‍💻 🇰🇷 Привет',
@@ -115,4 +118,59 @@ test('英文live API實際還原NFD字面；還原後過長仍拒絕完整結果
   const large = await post(url, 'Keep "e\u0301" unchanged.', 'en');
   assert.equal(large.status, 502);
   assert.ok(!Object.hasOwn(large.data, 'prompt'));
+});
+
+test('同意圖語料的中文與其他語言共用驗收標準，且來源完整往返', async t => {
+  const expectedLocales = ['en', 'zh-Hant', 'zh-Hans', 'ja', 'ko', 'ru', 'es', 'fr', 'de', 'pt', 'it', 'uk',
+    'ar', 'fa', 'hi', 'bn', 'th', 'vi', 'id', 'tr', 'nl', 'pl', 'ta', 'te', 'mr', 'ur', 'sw', 'pa', 'fil'];
+  const provided = parityFixtures.filter(c => !c.expected.needsClarification);
+  assert.deepEqual(provided.map(c => c.locale).sort(), expectedLocales.sort());
+  assert.equal(new Set(parityFixtures.map(c => c.id)).size, parityFixtures.length);
+  for (const fixture of provided) assert.deepEqual(fixture.expected, provided[0].expected);
+  const missing = parityFixtures.filter(c => c.expected.needsClarification);
+  assert.equal(missing.length, 6);
+  for (const fixture of missing) assert.deepEqual(fixture.expected, missing[0].expected);
+  const url = await listen(createApp(readConfig({ PORT: '0' })), t);
+  for (const fixture of parityFixtures) {
+    const { status, data } = await post(url, fixture.prompt, 'en');
+    assert.equal(status, 200);
+    assert.ok(data.prompt.includes(fixture.prompt));
+    assert.equal(data.mode, 'mock'); // Corpus/transport evidence, never a translation-quality score.
+  }
+});
+
+test('英文優化的任務提示不受中文UI或原文語言影響；繁中既有契約保持相容', async t => {
+  const captured = [];
+  const provider = await listen(createServer(async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    captured.push(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+    response.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({
+      prompt: 'Write the requested artifact in Japanese.', improvements: ['可控接線測試。'], assumptions: [],
+    }) }, finish_reason: 'stop' }] }));
+  }), t);
+  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live',
+    LLM_API_KEY: 'synthetic-test-key', LLM_MODEL: 'controlled-test-model', LLM_BASE_URL: provider })), t);
+  const source = parityFixtures.find(c => c.locale === 'ko').prompt;
+  for (const task of ['general', 'writing', 'analysis', 'coding', 'summary', 'marketing']) {
+    const response = await fetch(`${url}/api/optimize`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: source, task, promptLanguage: 'en' }),
+    });
+    assert.equal(response.status, 200);
+    const sent = JSON.parse(captured.at(-1).messages[1].content);
+    assert.equal(sent.originalPrompt, source);
+    assert.equal(sent.task, task);
+    assert.ok(sent.taskGuidance.length > 20);
+    assert.ok(!/\p{Script=Han}/u.test(sent.taskGuidance));
+    assert.equal(sent.targetModel, '');
+    assert.equal(sent.promptInstructionLanguage, 'English');
+    assert.equal(sent.uiNotesLanguage, 'Traditional Chinese');
+  }
+  await post(url, source); // Omitting promptLanguage retains the existing Traditional Chinese API.
+  const chinese = JSON.parse(captured.at(-1).messages[1].content);
+  assert.equal(chinese.task, '通用用途');
+  assert.ok(/\p{Script=Han}/u.test(chinese.taskGuidance));
+  assert.equal(chinese.targetModel, '通用');
+  assert.equal(chinese.originalPrompt, source);
 });

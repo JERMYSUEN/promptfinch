@@ -178,6 +178,10 @@ final class WorkspaceModel: ObservableObject {
     }
 
     private func pasteBack(_ prompt: String) {
+        if sourceCapture?.isTerminal == true {
+            copyTerminalResult(prompt)
+            return
+        }
         guard pasteBackEnabled, TextSelection.authorized else {
             let copied = pasteOperations.copy(prompt)
             DebugLog.write("pasteBack skipped: enabled=\(pasteBackEnabled) authorized=\(TextSelection.authorized)")
@@ -194,10 +198,25 @@ final class WorkspaceModel: ObservableObject {
     }
 
     private var canOfferPasteBack: Bool {
-        TextSelection.authorized && sourceCapture?.hasReliableRange == true
+        TextSelection.authorized && sourceCapture?.canPasteBack == true
+    }
+
+    private func copyTerminalResult(_ prompt: String) {
+        invalidatePendingPasteFeedback()
+        let copied = pasteOperations.copy(prompt)
+        let status = L10n.text(copied ? .terminalCopied : .copyFailedPanel)
+        notify(status, error: !copied)
+        resultPanel.finish(prompt: prompt, status: status, canPasteBack: false,
+                           error: !copied, eventSequence: activeEventSequence)
     }
 
     private func requestPasteBack(_ prompt: String) {
+        // A terminal selection is display text, even when its AX helper reports
+        // an editable UTF-16 range. Never send generated text into process stdin.
+        if sourceCapture?.isTerminal == true {
+            copyTerminalResult(prompt)
+            return
+        }
         let feedbackID = UUID()
         pasteFeedbackID = feedbackID
         let generation = generationID
@@ -274,6 +293,13 @@ final class WorkspaceModel: ObservableObject {
     }
 
     func invalidatePendingPasteFeedback() { pasteFeedbackID = UUID() }
+
+    #if PROMPTFINCH_TESTS
+    func setSelectionSourceForTesting(_ capture: SelectionCapture?) {
+        sourceCapture = capture
+        sourcePID = capture?.pid
+    }
+    #endif
 
     func clear() {
         cancel()
@@ -466,6 +492,8 @@ struct SettingsView: View {
                         .font(.caption).foregroundColor(.secondary)
                     Toggle(L10n.text(.autoPaste), isOn: $model.pasteBackEnabled)
                     Text(L10n.text(.selectionHelp))
+                        .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.text(.terminalHelp))
                         .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Divider()
                     HStack {

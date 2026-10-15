@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 
 // UI flow regressions with fake operations: no model, host text, key events or
 // general pasteboard. Delayed callbacks are delivered after user actions.
@@ -94,4 +95,27 @@ func checkWorkspacePasteFeedback(check: (Bool, String) -> Void) async {
           "unsafe clipboard preparation keeps the result visible for deliberate manual copying")
     operations.callbacks.last?(.restored)
     check(model.message == L10n.text(.clipboardUnavailable), "unrequested paste recovery cannot claim a paste or replace clipboard error feedback")
+
+    // Even a terminal helper with a valid selected range cannot authorize
+    // replacement: pasting there sends text to stdin instead of editing it.
+    let terminal = SelectionCapture(text: "合成原文", bounds: nil, pid: 77,
+                                    element: AXUIElementCreateApplication(77),
+                                    range: SelectionRange(location: 0, length: 4), isTerminal: true)
+    model.setSelectionSourceForTesting(terminal)
+    operations.copySucceeds = true
+    operations.immediateRestore = nil
+    let pasteCount = operations.callbacks.count
+    model.pasteBackFromPanel()
+    check(operations.callbacks.count == pasteCount && operations.copies.last == prompt,
+          "terminal result copies only the prompt without asking fake paste operations to run")
+    check(model.message == L10n.text(.terminalCopied) && !model.isError && model.resultPanel.isVisible,
+          "terminal result keeps review visible and explains manual CLI input")
+    check(!model.resultPanel.contentView!.subviews.compactMap { $0 as? NSButton }
+        .contains { $0.title == L10n.text(.pasteBack) && !$0.isHidden },
+          "terminal review hides paste-back even when the source has a reliable range")
+    operations.copySucceeds = false
+    model.pasteBackFromPanel()
+    check(model.isError && model.message == L10n.text(.copyFailedPanel)
+          && operations.callbacks.count == pasteCount,
+          "terminal copy failure is visible and never falls through to stdin paste")
 }
