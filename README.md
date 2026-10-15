@@ -6,7 +6,7 @@
 
 **Select. Refine. Paste.**
 
-A prompt editor for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer English instructions, then review and paste them into the model you plan to use.
+A prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer, actionable instructions for the model you plan to use. The optimizer is instructed to clarify the objective, inputs and constraints, arrange useful steps, address critical information gaps and derive checks from your requirements. Already-clear requests should receive minimal edits; added structure should help the task, without inventing new requirements.
 
 Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. An optional **browser workspace and HTTP API** use the same backend.
 
@@ -16,7 +16,7 @@ PromptFinch edits instructions; it does not carry out the task described in them
 
 ![Using PromptFinch from the Codex desktop composer with synthetic sample text](docs/media/demo-selection.gif)
 
-A 15-second recreation of the Codex desktop workflow: select a draft in the composer, right-click, choose conversion in PromptFinch's companion action menu, review the English prompt, then copy and paste it into Codex. The companion menu is provided by PromptFinch, not built into Codex. The interface and sample content are synthetic, with no personal inputs; this is not a screen recording or a live model request.
+A 15-second recreation of the Codex desktop workflow: select a rough CSV bug-fix request, right-click, choose conversion in PromptFinch's companion action menu, review an English prompt with project-inspection steps, a focused fix and checks derived from the original requirements, then copy and paste it into Codex. The companion menu is provided by PromptFinch, not built into Codex. The interface, sample content and optimized result are synthetic, with no personal inputs; this is not a screen recording or a live model request.
 
 ## Documentation languages
 
@@ -35,6 +35,7 @@ The macOS app generates English prompt instructions. The browser defaults to Eng
 ### What it does
 
 - Accept a rough prompt, choose a task type, and optionally name the model that will receive the result.
+- Ask the model to improve task clarity and execution guidance while preserving intent, constraints and exact strings, rather than merely changing the language.
 - Produce a copyable prompt with improvements and assumptions shown separately. Copy and paste-back use the prompt field alone.
 - Use one macOS app for manual input, selection actions, result panels, model settings, four interface languages, and optional paste-back.
 - Handle blank input, size limits, loading, cancellation, and understandable errors.
@@ -254,6 +255,8 @@ Main source files:
 This is a local personal tool without account authentication or multi-user isolation. The standalone server supports deployment configuration, but a public deployment needs its own HTTPS and access control. Remote deployment and Docker execution have not been validated.
 
 ### Validation and limitations
+
+[The optimization-value verification record](docs/optimization-value-verification.md) defines eight synthetic cases for task guidance beyond translation and restraint on already-clear requests. Live checks encountered provider timeouts and service errors, so quality comparison remains unverified. The illustrated result is not evidence of better model or downstream task performance.
 
 [The previous reliability verification](docs/reliability-verification.md), on 2026-10-09, passed JavaScript syntax checks, 55 Node tests, 190 native checks, 10 Chrome flow tests and the macOS build/signature checks. For the Terminal change on 2026-10-11, syntax checks, 55 Node tests, 233 native checks, README/link checks and the macOS build/signature checks passed; the updated app was installed. Browser flow tests were not rerun for this native change. Automated tests use mock or controlled providers; they do not establish real-model output quality.
 

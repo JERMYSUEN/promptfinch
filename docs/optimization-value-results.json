@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-15",
+  "purpose": "Task-directed prompt editing beyond translation; all inputs synthetic.",
+  "evidenceStatus": "No usable live outputs. Quality comparison is unverified.",
+  "before": {
+    "date": "2026-10-15T01:59:52.920Z",
+    "generationModel": "deepseek-flash",
+    "backendID": "2e51ee133b850855e357ab0d15fd65afcebb0b47e7b504bb3c80d873aa4c6215",
+    "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+    "results": [
+      {
+        "id": "value-writing-zh-clear-notice",
+        "locale": "zh-Hant",
+        "language": "Traditional Chinese",
+        "task": "writing",
+        "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+        "expected": {
+          "answerLanguage": "Traditional Chinese",
+          "answerLanguageSource": "explicit",
+          "literals": [],
+          "constraints": [
+            "Return reusable English instructions, not the finished notice.",
+            "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+            "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+            "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+          ],
+          "valueCriteria": [
+            "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+            "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+          ],
+          "assumptions": [],
+          "needsClarification": false,
+          "answersTask": false
+        },
+        "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+        "sourceUTF16Length": 91,
+        "semanticReview": "pending",
+        "status": 504,
+        "error": "模型回應逾時，請稍後再試或縮短 Prompt。",
+        "elapsedMs": 90054
+      },
+      {
+        "id": "value-coding-zh-csv-dedup",
+        "locale": "zh-Hant",
+        "language": "Traditional Chinese",
+        "task": "coding",
+        "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+        "expected": {
+          "answerLanguage": "Traditional Chinese",
+          "answerLanguageSource": "explicit",
+          "literals": [
+            "email",
+            "CSV"
+          ],
+          "constraints": [
+            "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+            "Inspect the existing project implementation before changing its CSV deduplication logic.",
+            "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+            "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+            "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+          ],
+          "valueCriteria": [
+            "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+            "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+            "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+          ],
+          "assumptions": [],
+          "needsClarification": false,
+          "answersTask": false
+        },
+        "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+        "sourceUTF16Length": 75,
+        "semanticReview": "pending",
+        "status": 502,
+        "error": "模型服務暫時無法使用，請稍後再試。",
+        "elapsedMs": 222
+      }
+    ]
+  },
+  "beforeBatchInterruption": {
+    "reason": "Stopped after consecutive timeout and service failures. No incomplete or unrun case is counted as passed.",
+    "completedResults": 2,
+    "remainingCaseStatus": "Not completed; an in-flight request was interrupted when the evaluator process stopped."
+  },
+  "after": {
+    "date": "2026-10-15T02:03:12.389Z",
+    "generationModel": "deepseek-flash",
+    "backendID": "58570ff9cd7241ac3755fe369f58064935150fdd9902ed3c9dc5161be7ba35ca",
+    "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+    "results": [
+      {
+        "id": "value-coding-zh-csv-dedup",
+        "locale": "zh-Hant",
+        "language": "Traditional Chinese",
+        "task": "coding",
+        "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+        "expected": {
+          "answerLanguage": "Traditional Chinese",
+          "answerLanguageSource": "explicit",
+          "literals": [
+            "email",
+            "CSV"
+          ],
+          "constraints": [
+            "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+            "Inspect the existing project implementation before changing its CSV deduplication logic.",
+            "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+            "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+            "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+          ],
+          "valueCriteria": [
+            "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+            "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+            "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+          ],
+          "assumptions": [],
+          "needsClarification": false,
+          "answersTask": false
+        },
+        "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+        "sourceUTF16Length": 75,
+        "semanticReview": "pending",
+        "status": 502,
+        "error": "模型服務暫時無法使用，請稍後再試。",
+        "elapsedMs": 318
+      }
+    ]
+  },
+  "semanticReview": {
+    "status": "unavailable",
+    "reason": "All completed requests failed without usable model outputs."
+  },
+  "illustratedDemo": {
+    "resultSource": "Hand-authored synthetic illustration, not model-generated evidence.",
+    "hostInterface": "Synthetic Codex desktop shell",
+    "durationSeconds": 15,
+    "usesPrivateSourceRecording": false
+  }
+}

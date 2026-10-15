@@ -1,0 +1,224 @@
+[
+  {
+    "id": "value-writing-zh-clear-notice",
+    "locale": "zh-Hant",
+    "language": "Traditional Chinese",
+    "task": "writing",
+    "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+    "expected": {
+      "answerLanguage": "Traditional Chinese",
+      "answerLanguageSource": "explicit",
+      "literals": [],
+      "constraints": [
+        "Return reusable English instructions, not the finished notice.",
+        "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+        "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+        "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+      ],
+      "valueCriteria": [
+        "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+        "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+      ],
+      "assumptions": [],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required."
+  },
+  {
+    "id": "value-coding-zh-csv-dedup",
+    "locale": "zh-Hant",
+    "language": "Traditional Chinese",
+    "task": "coding",
+    "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+    "expected": {
+      "answerLanguage": "Traditional Chinese",
+      "answerLanguageSource": "explicit",
+      "literals": [
+        "email",
+        "CSV"
+      ],
+      "constraints": [
+        "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+        "Inspect the existing project implementation before changing its CSV deduplication logic.",
+        "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+        "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+        "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+      ],
+      "valueCriteria": [
+        "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+        "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+        "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+      ],
+      "assumptions": [],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details."
+  },
+  {
+    "id": "value-analysis-en-conversion-comparison",
+    "locale": "en",
+    "language": "English",
+    "task": "analysis",
+    "prompt": "Compare these two landing-page versions for me. A had 200 visits and 18 sign-ups; B had 160 visits and 20 sign-ups. Tell me which has the higher sign-up rate and how far apart they are in percentage points. Use only these counts, don't claim the page caused the difference, and keep the answer under 120 words.",
+    "expected": {
+      "answerLanguage": "English",
+      "answerLanguageSource": "inferred",
+      "literals": [],
+      "constraints": [
+        "Return reusable English analysis instructions, not calculated results.",
+        "Preserve A: 200 visits and 18 sign-ups; B: 160 visits and 20 sign-ups.",
+        "Request the higher sign-up rate and their percentage-point difference, using only the supplied counts and fewer than 120 words.",
+        "Do not infer causality, statistical significance, experiment design, business value, or missing segmentation data."
+      ],
+      "valueCriteria": [
+        "Make the comparison method explicit by defining each sign-up rate as sign-ups divided by visits, and keep percentage-point difference distinct from relative percentage change.",
+        "Give the downstream analyst a clear, concise comparison objective without adding confidence intervals, charts, recommendations, or other unrequested analysis."
+      ],
+      "assumptions": [
+        "English is inferred as the downstream answer language from the English request."
+      ],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "Reward a relevant method clarification and preservation of the causal limitation. Do not reward volume or unrelated analytical sophistication."
+  },
+  {
+    "id": "value-summary-ja-meeting-notes",
+    "locale": "ja",
+    "language": "Japanese",
+    "task": "summary",
+    "prompt": "次のメモを、欠席したメンバーがすぐ分かるように日本語で3つの箇条書きにまとめて。決まったことと未決のことを混ぜず、書かれていない担当者や期限は足さないで。メモ：デモは録画で共有することに決定。公開日は未定。字幕の確認は佐藤さんが担当する。",
+    "expected": {
+      "answerLanguage": "Japanese",
+      "answerLanguageSource": "explicit",
+      "literals": [],
+      "constraints": [
+        "Return reusable English summarization instructions, not the completed summary.",
+        "Request exactly 3 Japanese bullet points for absent team members.",
+        "Preserve the three supplied facts: the demo will be shared as a recording, the publication date is undecided, and Sato (佐藤) is responsible for checking subtitles.",
+        "Keep decided and undecided matters distinct; do not invent owners, deadlines, or a publication date."
+      ],
+      "valueCriteria": [
+        "Clearly separate the meeting notes as source material from the summary instructions and identify the distinction between decisions, open matters, and responsibility.",
+        "Make the absent-reader goal useful to the summarizer while keeping exactly the requested three bullets and no extra sections."
+      ],
+      "assumptions": [],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "Judge whether the optimized instructions improve source handling and information priority without generating the summary or inventing project-management details. Preserve the named subtitle-checking owner; either the original surname 佐藤 or its unambiguous transliteration Sato is acceptable."
+  },
+  {
+    "id": "value-marketing-ko-feature-boundary",
+    "locale": "ko",
+    "language": "Korean",
+    "task": "marketing",
+    "prompt": "Nimbus Notes 업데이트 소개 문구를 한국어로 2문장 써 줘. 친근하게 쓰되 과장하지 마. 확인된 내용은 기기에 이미 저장된 메모를 인터넷 없이 검색할 수 있다는 것뿐이야. 제품명은 Nimbus Notes 그대로 쓰고, 무료라는 말이나 지원 기기, 출시일은 넣지 마.",
+    "expected": {
+      "answerLanguage": "Korean",
+      "answerLanguageSource": "explicit",
+      "literals": [
+        "Nimbus Notes"
+      ],
+      "constraints": [
+        "Return reusable English marketing instructions, not the completed update copy.",
+        "Request exactly 2 Korean sentences in a friendly, restrained tone and retain Nimbus Notes exactly.",
+        "The only confirmed capability is searching notes already stored on the device without an internet connection.",
+        "Do not imply every account note is stored offline; do not add free-access claims, supported devices, a release date, or other features."
+      ],
+      "valueCriteria": [
+        "Connect the feature's practical benefit to the copywriting goal while preserving its local-storage boundary and all claim restrictions.",
+        "Provide focused drafting instructions without inventing an audience, channel, call to action, campaign strategy, or additional variants."
+      ],
+      "assumptions": [],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "A useful marketing optimization clarifies the confirmed benefit and its limits. Generic promotional embellishment or unsupported product promises fail even if the English reads fluently."
+  },
+  {
+    "id": "value-general-zh-bounded-plan",
+    "locale": "zh-Hant",
+    "language": "Traditional Chinese",
+    "task": "general",
+    "prompt": "我週末只有兩小時，想整理書桌和旁邊的書架。請用家裡現有的東西，不買收納用品。幫我排一個能照做的順序，用繁體中文列步驟，最後給一張短的檢查清單。不用規劃其他房間。",
+    "expected": {
+      "answerLanguage": "Traditional Chinese",
+      "answerLanguageSource": "explicit",
+      "literals": [],
+      "constraints": [
+        "Return reusable English planning instructions, not the completed cleanup plan.",
+        "Keep the total available time at 2 hours during the weekend and limit the area to the desk and adjacent bookshelf.",
+        "Use existing household items only, with no purchases of storage supplies.",
+        "Request actionable ordered steps in Traditional Chinese and a short final checklist; do not add other rooms."
+      ],
+      "valueCriteria": [
+        "Turn the informal request into a bounded planning objective, connecting the action order to the two-hour total and the stated two areas.",
+        "Make the eventual checklist check completion of this task rather than adding maintenance routines, product recommendations, or assumptions about available containers and furniture."
+      ],
+      "assumptions": [],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "Useful structure is welcome, but the optimizer must not perform the plan, invent the home layout, prescribe purchases, or expand the scope. Exact time allocations are not required."
+  },
+  {
+    "id": "value-writing-en-minimal-edit",
+    "locale": "en",
+    "language": "English",
+    "task": "writing",
+    "prompt": "Write a friendly one-sentence reminder to bring a reusable bottle to Friday's team walk. Return only the reminder, with no heading, explanation, or checklist.",
+    "expected": {
+      "answerLanguage": "English",
+      "answerLanguageSource": "inferred",
+      "literals": [
+        "Friday"
+      ],
+      "constraints": [
+        "Return a reusable English prompt, not the completed reminder.",
+        "Preserve the friendly tone, exactly one sentence, reusable bottle, and Friday team walk.",
+        "Keep the downstream output limited to the reminder with no heading, explanation, or checklist.",
+        "Do not invent a time, location, recipient names, meeting duration, or other walk details."
+      ],
+      "valueCriteria": [
+        "Recognize that the input already specifies a complete small task; an unchanged or lightly clarified prompt is an acceptable result.",
+        "Any edit must preserve the compact, directly usable instructions. Added roles, phases, acceptance sections, or extra deliverables are regressions rather than evidence of value."
+      ],
+      "assumptions": [
+        "English is inferred as the downstream answer language from the English request."
+      ],
+      "needsClarification": false,
+      "answersTask": false
+    },
+    "review": "This is the restraint control. Do not demand a visible structural rewrite when the original prompt is already clear, and distinguish the optimizer's reusable prompt from the downstream one-sentence artifact."
+  },
+  {
+    "id": "value-analysis-ja-ko-missing-options",
+    "locale": "ja-KR",
+    "language": "Japanese instructions with explicit Korean output",
+    "task": "analysis",
+    "prompt": "チーム用のノートアプリを2つ比べて選びたい。比較する製品名と必要な条件はこのあと送ります。それを受け取ってから、条件ごとの違いと分からない点を韓国語の短い表にして、最後に理由つきの候補を1つ示してください。제품 정보가 없으면 추측하지 마세요. 条件が足りなければ、判断に必要な質問を先にして。",
+    "expected": {
+      "answerLanguage": "Korean",
+      "answerLanguageSource": "explicit",
+      "literals": [],
+      "constraints": [
+        "Return reusable English comparison instructions, not a guessed product recommendation.",
+        "Preserve the plan to compare exactly 2 note-taking apps for a team, with product names and selection requirements forthcoming.",
+        "After the promised inputs arrive, request a short Korean table of requirement-by-requirement differences and unknowns, then exactly one justified candidate.",
+        "Do not invent products, requirements, or unavailable product facts; ask necessary decision questions first if requirements are insufficient."
+      ],
+      "valueCriteria": [
+        "Make the dependency order explicit: receive the named products and requirements, clarify only decision-critical gaps, then compare and recommend using those requirements.",
+        "Distinguish unknown product information from known facts and connect the final choice to the user's supplied conditions without adding assumed budgets, platforms, or team size."
+      ],
+      "assumptions": [],
+      "needsClarification": true,
+      "clarification": "Wait for the promised product names and requirements, then ask only decision-critical questions if needed before comparison.",
+      "answersTask": false
+    },
+    "review": "Mixed-language instructions must receive the same task-directed improvement as Chinese, while retaining explicit Korean output. A generic English translation that omits the staged comparison workflow is insufficient."
+  }
+]
