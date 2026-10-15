@@ -110,7 +110,7 @@ const rel = [...changelog.matchAll(relRe)];
 const unreleased = changelog.indexOf("[Unreleased]");
 const latest = rel.length ? rel[0][1] : null;
 if (pkg.version !== latest) warn(`package.json version ${pkg.version} != CHANGELOG latest ${latest}`);
-if (unreleased >= 0 && latest && rel[0].index > unreleased) warn("CHANGELOG: [Unreleased] must precede the latest release (Keep a Changelog order)");
+if (unreleased >= 0 && latest && unreleased > rel[0].index) warn("CHANGELOG: [Unreleased] must precede the latest release (Keep a Changelog order)");
 for (const m of fs.readFileSync(path.join(root, "README.md"), "utf8").matchAll(versionRe)) staleVersions.push({ file: "README.md", version: m[0] });
 for (const { file, version } of staleVersions) if (version !== latest) warn(`${file}: stale version ${version} (latest ${latest})`);
 

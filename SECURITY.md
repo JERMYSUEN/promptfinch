@@ -1,16 +1,39 @@
-# 資料與安全
+# Security and data handling
 
-- 每位使用者自行設定模型金鑰。本專案不提供共用金鑰、不代付模型費用。
-- 金鑰僅由本機 Node.js 後端的環境變數讀取。原生 App 保存 `.env` 的路徑，沒有把金鑰複製到套件或前端。
-- `.env` 為本機明文設定，請使用自己的檔案、限制權限（`chmod 600 .env`），勿提交到 Git。第一版尚未整合 Keychain。
-- Mac 後端固定綁定 `127.0.0.1:3210`。這是個人本機服務，沒有帳號或多使用者隔離；不要直接暴露至公網。
-- 伺服器先驗證每個請求的 `Host`。預設只允許 `localhost`、`127.0.0.1`、`[::1]` 與非萬用的設定監聽主機，且連接埠必須符合實際監聽埠；`HOST=0.0.0.0` 或 `HOST=::` 不代表信任任意主機。API 若附有 `Origin`，還必須與已允許的 `Host` 相符；未附 `Origin` 的原生 API 呼叫仍可使用。格式錯誤或未允許的來源會在讀取設定或呼叫模型前遭拒。
-- 獨立伺服器若經反向代理部署，可使用 `ALLOWED_HOSTS=prompts.example.com,proxy.example.com:8443` 明確列出對外主機。只能填完整主機名稱或 IP（IPv6 加方括號），可附連接埠；不可填 URL、路徑、帳密或萬用字元。省略連接埠允許未附埠與標準 HTTP/HTTPS 的 80/443；指定非標準埠時必須精確相符。伺服器不自動信任 `Forwarded`／`X-Forwarded-Host`，代理必須傳送正確的 `Host`。Mac App 強制清空此清單，維持本機限定；此防護不取代代理部署需要的 HTTPS 與存取控制。
-- 原文、結果與說明在正常使用時只存在記憶體，不寫日誌或歷史記錄。複製、貼回及來源變動時的複製備援會使用系統剪貼簿；清除工作台不會刪除已複製的剪貼簿。
-- 啟用背景選取功能時，助手以listen-only監聽滑鼠選取與右鍵事件，讀取目前來源程式可存取的選取資訊；另外監聽按鍵以關閉待選操作，不讀取、保存或記錄按鍵內容。沒有持續監看剪貼簿。右鍵只顯示附加操作選單，不呼叫模型；點選「轉為英文 Prompt」後才關閉來源選單、重新核對選取並生成。安全可編輯欄位若只提供非空選取範圍，助手可能暫時讀取欄位值，再取出該範圍；值超過65,536個UTF-16單位會拒絕，欄位內容不寫入日誌。
-- 貼回需要有效、非空且與選取文字 UTF-16 長度相符的範圍，並重新核對前景程式、欄位及文字；已知唯讀欄位不貼回。只有文字資訊的選取仍可轉換，無法確認貼回位置時只複製結果供手動使用。模擬一次⌘V後只回報「已送出貼上操作」，不宣稱來源已寫入；請檢查來源文字。可在設定關閉自動貼回；不會自動送出聊天訊息。暫存前須完整備份剪貼簿，還原結果在回呼完成後顯示，並保護使用者較新的複製內容。備份不完整、暫存失敗或立即還原失敗時，停止貼回且不自動複製覆寫剪貼簿；結果仍可手動複製。
-- 真實模型模式會把需求與目標模型名稱送往 `.env` 設定的模型服務。模型供應商的資料保留政策由供應商決定。
-- mock 不會呼叫模型，也不提供真正的英文翻譯；在介面與輸出中明確標示。
-- 手動執行 `scripts/verify-multilingual.js --live` 會把指定測例送至已設定的模型，可能計費，並刻意將合成測例與結果寫到測試檔。它不屬於正常使用或自動單元測試；公開驗證檔僅含非敏感固定案例，不應換成私人輸入後提交。
+PromptFinch is a personal local tool. Each user configures their own model provider and pays that account's charges. The project supplies no shared key, hosted model, account system or multi-user isolation. Security-sensitive changes should identify the source commit or release tag; old downloads are not automatically updated when `main` changes.
 
-目前沒有對外的安全回報信箱。發現疑似漏洞時，請先用不含私人資料的最小案例聯絡儲存庫維護者；不要公開可用金鑰。發佈 GitHub 儲存庫後可啟用 GitHub 的私人漏洞回報功能。
+## Reporting a vulnerability
+
+As checked on 2026-10-15, this repository's GitHub private vulnerability reporting is disabled, and no dedicated security email is published. Do not post credentials, private data or a working exploit in a public issue. Ask the maintainer for a private reporting channel through a non-sensitive [contact request](https://github.com/JERMYSUEN/promptfinch/issues), then share details through the channel they provide. If GitHub private reporting is later enabled, its **Security → Report a vulnerability** entry provides that route. Ordinary non-sensitive bugs follow [Contributing](CONTRIBUTING.md).
+
+## Credentials and local storage
+
+- Only the Node.js backend reads model credentials from its environment, optionally loaded from a private `.env`. The frontend and API configuration response do not expose the key. The native app retains a configuration-file path rather than copying the key into its bundle.
+- Model keys remain in a plain-text file, not Keychain. Restrict a private file's permissions, for example `chmod 600 .env`, and keep it out of Git, screenshots and support reports. The app creates its own settings file with owner-only permissions. This is separate from the personal code-signing key, which lives in the login Keychain.
+- Normal prompt input, result and explanation text stay in process memory; there is no database or prompt-history feature. Native UserDefaults persist interface/selection preferences, task type, target-model hint, Node path and configuration path. Do not put private prompt content into a model-name hint.
+- Native status diagnostics append to `~/Library/Application Support/PromptSelection/debug.log`. They record events, application/process identifiers, roles, lengths and window geometry, not prompt/result text, key contents or typed characters. There is no automatic log rotation. Review metadata before sharing excerpts; logs are not anonymous just because prompt text is absent.
+- Explicit live-evaluation scripts intentionally save synthetic cases and results. These files are different from normal workspace behavior. Do not substitute private inputs and then commit the output.
+
+The browser uses no application cookies, browser storage, analytics or remote fonts. Clearing/reloading a workspace does not erase clipboard-manager history, provider-side data, local preferences or a file the user deliberately saved.
+
+## Network boundary
+
+The native app binds its owned backend to `127.0.0.1:3210` and clears `ALLOWED_HOSTS`. The standalone server defaults to `127.0.0.1:3000`. Local processes can call a reachable local API without authenticating, so Host/Origin protections do not isolate users or processes.
+
+Each request must have one valid, allowed Host. By default, loopback names and the non-wildcard configured bind hostname must use the actual listening port. Binding to `0.0.0.0` or `::` does not trust arbitrary hosts. API Origin, when present, must match the allowed Host and port; cross-site browser requests are rejected. Native callers may omit Origin. The server does not trust forwarded host headers.
+
+A standalone reverse proxy can use an explicit `ALLOWED_HOSTS` list such as `prompts.example.com,proxy.example.com:8443`. Entries are hostnames/IP authorities, not URLs or wildcards; IPv6 uses brackets. Omitted ports allow no port or standard 80/443, while nonstandard ports must match. This list is not an access-control system. A public deployment needs separately implemented HTTPS, authentication and isolation; Docker and remote deployment have not been validated. Do not assume that a working local service is safe to expose publicly.
+
+Live mode sends the selected/manual request and editing context, including the optional target-model hint, to the configured provider. Provider retention and billing policies apply. PromptFinch does not reuse Codex/Claude account credentials or silently switch to another paid provider. Mock mode makes no model call and explicitly states that it does not translate or semantically optimize.
+
+The server bounds requests and provider responses, validates input/output structure, limits active optimization calls, and returns safe errors without raw provider bodies. It does not establish semantic correctness of a generated prompt. Client cancellation propagates an abort but cannot guarantee that a provider stops processing or charging. See the [API reference](docs/api.md).
+
+## Selection and clipboard access
+
+With Accessibility permission and selection features enabled, the native app uses a listen-only event monitor to inspect currently accessible selected text. Keyboard events invalidate pending actions; typed character content is not read or logged. There is no background clipboard monitor, OCR or forced-copy operation.
+
+If a safe editable field exposes a nonempty selected range but no selected-text attribute, capture may temporarily read the field value and extract that range. Values above 65,536 UTF-16 code units are rejected; full field contents are not logged. A right-click alone only offers the companion action. Text is sent to a model after an explicit conversion choice or another deliberate generation entry point.
+
+For a new preference profile, the selection button, right-click menu and automatic paste-back are enabled. Turn off automatic paste-back to review before replacing editable source text. Paste-back requires a valid range and rechecks the foreground app, field and selection. Known read-only fields and recognized terminals do not receive generated paste-back; unknown/custom terminal controls need separate identification checks. The tool may dismiss a host context menu after an explicit choice, but it does not submit a chat message or terminal command.
+
+Copy and paste-back use the system clipboard. Before temporary paste content, the app requires a complete clipboard backup; restoration protects a newer user copy. A paste status reports a requested operation, not proof of a successful host edit. Clipboard failure paths retain the visible result for deliberate copying rather than silently overwriting the clipboard. Clearing the workspace does not clear copied text. Review the [terminal limits](docs/terminal.md) and [troubleshooting guide](docs/troubleshooting.md).

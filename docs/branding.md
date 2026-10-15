@@ -2,9 +2,11 @@
 
 **Select. Refine. Paste.**
 
+這份文件保留 2026-10-09 的更名範圍與當時驗證；不是目前安裝版本、測試數量或模型服務狀態的即時報告。最新操作見 [macOS 指南](macos.md)，版本與已發布下載的差異見 [CHANGELOG](../CHANGELOG.md)。
+
 國際化顯示名稱：**PromptFinch**。公開 GitHub 儲存庫：[JERMYSUEN/promptfinch](https://github.com/JERMYSUEN/promptfinch)。npm 專案名稱及來源包也使用新名稱。Finch 指小型鳥類，作為輕巧選取助手的名稱。
 
-## 更名範圍
+## 當時的更名範圍
 
 - macOS App：`PromptFinch.app`，主視窗、應用程式選單、選單列入口及右鍵附加選單標題。
 - macOS Services：`PromptFinch — 轉為英文 Prompt`。
@@ -12,7 +14,7 @@
 - README 保留英文及 28 個其他語言／書寫介紹，只更換品牌名稱；npm 專案名稱為 `promptfinch`。
 - 公開來源包：`PromptFinch-source-v1.0.0.zip`。
 
-右鍵仍先顯示操作選單，只有點選轉換才生成。目前 macOS 介面可在設定切換繁體中文、英文、日文與韓文，預設繁體中文；瀏覽器介面仍為繁中。README 頁首的語言連結只切換文件頁面，不會改動 App 的介面設定。
+右鍵仍先顯示操作選單，只有點選轉換才生成。macOS 介面可在設定切換繁體中文、英文、日文與韓文，預設繁體中文；瀏覽器介面仍為繁中。README 頁首的語言連結只切換文件頁面，不會改動 App 的介面設定。
 
 ## 既有安裝與相容性
 
@@ -27,7 +29,7 @@ npm run install:mac
 
 為保留設定與固定簽章，內部 bundle ID `org.promptstudio.selection`、執行檔 `PromptSelection`、Application Support 的 `PromptSelection` 目錄、UserDefaults 鍵與 API 識別 `prompt-studio` 沿用原值。實際專案目錄無需改名；既有 `.env` 路徑及模型設定保持原樣。沒有重設 TCC 或重新建立簽章私鑰。
 
-## 核對
+## 歷史核對
 
 2026-10-09 已完成 build 9 的建置、後端更新與更名安裝，實際核對結果：
 
@@ -37,4 +39,4 @@ npm run install:mac
 - 原設定檔路徑、設定檔內容及 UserDefaults 匯出內容的 SHA-256 均與更名前一致。
 - 唯一已安裝 App 啟動了自己的後端，回報 `live/ready/deepseek-flash`；日誌記錄 `watcher started`，原權限可繼續使用。
 
-這次沒有重新呼叫付費模型，也沒有重做 Codex／Claude 的真人右鍵驗收；前輪使用者已確認附加選單及點一次生成可用。舊來源 ZIP 與歷史驗證記錄保留原名稱。
+這次沒有重新呼叫付費模型，也沒有重做 Codex／Claude 的真人右鍵驗收；前輪使用者已確認附加選單及點一次生成可用。當時已有的來源 ZIP 與歷史驗證記錄保留原名稱；這不表示那些本機產物都已上傳到 GitHub。

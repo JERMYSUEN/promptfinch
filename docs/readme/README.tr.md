@@ -8,6 +8,8 @@
 
 PromptFinch, genel amaçlı bir istem düzenleyici ve iyileştiricidir. Herhangi bir dilde talimat girin veya seçin; yazma, kodlama, araştırma, özetleme ve planlama için İngilizce istem oluşturun. Açık gereksinimleri, istenen yanıt dilini ve tırnak içindeki sabit metinleri korumak üzere tasarlanmıştır.
 
+Modelden amacı, girdileri ve kısıtları netleştirmesi, yararlı adımları düzenlemesi, önemli bilgi eksiklerini ele alması ve özgün gereksinimlerden kontroller türetmesi istenir. Zaten açık olan istekler, yeni gereksinimler uydurulmadan en az değişiklikle düzenlenmelidir. PromptFinch talimatları düzenler; anlatılan görevi yerine getirmez. Kalite modele bağlı olduğundan sonucu inceleyin. Yalnızca sağ tıklamak modele metin göndermez.
+
 macOS uygulaması, elle kullanılan çalışma alanını seçim asistanıyla birleştirir; tarayıcı çalışma alanı da mevcuttur. Üretim için yapılandırılmış model API anahtarı gerekir. Simülasyon modu işleyişi gösterir; çeviri veya iyileştirme yapmaz.
 
 macOS arayüzü için Ayarlar’dan Geleneksel Çince (varsayılan), İngilizce, Japonca veya Korece seçilebilir. Tarayıcı arayüzü Geleneksel Çince olarak kalır. İyileştirme ve varsayım notları modelden Geleneksel Çince olarak istenir; arayüz dilini değiştirmek bu notları çevirmez. README’deki dil bağlantıları yalnızca belge sayfalarını değiştirir.

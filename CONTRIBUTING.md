@@ -1,23 +1,63 @@
-# 參與開發
+# Contributing
 
-需要 Node.js 22 以上。原生功能另需要 macOS 13 以上與 Xcode Command Line Tools（`xcode-select --install`）。
+Start with the [documentation index](docs/README.md) and [architecture](docs/design.md). The backend uses Node.js built-ins without third-party runtime packages; the native client uses Swift, AppKit and SwiftUI without Swift package dependencies. Keep changes focused and explain any new dependency.
+
+## Development checks
+
+Use Node.js 22 or later. Native checks/builds also need macOS 13+ and Apple's Xcode Command Line Tools.
 
 ```sh
 npm ci
 npm run check
+npm run check:docs
 npm test
+
+# Install a test browser once, then run browser checks.
+npx playwright install chromium
+npm run test:ui
+
+# Or use an installed Google Chrome.
 PLAYWRIGHT_CHANNEL=chrome npm run test:ui
-# macOS
+
+# macOS only
 npm run test:mac
 npm run build:mac
+
+# Source archive with the explicit public-file allowlist.
+npm run package:source
 ```
 
-瀏覽器測試也可先 `npx playwright install chromium` 再 `npm run test:ui`。
+Run checks appropriate to the change and report what actually ran. The GitHub workflow runs syntax/documentation checks, Node tests, native checks and a native build. Browser flows and physical mouse acceptance are separate; CI does not publish releases or prove live-model quality.
 
-文件翻譯以根目錄 `README.md` 的英文內容為來源，各語言文件位於 `docs/readme/README.<locale>.md`；簡體中文使用 `zh-CN`，繁體中文使用 `zh-TW`。各 README 最上方的語言列連至獨立文件頁。新增語言時請同步更新所有頁面的語言列，以及 `scripts/package-source.js` 的 `readmeLocales` 清單。翻譯中的文件連結須相對於所在目錄，指令、API 欄位、固定字串與設定範例應保留原樣；僅翻譯簡介的頁面須清楚標示，並保留完整英文技術文件入口。
+For existing native installations, installing a new app preserves the active external backend. Native-plus-backend changes need `build:mac`, `install:mac`, then `update:mac-backend` from the trusted updated checkout. Backend-only changes use `update:mac-backend`. See the [macOS guide](docs/macos.md) for stable local signing and permissions. Do not commit private signing material.
 
-請維持零執行期套件的後端與原生 Swift/AppKit/SwiftUI 架構。修改英文編輯策略時，核對數字、名稱、原本的答案語言、輸出格式、關鍵缺漏與非關鍵假設；API 假模型測試只能驗證協定，不能證明真實模型的翻譯品質。
+## Prompt-editing changes
 
-提交 Issue 或 PR 時不要附上金鑰、`.env`、私人原文、剪貼簿或原生偏好設定。使用虛構、可公開的範例。涉及 Services 或取字時，請記錄 macOS 版本、來源軟體版本、是否有輔助使用權限、重現步驟，以及使用哪個入口。
+Use [optimization-value cases](tests/fixtures/optimization-value.json) to assess useful execution guidance and restraint on already-clear requests. Also review source intent, facts, Unicode literals, units, numerical bounds, conditional scope, answer language, output format, supplied sources and necessary clarification. Preserve the requested task rather than answering it or adding arbitrary requirements.
 
-專案包含 MIT 授權。請保留第三方套件的原有授權，勿直接加入授權不相容的程式碼。
+Fake-provider tests establish transport and schema behavior, not semantic quality. Live evaluation is explicit, uses the contributor's own model account, can incur charges and deliberately saves its results. Use synthetic inputs only, review outputs separately from literal checks, and preserve failed attempts. A newer prompt policy cannot inherit a prior revision's live-quality score. Never replace a provider failure with an unlabeled mock result or use the demo GIF as model evidence.
+
+## Documentation and translations
+
+English `README.md` is the source. Localized pages use `docs/readme/README.<locale>.md`; keep `zh-CN` and `zh-TW` separate. There are 29 documentation editions, representing 28 languages with separate Chinese scripts. The two Chinese editions contain the full reference; the other 26 translations are introduction-only and must say so.
+
+Preserve commands, API field names, identifiers and example literals when translating. Resolve relative links from each document's own directory. A language link changes the documentation page; it does not switch app language or certify model coverage. For a new locale, update every language banner and the `readmeLocales` allowlist in `scripts/package-source.js`. Obtain language review where possible; structural checks do not certify a translation.
+
+When adding a public guide, link it from `docs/README.md` and add it to `scripts/package-source.js` if it belongs in the source archive. Keep dated test records labeled with their source revision and limitations. Do not rewrite raw synthetic evidence to make a result look successful. The corrected release-note source is [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md); updating it does not rebuild a release download.
+
+`npm run check:docs` checks navigation, README structure and changelog ordering. Also check local links, anchors, image paths, commands and factual claims against the relevant implementation. Avoid personal absolute paths and do not publish ignored handoff notes, local artifacts or original private recordings.
+
+## Bug reports and pull requests
+
+Use [GitHub Issues](https://github.com/JERMYSUEN/promptfinch/issues) for ordinary bugs. Include:
+
+- Source commit or release tag; macOS/Node version and architecture where relevant.
+- Browser or source app/terminal and version; for CLI workflows, the CLI version separately.
+- Entry point, relevant settings and whether Accessibility permission is enabled.
+- A small synthetic request, reproduction steps, expected result and actual behavior.
+- For quality reports, the generated prompt and notes from that synthetic case, plus the configuration's non-secret model identifier and prompt language.
+- The checks you ran, and any provider error status, without raw provider bodies or credentials.
+
+Do not attach `.env`, API keys, real user prompts, clipboard contents, native preferences, signing keys or an unreviewed diagnostic log. Native diagnostics omit prompt text but contain application/process and timing metadata. Sensitive vulnerabilities follow [SECURITY.md](SECURITY.md), not a public exploit report.
+
+Pull requests should describe the resulting behavior and relevant verification. Keep generated media clearly labeled as synthetic or recorded. PromptFinch uses the [MIT License](LICENSE); retain required third-party notices and use compatible contributions.

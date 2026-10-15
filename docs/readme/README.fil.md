@@ -10,6 +10,8 @@
 
 Pang-edit at pagpapahusay ng prompt ang PromptFinch para sa pagsusulat, coding, pananaliksik, pagbubuod at pagpaplano. Maglagay o pumili ng tagubilin sa anumang wika upang makabuo ng English prompt. Dinisenyo ito upang mapanatili ang tahasang hinihingi, gustong wika ng sagot at takdang tekstong nasa panipi.
 
+Hinihiling sa modelo na linawin ang layunin, input at mga limitasyon, ayusin ang mga kapaki-pakinabang na hakbang, tugunan ang mahahalagang kulang na impormasyon at bumuo ng mga pagsusuri mula sa orihinal na hinihingi. Kaunting pagbabago lang ang dapat gawin sa malinaw nang kahilingan, nang walang iniimbentong bagong kinakailangan. Mga tagubilin ang ine-edit ng PromptFinch; hindi nito ginagawa ang mismong gawain. Suriin ang resulta dahil nakadepende sa modelo ang kalidad. Hindi nagpapadala ng teksto sa modelo ang pag-right-click lang.
+
 May manwal na workspace at selection assistant ang macOS app; pumili ng teksto sa katugmang app, mag-right-click, at piliin ang **Convert to English prompt** sa kasamang menu para makita ang resulta. May browser workspace din. Kailangan ng naka-configure na model API key para sa aktuwal na generation. Preview lang ang Mock, walang pagsasalin o pagpapahusay.
 
 Maaaring piliin sa Settings ang Traditional Chinese (default), English, Japanese o Korean para sa interface ng macOS. Traditional Chinese pa rin ang interface ng browser. Hinihiling sa modelo ang mga tala tungkol sa pagpapahusay at mga palagay sa Traditional Chinese; hindi isinasalin ang mga ito kapag binago ang wika ng interface. Mga pahina ng dokumentasyon lang ang pinapalitan ng mga link ng wika sa README.

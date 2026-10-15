@@ -8,6 +8,8 @@
 
 PromptFinch is een veelzijdige prompteditor en -optimalisator. Voer instructies in of selecteer ze, in elke taal; maak Engelse prompts voor schrijven, programmeren, onderzoek, samenvattingen en planning. Het is ontworpen om expliciete eisen, de gevraagde antwoordtaal en vaste tekenreeksen tussen aanhalingstekens te behouden.
 
+Het model krijgt de opdracht het doel, de invoer en de beperkingen te verduidelijken, nuttige stappen te ordenen, belangrijke ontbrekende informatie te behandelen en controles uit de oorspronkelijke eisen af te leiden. Duidelijke verzoeken horen slechts minimaal te worden aangepast, zonder nieuwe eisen te verzinnen. PromptFinch bewerkt instructies en voert de beschreven taak niet uit. Controleer het resultaat; de kwaliteit hangt van het model af. Alleen rechtsklikken verstuurt geen tekst naar het model.
+
 De macOS-app combineert een handmatige werkruimte met een selectieassistent; een browserwerkruimte is beschikbaar. Werkelijke generatie vereist een ingestelde API-sleutel voor het model. De simulatiemodus toont de werkwijze en vertaalt of optimaliseert niet.
 
 De macOS-interface biedt traditioneel Chinees (standaard), Engels, Japans en Koreaans; kies de taal in de instellingen. De browserinterface blijft in traditioneel Chinees. Toelichtingen op verbeteringen en aannames worden bij het model in traditioneel Chinees aangevraagd en niet vertaald wanneer de interfacetaal verandert. De taallinks in de README wisselen alleen tussen documentatiepagina’s.

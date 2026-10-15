@@ -8,6 +8,8 @@
 
 PromptFinch: editor e otimizador de uso geral. Introduza ou selecione instruções em qualquer idioma: prompts em inglês para escrita, programação, pesquisa, resumos e planeamento. Foi concebido para preservar os requisitos explícitos, o idioma de resposta solicitado e os textos fixos entre aspas.
 
+Pede-se ao modelo que esclareça o objetivo, os dados de entrada e as restrições, organize passos úteis, trate as lacunas de informação importantes e derive verificações dos requisitos originais. Pedidos já claros devem receber alterações mínimas, sem inventar novos requisitos. O PromptFinch edita as instruções e não executa a tarefa descrita. Reveja o resultado: a qualidade depende do modelo. Um clique direito, por si só, não envia texto ao modelo.
+
 A aplicação para macOS combina espaço manual e assistente de seleção; há versão web. Geração real: chave API de modelo configurada. Modo simulado: pré-visualização do fluxo, sem tradução nem otimização.
 
 A interface macOS permite escolher chinês tradicional (predefinido), inglês, japonês ou coreano nas definições. A interface do navegador permanece em chinês tradicional. As notas sobre melhorias e pressupostos são solicitadas ao modelo em chinês tradicional e não são traduzidas ao mudar o idioma da interface. Os links de idiomas do README mudam apenas a página de documentação.

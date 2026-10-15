@@ -8,6 +8,8 @@
 
 PromptFinch: éditeur et optimiseur polyvalent de consignes. Saisissez ou sélectionnez des consignes dans toute langue pour produire une invite anglaise destinée à écrire, coder, rechercher, résumer ou planifier. Il est conçu pour préserver les exigences explicites, la langue de réponse demandée et les textes fixes entre guillemets.
 
+Le modèle est invité à clarifier l’objectif, les données d’entrée et les contraintes, à organiser les étapes utiles, à traiter les informations essentielles manquantes et à déduire des vérifications des exigences initiales. Une demande déjà claire ne doit subir que des modifications minimales, sans inventer de nouvelles exigences. PromptFinch modifie les consignes sans exécuter la tâche décrite. Vérifiez le résultat : la qualité dépend du modèle. Un clic droit seul n’envoie aucun texte au modèle.
+
 L’application macOS associe espace manuel et assistant de sélection; espace web disponible. Génération réelle: clé API de modèle configurée. Mode simulé: aperçu du parcours sans traduction ni optimisation.
 
 L’interface macOS propose le chinois traditionnel (par défaut), l’anglais, le japonais et le coréen, au choix dans les réglages. L’interface du navigateur reste en chinois traditionnel. Les notes sur les améliorations et les hypothèses sont demandées au modèle en chinois traditionnel et ne sont pas traduites lors d’un changement de langue de l’interface. Les liens de langue du README changent uniquement la page de documentation.

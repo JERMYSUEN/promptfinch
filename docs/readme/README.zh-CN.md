@@ -26,6 +26,8 @@ macOS App 的**设置 → 界面语言**可选繁体中文（默认）、英文�
 
 macOS App 生成英文 Prompt 指令。浏览器默认生成英文指令，也提供繁体中文选项。API 使用 `promptLanguage: "en"` 获取英文指令；省略时保留 `zh-Hant` 默认值。最终答案语言是原始 Prompt 中的另一项需求。工具接受 Unicode 输入，但文档翻译不代表每种语言的模型质量均已验证。
 
+[文档索引](../README.md) · [故障排查](../troubleshooting.md) · [完整 API 参考](../api.md)
+
 ## 功能
 
 - 接受原始 Prompt、任务类型，以及可选的下游目标模型名称。
@@ -59,7 +61,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-macOS App 需要从源码构建；此仓库目前没有提供现成且经过公证的安装程序。
+要使用最新文档所述功能，请从当前的 `main` 源码构建。[v1.0.0 发行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.0.0) 也提供较早的 Apple Silicon ZIP；它早于后续 Terminal 与优化器变更，不是经过公证的安装程序，也不包含 Node.js。[修订发行说明](../releases/v1.0.0.md)列明其涵盖范围与版本标签注意事项。项目没有自动更新功能，目前也未提供 Intel／Universal Binary 下载。
 
 ### 浏览器演示（不需 API 密钥）
 
@@ -103,6 +105,8 @@ npm run install:mac -- --config .env
 ## 模型配置
 
 实时生成使用 **OpenAI 兼容的 Chat Completions** 端点。后端会在 `LLM_BASE_URL` 后附加 `/chat/completions`。用户需自行提供模型供应商账户并承担相关费用。
+
+PromptFinch 不包含或下载语言模型。`LLM_MODEL` 选择通过 API 编辑 Prompt 的模型；可选的目标模型字段只描述你打算粘贴结果的模型。供应商模型名称与账户权限必须符合该供应商当前的 API 配置。
 
 新配置可参考 [.env.deepseek.example](../../.env.deepseek.example)：
 
@@ -186,6 +190,8 @@ curl --fail --silent --show-error http://127.0.0.1:3000/api/optimize \
 
 API 会验证输入与模型响应结构、限制同时进行的优化请求，并报告配置、供应商、格式错误和超时错误。取消操作会关闭上游请求；供应商端的处理和计费仍由供应商控制。
 
+[完整 API 参考](../api.md)提供响应示例、配置就绪状态、限制、状态码与取消行为。`LLM_TIMEOUT_MS` 适用于每次供应商请求；模型输出格式错误时可能再尝试一次，因此这不是整个操作的总时间上限。
+
 ## macOS 操作流程
 
 1. 打开 App 手动工作台，输入或贴上需求，选择任务与可选目标模型，再生成英文 Prompt。
@@ -194,7 +200,9 @@ API 会验证输入与模型响应结构、限制同时进行的优化请求，�
 4. 其他入口包括默认的 Option-Command-P 快捷键、支持的 macOS 服务，以及明确的剪贴板操作。宿主 App 必须提供可用的文本选择功能，因此不保证所有 App 都兼容。
 5. 可选自动贴回需要可信的非空选择范围，并在发送粘贴操作前重新核对来源 App、焦点字段与选中文本。无法确认位置时，结果会复制供手动使用；只有文本信息的选择仍可转换，再自行粘贴。状态只报告已发送粘贴操作，请检查来源文本，因为来源软件可能忽略模拟按键。剪贴板恢复结果会在回调完成后显示。备份不完整、暂存或立即恢复失败时，会停止贴回且不自动复制，保留结果供自行复制。面板也提供复制及手动贴回。贴回不会发送聊天消息，并可在设置中停用。Mock 结果不会贴回。
 
-关闭工作区窗口后，选择助手仍会在菜单栏运作；结束 App 则会停止由它启动的后端。辅助菜单是独立且不会启用宿主 App 的操作面板，不会插入宿主 App 原有的上下文菜单。详见[右键操作验证](../context-menu-verification.md)。
+首次建立原生偏好设置时，选择按钮、右键菜单与自动贴回默认开启。若要在替换可编辑原文前先查看结果，请在设置关闭自动贴回；已识别的终端来源不受此偏好影响，仍只复制结果。
+
+关闭工作区窗口后，选择助手仍会在菜单栏运作；结束 App 则会停止由它启动的后端。辅助菜单是独立且不会抢走焦点的操作面板，不会插入宿主 App 原有的上下文菜单。详见[右键操作验证](../context-menu-verification.md)。
 
 ### 仅更新原生后端
 
@@ -204,7 +212,18 @@ API 会验证输入与模型响应结构、限制同时进行的优化请求，�
 npm run update:mac-backend
 ```
 
-更新程序会先暂存并以 mock HTTP 检查候选版本，正常关闭 App、检查端口，再切换后端版本并重新启动 App。若启动失败会尝试恢复。它不会更改所选模型配置，也不会终止无关的端口监听进程。Swift 或原生 UI 更改仍须运行 `build:mac` 与 `install:mac`。
+更新程序会先暂存并以 mock HTTP 检查候选版本，正常关闭 App、检查端口，再切换后端版本并重新启动 App。若启动失败会尝试恢复。它不会更改所选模型配置，也不会终止无关的端口监听进程。安装重新构建的 App 会保留现有外部后端，不会自动选用较新的内附后端文件。
+
+现有安装若同时更新原生与后端代码，请先更新可信任的源码工作目录，再运行：
+
+```sh
+git pull --ff-only
+npm run build:mac
+npm run install:mac
+npm run update:mac-backend
+```
+
+若只更改后端，更新源码后运行 `update:mac-backend` 即可。请保留此电脑已配置的稳定签名身份；新电脑须先完成快速开始中的一次性签名配置。更新程序是手动本地命令，不是自动下载服务。
 
 ## Terminal 与 CLI 文本选择
 
@@ -240,7 +259,7 @@ Either backend
 ## 隐私与数据处理
 
 - API 密钥由 Node.js 后端从本地配置读取，不会暴露在前端代码或封装进 App。目前密钥以纯文本环境文件保存；尚未整合 Keychain 密钥存储。
-- 输入、结果与说明在内存中处理，不使用数据库或 Prompt 历史记录。原生偏好设置及配置路径会存储在本地。原生诊断记录状态元数据与长度，不记录 Prompt 内容。
+- 输入、结果与说明在内存中处理，不使用数据库或 Prompt 历史记录。原生偏好设置（包括任务类型与目标模型提示）及配置路径会存储在本地。原生诊断记录状态元数据与长度，不记录 Prompt 内容；分享日志前仍须检查 App／进程元数据。
 - 实时模式会将请求与编辑指示传送至已配置的模型供应商，并受该供应商的数据保留政策约束。Mock 不会调用模型。
 - 浏览器界面不使用 Cookie、浏览器存储、分析工具或远程字体；重新加载会清空工作区。原生工作区可透过清除操作或结束内存会话清空。
 - 启用文本选择操作后，App 会监听鼠标事件并读取可访问的文本选择内容。若安全的可编辑字段提供非空选择范围但没有选择文本属性，助手可能暂时读取字段值。超过 65,536 个 UTF-16 code unit 的值会被拒绝；只会返回选择范围，也不会记录字段内容。
@@ -263,6 +282,7 @@ Either backend
 ```sh
 npm ci
 npm run check
+npm run check:docs
 npm test
 
 # Browser checks: install the test browser once.
@@ -277,7 +297,7 @@ npm run test:mac
 npm run build:mac
 ```
 
-`npm run dev` 会以 Node watch 模式运行独立服务器。API 测试使用本地假模型服务；原生测试使用合成目标与具名测试剪贴板。[GitHub 工作流程](../../.github/workflows/check.yml)会运行 Node 检查与 macOS 原生检查／构建。浏览器测试目前在本地运行；特定提交的结果请查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
+`npm run dev` 会以 Node watch 模式运行独立服务器。`npm run check:docs` 会检查 README 导览、翻译结构与变更记录顺序，不会认证翻译准确度或模型质量。API 测试使用本地假模型服务；原生测试使用合成目标与具名测试剪贴板。[GitHub 工作流程](../../.github/workflows/check.yml)会运行 JavaScript／文档检查、Node 测试与 macOS 原生检查／构建，不会发布发行文件。浏览器测试目前在本地运行；特定提交的结果请查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
 
 ## 贡献与授权
 

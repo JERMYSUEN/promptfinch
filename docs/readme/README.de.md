@@ -8,6 +8,8 @@
 
 PromptFinch ist ein vielseitiger Prompt-Editor und -Optimierer. Eingaben oder markierte Anweisungen in jeder Sprache werden zu englischen Prompts für Schreiben, Programmieren, Recherche, Zusammenfassungen und Planung. Es ist darauf ausgelegt, explizite Anforderungen, die gewünschte Antwortsprache und feste Zeichenfolgen in Anführungszeichen zu erhalten.
 
+Das Modell soll Ziel, Eingaben und Einschränkungen klären, sinnvolle Schritte ordnen, wichtige Informationslücken berücksichtigen und Prüfungen aus den ursprünglichen Anforderungen ableiten. Bereits klare Anfragen sollen nur geringfügig bearbeitet werden, ohne neue Anforderungen zu erfinden. PromptFinch bearbeitet Anweisungen und führt die beschriebene Aufgabe nicht aus. Prüfen Sie das Ergebnis; die Qualität hängt vom Modell ab. Ein Rechtsklick allein sendet keinen Text an das Modell.
+
 Die macOS-App verbindet manuellen Arbeitsbereich und Auswahlassistent; ein Browser-Arbeitsbereich ist verfügbar. Echte Generierung benötigt einen konfigurierten API-Schlüssel für ein Modell. Der Simulationsmodus zeigt den Ablauf, ohne zu übersetzen oder zu optimieren.
 
 Die macOS-Oberfläche unterstützt traditionelles Chinesisch (Standard), Englisch, Japanisch und Koreanisch; die Sprache lässt sich in den Einstellungen wählen. Die Browser-Oberfläche bleibt auf traditionellem Chinesisch. Hinweise zu Verbesserungen und Annahmen werden beim Modell auf traditionellem Chinesisch angefordert und bei einem Wechsel der Oberflächensprache nicht übersetzt. Die Sprachlinks im README wechseln nur zwischen Dokumentationsseiten.

@@ -30,7 +30,7 @@ The macOS app generates English prompt instructions. The browser defaults to Eng
 
 ## English technical reference
 
-[Quick start](#quick-start) · [Model configuration](#model-configuration) · [HTTP API](#http-api) · [macOS workflow](#macos-workflow) · [Terminal / CLI](#terminal-and-cli-selection) · [Privacy](#privacy-and-data-handling) · [Validation and limitations](#validation-and-limitations) · [Development](#development)
+[Quick start](#quick-start) · [Model configuration](#model-configuration) · [HTTP API](#http-api) · [macOS workflow](#macos-workflow) · [Terminal / CLI](#terminal-and-cli-selection) · [Troubleshooting](docs/troubleshooting.md) · [Documentation index](docs/README.md) · [Privacy](#privacy-and-data-handling) · [Validation and limitations](#validation-and-limitations) · [Development](#development)
 
 ### What it does
 
@@ -65,7 +65,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-The macOS app is built from source; this repository does not currently provide a ready-made, notarized installer.
+Build from the current `main` source for the latest documented behavior. The [v1.0.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.0.0) also has an older Apple Silicon ZIP; it predates later Terminal and optimizer changes and is not a notarized installer. It does not bundle Node.js. See the [corrected release notes](docs/releases/v1.0.0.md) for its scope and version-label caveat. The project has no automatic updater or current Intel/Universal binary download.
 
 #### Browser demo, no API key
 
@@ -109,6 +109,8 @@ For more macOS setup details, see the [macOS guide](docs/macos.md), currently wr
 ### Model configuration
 
 Live generation uses an **OpenAI-compatible Chat Completions** endpoint. The backend appends `/chat/completions` to `LLM_BASE_URL`. Each user provides their own provider access and pays any charges on that account.
+
+No language model is bundled or downloaded by PromptFinch. `LLM_MODEL` chooses the API model that edits prompts; the optional target-model field only describes the model you plan to paste into. Provider model names and account access must match your provider's current API configuration.
 
 For a new configuration, [.env.deepseek.example](.env.deepseek.example) provides this concrete example:
 
@@ -192,6 +194,8 @@ A successful optimization returns `prompt`, `improvements`, `assumptions`, `mode
 
 The API validates input and model response structure, limits concurrent optimization requests, and reports configuration, provider, malformed-output, and timeout errors. Cancellation closes the upstream request; provider-side processing and billing behavior remain under the provider's control.
 
+See the [complete API reference](docs/api.md) for response examples, configuration readiness, limits, status codes and cancellation behavior. `LLM_TIMEOUT_MS` applies to each provider attempt; malformed model output can trigger one additional attempt, so it is not a total-operation time limit.
+
 ### macOS workflow
 
 1. Open the app's manual workspace, enter or paste a request, choose a task and optional target model, then generate an English prompt.
@@ -199,6 +203,8 @@ The API validates input and model response structure, limits concurrent optimiza
 3. For selection actions, enable Accessibility in System Settings when prompted. In a compatible input field, select text and right-click, then choose **Convert to English prompt** in the companion menu (the label follows your app language); the result appears nearby. The host's original context menu remains available. Cancel, a click elsewhere, keyboard input, switching apps or the 12-second timeout dismisses the offered action without generating. The assistant checks the selection again after an explicit choice. You can also use the optional selection button. Some Electron apps may show an activation notice: wait about two seconds, make a new selection, and try again.
 4. Other entry points include the default Option-Command-P shortcut, macOS Services where supported, and an explicit clipboard action. Host applications must expose usable text selection; this is not universal compatibility.
 5. Optional automatic paste-back requires a trustworthy nonempty selection range and rechecks the source app, focused field and selected text before requesting a paste. If the position cannot be verified, the result is copied for manual use. Text-only selection access still permits conversion, with manual pasting. The status reports that a paste was requested; inspect the source because applications can ignore simulated key events. Clipboard restoration is reported only after its callback completes. An incomplete clipboard backup, failed temporary write or failed immediate recovery stops paste-back without automatic fallback copying; the result stays available for a deliberate copy. The panel also offers copy and manual paste-back. Paste-back does not submit the chat message and can be disabled in Settings. Mock results are not pasted back.
+
+For a new native preference profile, the selection button, right-click menu and automatic paste-back are enabled. Disable automatic paste-back in Settings to review before replacing editable source text. Recognized terminal sources remain copy-only regardless of that preference.
 
 Closing the workspace window leaves the selection assistant running in the menu bar. Quitting the app stops the backend it started. The companion menu is a separate, nonactivating action panel; it does not insert items into the host's original context menu. See the [right-click action verification](docs/context-menu-verification.md).
 
@@ -210,7 +216,18 @@ After changing trusted backend or browser source, an installed app can update it
 npm run update:mac-backend
 ```
 
-The updater stages and validates a candidate with a mock HTTP check, closes the app normally, checks the port, switches the backend version, and restarts the app. If startup fails, it attempts rollback. It does not change the selected model configuration or terminate an unrelated port listener. Swift or native UI changes still require `build:mac` and `install:mac`.
+The updater stages and validates a candidate with a mock HTTP check, closes the app normally, checks the port, switches the backend version, and restarts the app. If startup fails, it attempts rollback. It does not change the selected model configuration or terminate an unrelated port listener. Installing a rebuilt app preserves an existing external backend; it does not automatically select newer bundled backend files.
+
+For an existing installation after changes to both native and backend source, update your trusted checkout, then run:
+
+```sh
+git pull --ff-only
+npm run build:mac
+npm run install:mac
+npm run update:mac-backend
+```
+
+For backend-only changes, use `update:mac-backend` after updating the source. Keep the stable signing identity configured on this machine; a new machine needs the one-time signing setup from the quick start. The updater is a manual local command, not an automatic download service.
 
 ### Terminal and CLI selection
 
@@ -246,7 +263,7 @@ Main source files:
 ### Privacy and data handling
 
 - API keys are read by the Node.js backend from local configuration, not exposed in frontend code or bundled with the app. Keys currently live in a plain-text environment file; API-key storage is not integrated with Keychain.
-- Input, results, and explanations are processed in memory without a database or prompt-history feature. Native preferences and configuration paths are stored locally. Native diagnostics record status metadata and lengths, not prompt content.
+- Input, results, and explanations are processed in memory without a database or prompt-history feature. Native preferences, including task type and the target-model hint, and configuration paths are stored locally. Native diagnostics record status metadata and lengths, not prompt content; review app/process metadata before sharing a log.
 - Live mode sends the request and editing context to the configured model provider. The provider's data retention policy applies. Mock does not make a model request.
 - The browser interface uses no cookies, browser storage, analytics, or remote fonts. Reloading clears its workspace. The native workspace is cleared using its clear action or by ending its in-memory session.
 - Enabled selection actions observe mouse events and read accessible text selection. Where a safe editable field exposes a nonempty selected range but no selected-text attribute, the assistant may temporarily read the field value. Values over 65,536 UTF-16 code units are rejected; only the selected range is returned, and field contents are not logged.
@@ -269,6 +286,7 @@ Current limits include host-app selection support, no OCR, no customizable globa
 ```sh
 npm ci
 npm run check
+npm run check:docs
 npm test
 
 # Browser checks: install the test browser once.
@@ -283,7 +301,7 @@ npm run test:mac
 npm run build:mac
 ```
 
-`npm run dev` runs the standalone server with Node's watch mode. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [GitHub workflow](.github/workflows/check.yml) runs Node checks and native macOS checks/builds. Browser tests currently run locally; check [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for the result on a particular commit.
+`npm run dev` runs the standalone server with Node's watch mode. `npm run check:docs` checks README navigation, translation structure and changelog ordering; it does not certify translation accuracy or model quality. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [GitHub workflow](.github/workflows/check.yml) runs JavaScript/documentation checks, Node tests and native macOS checks/builds. It does not publish release artifacts. Browser tests currently run locally; check [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for the result on a particular commit.
 
 ### Contributing and license
 

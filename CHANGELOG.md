@@ -1,34 +1,49 @@
 # Changelog
 
-All notable changes to PromptFinch are documented in this file.
-The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
-
-## [1.0.0] - 2026-10-10
-
-First public release.
-
-### Added
-
-- **Web workspace** (`server.js` + `public/`): multilingual prompt editor and optimizer.
-  - Interface and output languages: 繁體中文、简体中文、English.
-  - Six task types: general, coding, reasoning, creative, rewrite, API docs.
-  - Structured output standard: objective, context, requirements, steps, output format, and explicit `[PLACEHOLDER]` markers for missing information.
-  - Optimizer modes: `live` (LLM-backed) and `mock` (offline demonstration), selected via `.env`.
-- **macOS selection assistant** (native Swift/AppKit, macOS 13+):
-  - Floating action bar appears over selected text in most applications.
-  - Capture controls: `⇧Space` manual capture, auto-capture on selection up/down, `⇧D` capture from keyboard, right-click capture.
-  - One-click conversion to an English prompt runs in the background; the result window offers paste-back into the original application and clipboard restore when paste-back is not possible.
-  - Settings window with watcher controls and interface language switching.
-- **Backend contract**: versioned backend files with a deterministic content ID (`scripts/backend-release.js`), used by build, install, and in-app update tooling.
-- **Documentation**: READMEs in 29 languages with top-level navigation, plus architecture and verification guides under `docs/`.
-- **Testing & CI**: 55 Node test cases (`npm test`), 190 Swift checks (`npm run test:mac`), syntax checks (`npm run check`), and GitHub Actions workflows that lint, test, build the macOS app, and publish release artifacts.
-
-### Security
-
-- Optimizer credentials are read exclusively from a local `.env` file; the API key is never sent to the browser.
-- Explicit origin checks for `127.0.0.1:3210`, hardened selection-payload and API validation.
-- Reference `.env.example` for all supported configuration; no secrets are committed.
+Notable changes to PromptFinch are documented here. Entries describe the code at the named tag or commit; a GitHub release asset is not rebuilt when `main` changes.
 
 ## [Unreleased]
 
-- New versions of PromptFinch will be documented here. The changelog is only started as of v1.0.0; earlier development history is available in the commit log.
+### Added
+
+- Copy-only delivery for recognized terminal selections, including Apple Terminal. A user confirmed that the companion menu and English result worked in Terminal; separate Claude Code and Codex CLI versions and the remaining manual checks are not yet verified. See the [terminal guide](docs/terminal.md).
+- A synthetic Codex workflow GIF. Its interface and result are authored examples, not a real model run or an unedited recording of Codex.
+- Cross-language parity fixtures covering 29 locales / 28 languages, language-edge cases, a runner that fails on missing required literals, and targeted case selection.
+
+### Changed
+
+- English-mode task metadata and editing rules now address language inference, supplied facts, conditional requirements and task-specific execution guidance. The intent is to improve the task instructions beyond translation without adding requirements.
+- Multilingual and task-optimization reports now distinguish program checks, literal checks and semantic review. The newest task-guidance rules have no successful live before/after comparison because the recorded requests failed with HTTP 502/504. Earlier multilingual scores do not validate this newer backend. See [task-optimization verification](docs/optimization-value-verification.md).
+- Documentation corrections clarify installation, language support, release availability and verification limits. The existing `v1.0.0` tag and download are unchanged.
+
+## [1.0.0] - 2026-10-10
+
+First public release, corresponding to [tag v1.0.0](https://github.com/JERMYSUEN/promptfinch/tree/v1.0.0).
+
+### Added
+
+- An optional browser workspace and native macOS manual workspace using the same Node.js backend. Six task types: general, writing, analysis, coding, summary and marketing.
+- Browser UI in Traditional Chinese, with Traditional Chinese or English prompt instructions. The native UI supports Traditional Chinese, English, Japanese and Korean; native prompt instructions use English. The requested downstream answer language is a separate requirement.
+- Native selection actions: a selection button, an independent companion action menu beside the host's right-click menu, Services where supported, the global shortcut **⌥⌘P**, and explicit clipboard input. A right-click alone does not generate or send content to a model.
+- Nearby result review, copying, and optional paste-back to a verified editable selection. Accessibility support varies by application. Paste-back requests do not submit a chat message, and a sent paste shortcut is not proof that the host accepted it.
+- Server-side OpenAI-compatible Chat Completions integration and an explicitly labeled offline mock mode. Live generation requires the user's own provider credentials and model configuration; no model or API key is bundled.
+- Structured API responses separating `prompt`, `improvements` and `assumptions`. The copied prompt's layout follows the task; there is no mandatory Objective/Context/Steps template.
+- Versioned backend files with deterministic content IDs and a local backend updater. This is not an automatic network updater or an in-app release downloader.
+- English README plus 28 localized editions (29 locales / 28 languages), architecture notes and dated verification reports.
+- GitHub Actions for JavaScript syntax checks, Node tests, native checks and a macOS build. The workflow does not run browser UI tests, notarize the app or publish release assets.
+
+### Security
+
+- The backend reads credentials from server environment variables (optionally loaded from a local `.env`); it does not return API keys to the browser. Normal input and results are not persisted by the workspace.
+- Host validation and API Origin checks, bounded input/response handling, cancellation and limited concurrency. These checks do not provide authentication for a public deployment.
+- Native builds exclude private model configuration and signing keys. Personal local signing supports update continuity; it is not Developer ID signing or notarization.
+
+### Release and verification notes
+
+- The published `PromptFinch-1.0.0-macos-arm64.zip` is an Apple Silicon snapshot, requires macOS 13+ and a separately installed Node.js 22+ runtime, and predates the Unreleased changes above. Build current source to use those changes.
+- The tag/package release is named `1.0.0`; the tagged native bundle's internal version is `0.1.0`, build `11`. The original tag and artifact have not been rewritten to hide this mismatch.
+- Historical pre-release records report 55 Node tests and 190 native checks; these are dated evidence, not a claim that those counts cover current `main` or every host/model. See the [reliability record](docs/reliability-verification.md) and [release notes](docs/releases/v1.0.0.md).
+- Source installation requires `npm run build:mac` **before** `npm run install:mac`. Follow the [current macOS guide](docs/macos.md) for prerequisites, permissions and configuration.
+
+[Unreleased]: https://github.com/JERMYSUEN/promptfinch/compare/v1.0.0...main
+[1.0.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.0.0

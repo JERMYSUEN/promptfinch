@@ -2,11 +2,13 @@
 
 Use the existing PromptFinch macOS app alongside Claude Code or Codex CLI in macOS's built-in **Terminal**. Select displayed text with the mouse, right-click, and choose **Convert to English prompt** in PromptFinch's companion menu. No new shell command or CLI plugin is required.
 
+The generated text is an edited set of instructions, not an answer to the selected request. The optimizer is asked to clarify the task and its constraints and, when useful, organize its approach and checks without adding new requirements. English is the prompt's instruction language; a requested answer language such as Japanese or Traditional Chinese should remain in those instructions. Review the output: this behavior is a model policy, not a guarantee that every result preserves every detail.
+
 Terminal selection identifies displayed text, including scrollback. It does not identify an editable range in the running program's input. PromptFinch therefore converts and copies terminal selections for manual use; it does not replace the highlighted text or inject a paste into the terminal.
 
 ## Setup
 
-1. Build and install the macOS app using the [quick start](../README.md#build-and-install-the-macos-app). Existing users need to rebuild and reinstall after this native app change.
+1. Build and install the macOS app using the [quick start](../README.md#build-and-install-the-macos-app). Updating native selection support requires a rebuild and reinstall. If an installed app already has an external backend, also run `npm run update:mac-backend` from your updated source checkout; reinstalling the app alone keeps that existing backend. See the [update procedure](macos.md#僅更新後端不重建-app).
 2. Open PromptFinch and allow it in **System Settings → Privacy & Security → Accessibility**. Use **Check permission again** in the app if needed.
 3. In Settings, enable **Show an action menu when right-clicking selected text**.
 4. Select and reload your existing model configuration. The app starts its own local backend on `127.0.0.1:3210`; you do not need to start the browser service.
@@ -20,10 +22,10 @@ Without a model key, use the clearly labeled mock mode to check selection, menu,
 2. Use the mouse to highlight the request you want to refine. Selected text can come from an input display or earlier output; check that it contains the intended request.
 3. Right-click the highlighted text. The host context menu remains available, and PromptFinch offers **Convert to English prompt** and **Cancel** nearby when the selection is readable.
 4. Choose **Convert to English prompt**. Right-clicking alone does not generate a result or send text to the model. PromptFinch checks the source and selection again before starting.
-5. Review the English prompt and status in the nearby result panel. A successful live terminal conversion copies only the prompt; the status reports whether copying succeeded. The separate improvement and assumption notes are available in PromptFinch's manual workspace.
+5. Review the English prompt and status in the nearby result panel. A successful live terminal conversion copies only the prompt; the status reports whether copying succeeded. The separate improvement and assumption notes are available in PromptFinch's manual workspace. Those notes are currently requested in Traditional Chinese regardless of the selected interface language.
 6. Return to the intended Claude Code or Codex CLI input, remove any earlier draft you intend to replace, and paste manually. Review the complete input, then submit it yourself.
 
-The terminal copy-only policy applies even when automatic paste-back is enabled for editable fields elsewhere. PromptFinch does not send a paste key, Enter, or a shell command to recognized terminal sources. The panel's Copy action remains available; if clipboard writing fails, the result remains visible for another deliberate attempt.
+The terminal copy-only policy applies even when automatic paste-back is enabled for editable fields elsewhere. PromptFinch does not send a paste key, Enter, or a shell command to recognized terminal sources. Choosing conversion can send Escape to dismiss the host's context menu before the selection is checked again; this is not a terminal paste. The panel's Copy action remains available; if clipboard writing fails, the result remains visible for another deliberate attempt.
 
 Use an AI CLI input when pasting the result. A shell prompt treats pasted text as shell input, and line breaks can have immediate effects; [Apple documents this behavior for Terminal](https://support.apple.com/guide/terminal/trml1019/mac).
 
@@ -39,6 +41,8 @@ Use an AI CLI input when pasting the result. A shell prompt treats pasted text a
 
 Embedded terminal handling is bounded by recognizable terminal control metadata. PromptFinch does not treat every IDE text field as a terminal, scrape the whole accessibility tree, inspect terminal buffers, or change Claude Code or Codex CLI.
 
+The copy-only restriction depends on that positive identification. Other terminal apps and custom controls do not automatically inherit it. Before trying an unverified host, turn off automatic paste-back in PromptFinch and use synthetic text to confirm that no **Paste back** action is offered. For a host that cannot be identified reliably, use explicit Copy followed by PromptFinch's clipboard or manual workspace instead of selection-based paste-back.
+
 The timing matters for xterm.js: its official [clipboard implementation](https://github.com/xtermjs/xterm.js/blob/master/src/browser/Clipboard.ts) moves and focuses a helper textarea on right-click, then fills it with the selected display text. Its paste path sends data to the terminal input handler. This is why a later selection read can help and why that helper must not be treated as an editable prompt replacement target.
 
 ## Troubleshooting
@@ -49,8 +53,11 @@ The timing matters for xterm.js: its official [clipboard implementation](https:/
 - **No readable selected text:** Explicitly copy the selection using the terminal's own Copy command, then choose **Generate English prompt from clipboard** from PromptFinch's menu bar. You can also paste into the manual workspace and generate there.
 - **Mouse selection does not work:** Consult the terminal and CLI/TUI settings for mouse reporting and selection overrides. Test plain terminal text first to distinguish host selection access from CLI behavior.
 - **Result did not replace the highlight:** This is expected for terminal sources. Paste into the intended CLI input yourself.
+- **The model reports a connection, authorization, or format error:** Check the selected configuration and provider access in PromptFinch. The CLI's own provider or login is separate; PromptFinch does not inherit Claude Code or Codex CLI credentials or use their model sessions. Mock checks local flow only.
 
 PromptFinch does not monitor clipboard contents in the background, use OCR, or force-copy terminal text with simulated keys. The fallback clipboard read is a separate action you choose. A successful copy replaces the current system clipboard text; no clipboard history is saved.
+
+Selection actions use the task and optional target-model hint last chosen in PromptFinch's workspace. The hint does not switch the generation provider or model. Live mode sends the selected text and editing context to your separately configured provider; do not select shell history, secrets, or unrelated output that you do not want sent there. Closing the PromptFinch workspace leaves its menu-bar assistant active; use **Quit** to stop it and its owned backend.
 
 ## Manual acceptance check
 
