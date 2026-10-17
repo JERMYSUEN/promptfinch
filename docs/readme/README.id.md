@@ -14,6 +14,6 @@ Model diminta memperjelas tujuan, masukan dan batasan, menyusun langkah yang ber
 
 Tersedia ruang kerja macOS dan browser. Di aplikasi yang kompatibel, pilih teks, klik kanan, lalu pilih **Convert to English prompt** pada menu pendamping untuk membuka panel hasil. Generasi langsung memerlukan kunci API model. Mode simulasi hanya memperlihatkan alur, tanpa menerjemahkan atau mengoptimalkan.
 
-Bahasa antarmuka macOS dapat dipilih di Pengaturan: Tionghoa Tradisional (bawaan), Inggris, Jepang, atau Korea. Antarmuka browser tetap menggunakan Tionghoa Tradisional. Catatan perbaikan dan asumsi diminta dari model dalam Tionghoa Tradisional dan tidak diterjemahkan saat bahasa antarmuka diubah. Tautan bahasa di README hanya beralih antarhalaman dokumentasi.
+Aplikasi macOS menyediakan Tionghoa Tradisional (bawaan), Inggris, Jepang, dan Korea. Catatan perbaikan dan asumsi yang baru dibuat mengikuti bahasa antarmuka. Antarmuka browser tetap menggunakan Tionghoa Tradisional dan memiliki pemilih bahasa catatan yang terpisah. Tautan README hanya mengubah dokumentasi. Hasil yang sudah ada tidak ditulis ulang saat bahasa diubah.
 
 **Alur:** Masukkan atau pilih → Hasilkan prompt Inggris → Tinjau hasil

@@ -1,6 +1,6 @@
 {
   "name": "promptfinch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "PromptFinch — multilingual prompt editor and macOS selection assistant",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "dev": "node --watch --env-file-if-exists=.env server.js",
-    "check": "node --check server.js && node --check lib/optimizer.js && node --check public/app.js && node --check scripts/backend-release.js && node --check scripts/app-lifecycle.js && node --check scripts/install-macos.js && node --check scripts/update-macos-backend.js && node --check scripts/setup-signing-macos.js && node --check scripts/verify-signing-macos.js && node --check scripts/build-macos.js",
+    "check": "node --check server.js && node --check lib/optimizer.js && node --check public/app.js && node --check scripts/backend-release.js && node --check scripts/app-lifecycle.js && node --check scripts/install-macos.js && node --check scripts/update-macos-backend.js && node --check scripts/setup-signing-macos.js && node --check scripts/verify-signing-macos.js && node --check scripts/build-macos.js && node --check scripts/package-source.js && node --check scripts/package-macos.js && node --check scripts/check-readmes.js && node --check scripts/app-install.js && node --check scripts/check-package.js && node --check scripts/verify-multilingual.js",
     "test": "node --test tests/*.test.js",
     "check:docs": "node scripts/check-readmes.js",
     "test:ui": "playwright test",
@@ -21,7 +21,9 @@
     "install:mac": "node scripts/install-macos.js",
     "update:mac-backend": "node scripts/update-macos-backend.js",
     "test:backend-release": "node --test tests/backend-release.test.js",
-    "package:source": "node scripts/package-source.js"
+    "package:source": "node scripts/package-source.js",
+    "package:mac": "node scripts/package-macos.js",
+    "check:package": "node scripts/check-package.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0"

@@ -12,6 +12,6 @@ Het model krijgt de opdracht het doel, de invoer en de beperkingen te verduideli
 
 De macOS-app combineert een handmatige werkruimte met een selectieassistent; een browserwerkruimte is beschikbaar. Werkelijke generatie vereist een ingestelde API-sleutel voor het model. De simulatiemodus toont de werkwijze en vertaalt of optimaliseert niet.
 
-De macOS-interface biedt traditioneel Chinees (standaard), Engels, Japans en Koreaans; kies de taal in de instellingen. De browserinterface blijft in traditioneel Chinees. Toelichtingen op verbeteringen en aannames worden bij het model in traditioneel Chinees aangevraagd en niet vertaald wanneer de interfacetaal verandert. De taallinks in de README wisselen alleen tussen documentatiepagina’s.
+De macOS-app biedt traditioneel Chinees (standaard), Engels, Japans en Koreaans. Nieuwe toelichtingen op verbeteringen en aannames volgen de interfacetaal. De browserinterface blijft in traditioneel Chinees en heeft een aparte keuze voor de taal van de toelichtingen. De links in de README veranderen alleen de documentatie. Bestaande resultaten worden niet herschreven wanneer de taal verandert.
 
 **Werkwijze:** tekst selecteren → rechtsklikken → **Convert to English prompt** kiezen → resultatenpaneel (compatibele apps).

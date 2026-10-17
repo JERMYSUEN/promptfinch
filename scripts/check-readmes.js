@@ -61,8 +61,6 @@ const baseH2 = headingCount(baseText, "## ");
 // become H2, while introductory H2 sections remain H2.
 const fullReferenceH2 = baseH3 + baseH2 - 1;
 const fullStyle = ["zh-CN", "zh-TW"];
-const versionRe = /\b\d+\.\d+\.\d+\b(?<!\.\d)(?!\.\d)/g;
-const staleVersions = [];
 const rows = [];
 
 for (const lang of expected) {
@@ -97,7 +95,6 @@ for (const lang of expected) {
   } else {
     if (h2 > 1) ok.push(`summary file gained structure: h2 ${h2} > 1`);
     if (content < 150) ok.push(`content ${content} chars < 150`);
-    for (const m of text.matchAll(versionRe)) staleVersions.push({ file, version: m[0] });
   }
   rows.push({ file, h2, h3, content, ok });
 }
@@ -111,8 +108,16 @@ const unreleased = changelog.indexOf("[Unreleased]");
 const latest = rel.length ? rel[0][1] : null;
 if (pkg.version !== latest) warn(`package.json version ${pkg.version} != CHANGELOG latest ${latest}`);
 if (unreleased >= 0 && latest && unreleased > rel[0].index) warn("CHANGELOG: [Unreleased] must precede the latest release (Keep a Changelog order)");
-for (const m of fs.readFileSync(path.join(root, "README.md"), "utf8").matchAll(versionRe)) staleVersions.push({ file: "README.md", version: m[0] });
-for (const { file, version } of staleVersions) if (version !== latest) warn(`${file}: stale version ${version} (latest ${latest})`);
+// Historical release links and documented dependency versions are valid in prose.
+// Compare release metadata instead of treating every version in a README as current.
+const plist = fs.readFileSync(path.join(root, "macos/Info.plist"), "utf8");
+const plistValue = (key) => plist.match(new RegExp(`<key>${key}</key>\\s*<string>([^<]+)</string>`))?.[1];
+const nativeVersion = plistValue("CFBundleShortVersionString");
+const nativeBuild = plistValue("CFBundleVersion");
+if (nativeVersion !== pkg.version) warn(`macos/Info.plist version ${nativeVersion} != package.json ${pkg.version}`);
+if (!/^[1-9]\d*$/.test(nativeBuild ?? "")) warn(`macos/Info.plist invalid build ${nativeBuild}`);
+const lock = JSON.parse(fs.readFileSync(path.join(root, "package-lock.json"), "utf8"));
+if (lock.version !== pkg.version || lock.packages?.[""]?.version !== pkg.version) warn("package-lock.json release version differs from package.json");
 
 // ---------- summary ----------
 let bad = 0;

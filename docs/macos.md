@@ -6,7 +6,9 @@
 
 ## 安裝與建置
 
-需要 **macOS 13 以上、Node.js 22 以上**。從原始碼建置還需要 Apple 的 Xcode Command Line Tools；不必安裝完整 Xcode，也沒有第三方 Swift 套件。
+編譯目標為 **macOS 13 以上**，另需安裝 **Node.js 22 以上**。最低 macOS 13 與實體 Intel 裝置尚未完成驗證。從原始碼建置還需要 Apple 的 Xcode Command Line Tools；不必安裝完整 Xcode，也沒有第三方 Swift 套件。
+
+[v1.1.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) 提供 Apple Silicon 專用 `PromptFinch-1.1.0-macos-arm64.zip`、`PromptFinch-source-v1.1.0.zip`、`SHA256SUMS` 及公開輸入雜湊 manifest。解壓縮 App 後移至應用程式資料夾；Node 仍需另裝。公開 App 採 ad-hoc 簽章，未做 Developer ID 簽章或公證，macOS 可能阻擋不受信任的下載；請先評估來源並使用系統提供的安全控制。需要自行建置時使用下列指令。
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
@@ -114,7 +116,7 @@ App 使用 `POST /api/optimize` 的 `promptLanguage: "en"`。網頁新增「Prom
 - 若限制矛盾且原文禁止提問，Prompt 會明確用一句短通知取代不可能的交付；改善說明與假設是獨立介面資訊，不會另附在可複製 Prompt。缺少來源或佔位符本身不列為假設。
 - 不執行原任務、不捏造模型能力、不要求公開內部思考過程。模型仍可能遺漏或誤譯；重要用途應比對原文。
 
-「要求」描述的是模型策略，不能視為每次輸出都已達成的保證。改善說明與假設目前要求模型使用繁體中文，不隨介面語言自動翻譯；請到主工作台展開說明查看，浮窗主要呈現 Prompt 與操作狀態。
+「要求」描述的是模型策略，不能視為每次輸出都已達成的保證。新生成的改善說明與假設會要求模型使用目前介面語言，切換語言不重寫已生成的內容；請到主工作台展開說明查看，浮窗主要呈現 Prompt 與操作狀態。主工作台另有「對照原文與結果」，保留生成當時的原文快照並逐行標示改寫；標示不代表語意正確性已驗證。
 
 ## 常見問題
 
@@ -126,7 +128,7 @@ App 使用 `POST /api/optimize` 的 `promptLanguage: "en"`。網頁新增「Prom
 | 供應商拒絕授權或設定 | 檢查金鑰權限、帳戶額度、基底網址與模型名稱。400／404／422 類設定錯誤也可能來自不支援 JSON／thinking 參數。不要把金鑰或原始供應商回應貼進公開 Issue。 |
 | 502／504、頻率限制或結果格式錯誤 | 檢查供應商狀態、網路與額度，縮短輸入後再試；不完整或無法驗證的結果不會當作成功交付。回應結構無效時後端最多再請求一次，可能增加模型費用；取消不保證供應商尚未處理或計費。 |
 | 選取後沒有按鈕或右鍵項目 | 確認 App、輔助使用與相應入口已開啟，重新選取後再試。來源可能沒有暴露 Accessibility 文字；改用自己明確執行的複製／手動工作台。 |
-| 升級後仍像舊版的優化規則 | 安裝 App 不會覆蓋既有的外部後端 `current`；依下方更新指令另行更新後端。 |
+| 升級後仍像舊版的優化規則 | 安裝 App 不會覆蓋既有的外部後端 `current`；在新 App 設定按「使用此 App 隨附後端」，或依下方指令更新可信任的原始碼後端。 |
 
 診斷日誌位於 `~/Library/Application Support/PromptSelection/debug.log`。它記錄時間、來源程序／bundle 識別、事件、文字長度與狀態，不記錄 Prompt、結果、金鑰或按鍵內容；沒有自動輪替。回報前請先檢視並遮蔽不想公開的程式與操作資訊。正常結束 App 後可刪除這個日誌，下次執行需要時會重建。一般問題請附合成重現步驟，疑似安全漏洞則依 [安全回報方式](../SECURITY.md#reporting-a-vulnerability)處理。
 
@@ -157,9 +159,11 @@ Swift 測試編譯全部原生來源，包含空白、UTF-16 長度、輸入不�
 npm run package:source
 ```
 
-產生 `release/PromptFinch-source-v1.0.0.zip`。使用明確檔案清單，只包含原始碼、測試、文件與空白金鑰範本；排除 `.env`、偏好設定、產物、截圖、node_modules。GitHub 原始碼位於 [JERMYSUEN/promptfinch](https://github.com/JERMYSUEN/promptfinch)；ZIP 也可供離線檢視或依 README 建置。GitHub CI 已提供 Node 測試及 macOS 建置檢查。授權為 MIT，模型費用由各使用者的帳戶支付。
+產生 `release/PromptFinch-source-v1.1.0.zip`。使用明確檔案清單，只包含原始碼、測試、文件與空白金鑰範本；排除 `.env`、偏好設定、產物、截圖、node_modules。GitHub 原始碼位於 [JERMYSUEN/promptfinch](https://github.com/JERMYSUEN/promptfinch)；ZIP 也可供離線檢視或依 README 建置。GitHub CI 已提供 Node 測試及 macOS 建置檢查。授權為 MIT，模型費用由各使用者的帳戶支付。
 
-固定本機簽章只供自己的建置與更新使用，尚未做 Developer ID 簽章、公證、自動更新、Universal Binary、內附 Node 或 App Store 上架。對外分發二進位之前，需要另外規劃簽章與公證；GitHub 原始碼貢獻者不需要申請付費開發者帳號。沒有設置個人簽章的貢獻者仍可用 ad-hoc 建置，但該機器上的 Accessibility 授權可能在每次建置後失效。
+公開 App 套件請在有 Node.js 22+ 與 Xcode Command Line Tools 的 macOS 執行 `npm run package:mac`。它從明確列出的公開檔案建立乾淨副本，以 ad-hoc 簽章建置 Apple Silicon App，不讀取真實 `.env`、本機偏好或個人簽章設定；另產生來源 ZIP、`SHA256SUMS` 與 `PromptFinch-1.1.0-macos-arm64.verification.json`。manifest 記錄相對輸入路徑與 SHA-256，便於核對包內來源；這不是公證或發布者身分保證。指令不會自動上傳 GitHub。
+
+固定本機簽章只供自己的建置與更新使用；公開下載採 ad-hoc 簽章，尚未做 Developer ID 簽章、公證、自動更新、Universal Binary、內附 Node 或 App Store 上架。GitHub 原始碼貢獻者不需要申請付費開發者帳號。沒有設置個人簽章的貢獻者仍可用 ad-hoc 建置，但該機器上的 Accessibility 授權可能在每次建置後失效。
 
 ### 僅更新後端（不重建 App）
 
@@ -173,7 +177,9 @@ npm run update:mac-backend
 
 更新指令會先在隔離的臨時埠驗證候選版本語法與 mock HTTP 流程，再結束本工具、確認 3210 沒有其他程序監聽後原子切換版本，重啟 App 並核對後端版本識別。若啟動失敗，會切回先前版本。它不會重建或改寫已簽章 App，不會讀取或複製 `.env`，也不會停止其他程序。外部後端版本存於使用者資料夾，不能當成經 App 簽章驗證的程式碼；只更新自己信任的來源，並保持 API 金鑰只在 `.env`。
 
-已有 `current` 後，重新建置或安裝 App 仍使用該版本，**不會自動以新 App 內的種子覆蓋外部後端**。若這次更新同時修改 Swift 與後端，先建置／安裝原生 App，再更新後端：
+已有 `current` 後，重新建置或安裝 App 仍使用該版本，**不會自動以新 App 內的種子覆蓋外部後端**。下載新版 App 後若要採用它附帶的規則，開啟設定中執行階段區塊的「使用此 App 隨附後端」。這個明確操作會暫存並驗證隨附後端、停止自身服務後切換啟動；失敗時會嘗試恢復原先後端。它保留模型設定檔、Node 路徑與偏好，不會下載檔案或呼叫模型。切換前先保留未完成文字；不要刪除整個支援資料夾來更新。
+
+若從原始碼同時修改 Swift 與後端，先建置／安裝原生 App，再用命令更新後端：
 
 ```sh
 npm run build:mac

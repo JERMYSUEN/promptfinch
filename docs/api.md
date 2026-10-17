@@ -30,7 +30,16 @@ Example for the default standalone mock server:
     "summary": "摘要",
     "marketing": "行銷"
   },
-  "promptLanguages": ["zh-Hant", "en"]
+  "promptLanguages": [
+    "zh-Hant",
+    "en"
+  ],
+  "notesLanguages": [
+    "zh-TW",
+    "en",
+    "ja",
+    "ko"
+  ]
 }
 ```
 
@@ -53,6 +62,7 @@ If your curl does not recognize `--fail-with-body`, omit that flag to inspect an
 | `prompt` | Required nonblank string, up to 12,000 UTF-16 code units. Whitespace and code indentation are preserved. |
 | `task` | Optional string: `general`, `writing`, `analysis`, `coding`, `summary`, `marketing`. Default: `general`. |
 | `targetModel` | Optional single-line string, up to 80 UTF-16 code units. Leading/trailing whitespace is trimmed. It is a wording hint, not the generation model selector. |
+| `notesLanguage` | Optional `zh-TW`, `en`, `ja`, or `ko`. Default: `zh-TW`. Controls only improvement and assumption notes, independently of instruction and downstream answer languages. |
 | `promptLanguage` | Optional `en` or `zh-Hant`. Default when omitted: `zh-Hant`. It controls prompt instructions, not the downstream answer language specified in `prompt`. |
 
 Omit an optional field to use its default; `null` is not a valid substitute. Use `LLM_MODEL` in the server configuration to select the model that edits prompts. There is no streaming, file-upload or batch endpoint; clients submit one request at a time or manage their own bounded queue.
@@ -63,19 +73,21 @@ For the request above, the default mock response is:
 {
   "prompt": "DEMO ONLY — the source below has NOT been translated or semantically optimized.\n\nTask requirements (untranslated source):\nWrite a short greeting.\n\nPreserve all facts, constraints, tone, and the requested answer language and format. Ask for missing critical information before executing the task.",
   "improvements": [
-    "流程示範：只加入固定英文外框，沒有進行語意整理。",
-    "請設定真實模型後取得可直接使用的英文 Prompt。"
+    "流程示範：只加入固定英文外框，沒有進行語意整理；原文未翻譯。",
+    "加入一般執行提醒；尚未判斷原文的矛盾或關鍵缺漏。",
+    "請設定真實模型以取得優化結果；示範模式不提供模型專屬調整。"
   ],
   "assumptions": [],
   "mode": "mock",
   "generationModel": null,
-  "promptLanguage": "en"
+  "promptLanguage": "en",
+  "notesLanguage": "zh-TW"
 }
 ```
 
-A successful live response has the same fields, `mode: "live"`, the configured `generationModel`, and model-generated content. Copy only `prompt`. Improvement notes contain 1–4 strings; assumptions contain 0–4, with each note at most 500 UTF-16 code units. Notes are requested in Traditional Chinese. A live format failure is an error, not a silent fallback to mock.
+A successful live response has the same fields, `mode: "live"`, the configured `generationModel`, and model-generated content. Copy only `prompt`. Improvement notes contain 1–4 strings; assumptions contain 0–4, with each note at most 500 UTF-16 code units. Notes use `notesLanguage`; the native app sends its interface language, and the browser offers a separate selector. Existing results are not translated when the preference changes. A live format failure is an error, not a silent fallback to mock.
 
-In English mode, `prompt` is the complete rewritten instruction, with required task data and literals retained. Traditional Chinese mode wraps the complete original request with supplemental execution guidance. The model-generated portion is limited to 24,000 UTF-16 code units; the assembled Traditional Chinese result can be longer because it also contains the original. Schema validation does not prove semantic fidelity, so review names, quantities, conditional requirements, output format and answer language before using a result.
+In English mode, `prompt` is the complete rewritten instruction, with required task data and literals retained. Traditional Chinese mode keeps the complete original request as reference data alongside execution guidance. Compatible requirements remain binding; impossible combinations are handled by clarification or a brief conflict notice when questions are forbidden, rather than by reactivating the contradictory source requirements. The model-generated portion is limited to 24,000 UTF-16 code units; the assembled Traditional Chinese result can be longer because it also contains the original. Schema validation does not prove semantic fidelity, so review names, quantities, conditional requirements, output format and answer language before using a result.
 
 ## Errors and limits
 
@@ -98,12 +110,12 @@ Messages are user-facing Traditional Chinese, not stable machine-readable error 
 | `429` | Four optimizations are already active in this server process, or the provider returned a rate/usage limit. Avoid immediate retry loops. |
 | `502` | Provider authorization/configuration/service/connection error, truncated output or unusable response. Read the safe error message; provider `401`/`403` are mapped to this status. |
 | `503` | Live mode lacks a configured API key or model. Configure them or deliberately choose mock. |
-| `504` | Provider attempt timed out or was aborted. Check provider availability and the timeout setting. |
+| `504` | The shared provider deadline expired or the request was aborted. Check provider availability and the timeout setting. |
 | `500` | Unexpected internal failure; only a generic message is returned. |
 
 Every request requires an allowed `Host`. API requests with `Origin` must also match an allowed host and port. Cross-site browser requests are rejected; no general cross-origin access is provided. Native and command-line clients can omit Origin. Reverse proxies must preserve an explicitly allowed Host; forwarded host headers are not trusted.
 
-`LLM_TIMEOUT_MS` limits each provider attempt. An invalid structured response can cause one further attempt; HTTP failures are not generally retried. The setting is not a total-operation budget. The browser aborts at about 195 seconds, and the native client has its own request/resource limits around 190/195 seconds. Setting a very large per-attempt timeout does not guarantee both attempts can complete within a client budget.
+`LLM_TIMEOUT_MS` is the total upstream time budget shared by the original provider request and any retry. An invalid structured response can cause one further attempt within that same deadline; HTTP failures are not generally retried. The browser aborts at about 195 seconds, and the native client has request/resource limits around 190/195 seconds.
 
 Closing or cancelling the client request propagates an abort to the upstream request. It does not guarantee that the provider stops processing or refunds usage. Request-body and header receive timeouts are separate from model execution. No prompt content or raw provider errors are written to server logs.
 

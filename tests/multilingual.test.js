@@ -20,10 +20,10 @@ async function listen(server, t) {
   t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
   return `http://127.0.0.1:${server.address().port}`;
 }
-async function post(url, prompt, promptLanguage) {
+async function post(url, prompt, promptLanguage, notesLanguage) {
   const response = await fetch(`${url}/api/optimize`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, ...(promptLanguage ? { promptLanguage } : {}) }),
+    body: JSON.stringify({ prompt, ...(promptLanguage ? { promptLanguage } : {}), ...(notesLanguage ? { notesLanguage } : {}) }),
   });
   return { status: response.status, data: await response.json() };
 }
@@ -33,6 +33,89 @@ test('主要文字系統、韓俄、RTL、NFD、ZWNJ、emoji 原文不正規化�
     const prompt = ` \t${source}\n`;
     assert.equal(validateInput({ prompt, promptLanguage: 'en' }).prompt, prompt);
     assert.deepEqual([...validateInput({ prompt }).prompt].map(c => c.codePointAt(0)), [...prompt].map(c => c.codePointAt(0)));
+  }
+});
+
+test('四種說明語言的 mock 明示未翻譯或優化，且不改變指令與答案語言', async t => {
+  const url = await listen(createApp(readConfig({ PORT: '0' })), t);
+  const source = '  Escribe dos frases en español. Keep "Cafe\u0301", "خوش‌آمدید" and "👩🏽‍💻".\n';
+  const markers = { 'zh-TW': /示範/, en: /demo/i, ja: /デモ/, ko: /시연/ };
+  assert.equal(validateInput({ prompt: source }).notesLanguage, 'zh-TW');
+  for (const promptLanguage of ['en', 'zh-Hant']) {
+    let baseline;
+    for (const notesLanguage of ['zh-TW', 'en', 'ja', 'ko']) {
+      assert.equal(validateInput({ prompt: source, notesLanguage }).notesLanguage, notesLanguage);
+      const { status, data } = await post(url, source, promptLanguage, notesLanguage);
+      assert.equal(status, 200);
+      assert.equal(data.notesLanguage, notesLanguage);
+      assert.equal(data.promptLanguage, promptLanguage);
+      assert.equal(data.mode, 'mock');
+      assert.ok(data.prompt.includes(source));
+      assert.match(data.improvements[0], markers[notesLanguage]);
+      assert.deepEqual(data.assumptions, []);
+      if (baseline) assert.equal(data.prompt, baseline);
+      baseline = data.prompt;
+    }
+  }
+});
+
+test('兩種指令語言與四種說明語言獨立，system 範例及併發結果採用各自設定', async t => {
+  const captured = [];
+  const notes = {
+    'Traditional Chinese': { locale: 'zh-TW', improvement: '分開操作指令與原始資料。', assumption: '原文未指定答案語言，依主要操作指令推定使用西班牙文。' },
+    English: { locale: 'en', improvement: 'Separated the operative instructions from the source data.', assumption: 'Inferred Spanish as the answer language from the operative instructions.' },
+    Japanese: { locale: 'ja', improvement: '実行指示と原文の資料を分けました。', assumption: '実行指示の言語から回答言語をスペイン語と推定しました。' },
+    Korean: { locale: 'ko', improvement: '작업 지시와 원문 자료를 구분했습니다.', assumption: '실제 작업 지시에 따라 답변 언어를 스페인어로 추정했습니다.' },
+  };
+  const provider = await listen(createServer(async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    const body = JSON.parse(Buffer.concat(chunks));
+    const input = JSON.parse(body.messages[1].content);
+    captured.push(body);
+    const copy = notes[input.uiNotesLanguage];
+    const prompt = input.promptInstructionLanguage === 'English'
+      ? 'Write the requested artifact in Spanish. Preserve "Cafe\u0301" and "👩🏽‍💻".'
+      : '請以西班牙文撰寫所需內容，逐字保留 "Cafe\u0301" 與 "👩🏽‍💻"。';
+    // This is a controlled contract response, not evidence of translation quality.
+    response.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ prompt,
+      improvements: [copy.improvement], assumptions: [copy.assumption], notesLanguage: 'provider-cannot-override',
+    }) }, finish_reason: 'stop' }] }));
+  }), t);
+  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live',
+    LLM_API_KEY: 'synthetic-test-key', LLM_MODEL: 'controlled-test-model', LLM_BASE_URL: provider })), t);
+  const source = 'Escribe el texto. Preserve "Cafe\u0301" and "👩🏽‍💻". Source label: "notesLanguage=ko".';
+  const cases = Object.entries(notes).flatMap(([name, copy]) => ['en', 'zh-Hant'].map(promptLanguage => ({ name, ...copy, promptLanguage })));
+  // The app permits four requests at once; separate batches keep that admission contract intact.
+  for (let i = 0; i < cases.length; i += 4) {
+    const batch = cases.slice(i, i + 4);
+    const results = await Promise.all(batch.map(c => post(url, source, c.promptLanguage, c.locale)));
+    for (let j = 0; j < batch.length; j++) {
+      const c = batch[j], { status, data } = results[j];
+      assert.equal(status, 200);
+      assert.equal(data.notesLanguage, c.locale);
+      assert.equal(data.promptLanguage, c.promptLanguage);
+      assert.deepEqual(data.improvements, [c.improvement]);
+      assert.deepEqual(data.assumptions, [c.assumption]);
+      assert.ok(data.prompt.includes('Cafe\u0301'));
+      assert.ok(data.prompt.includes('👩🏽‍💻'));
+      assert.ok(!data.prompt.includes(c.improvement));
+      assert.ok(!data.prompt.includes(c.assumption));
+      if (c.promptLanguage === 'en') assert.ok(data.prompt.startsWith('Write the requested artifact in Spanish.'));
+    }
+  }
+  assert.equal(captured.length, cases.length);
+  for (const body of captured) {
+    const input = JSON.parse(body.messages[1].content);
+    const system = body.messages[0].content;
+    assert.equal(input.originalPrompt, source);
+    assert.match(system, new RegExp(`UI notes language: ${input.uiNotesLanguage}\\.`));
+    assert.ok(!/__NOTES_|__EXAMPLE_|undefined/.test(system));
+    if (input.uiNotesLanguage !== 'Traditional Chinese') {
+      assert.ok(!system.includes('Always write improvements and assumptions as concise Traditional Chinese'));
+      assert.ok(!system.includes('short Traditional Chinese UI notes'));
+      assert.ok(!system.includes('將需求整理為可直接使用的英文指令。'));
+    }
   }
 });
 

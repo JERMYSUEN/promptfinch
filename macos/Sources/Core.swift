@@ -18,6 +18,18 @@ struct PromptResult: Decodable {
     let mode: String
     let generationModel: String?
     let promptLanguage: String
+    let notesLanguage: String?
+
+    init(prompt: String, improvements: [String], assumptions: [String], mode: String,
+         generationModel: String?, promptLanguage: String, notesLanguage: String? = nil) {
+        self.prompt = prompt
+        self.improvements = improvements
+        self.assumptions = assumptions
+        self.mode = mode
+        self.generationModel = generationModel
+        self.promptLanguage = promptLanguage
+        self.notesLanguage = notesLanguage
+    }
 }
 
 struct PromptRequest: Encodable {
@@ -25,6 +37,14 @@ struct PromptRequest: Encodable {
     let task: String
     let targetModel: String
     let promptLanguage = "en"
+    let notesLanguage: String
+
+    init(prompt: String, task: String, targetModel: String, notesLanguage: String = "zh-TW") {
+        self.prompt = prompt
+        self.task = task
+        self.targetModel = targetModel
+        self.notesLanguage = notesLanguage
+    }
 
     func validate() throws {
         if prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -32,6 +52,9 @@ struct PromptRequest: Encodable {
         }
         // Match JavaScript's UTF-16 length rather than Swift's grapheme count.
         if prompt.utf16.count > 12000 { throw ToolError.message(L10n.text(.inputTooLong)) }
+        guard ["zh-TW", "en", "ja", "ko"].contains(notesLanguage) else {
+            throw ToolError.message(L10n.text(.invalidResult))
+        }
         if targetModel.utf16.count > 80 || targetModel.unicodeScalars.contains(where: { $0.value < 32 }) {
             throw ToolError.message(L10n.text(.invalidTarget))
         }
@@ -49,14 +72,14 @@ final class PromptClient {
     let baseURL: URL
     private let session: URLSession
 
-    init(baseURL: URL = URL(string: "http://127.0.0.1:3210")!) {
+    init(baseURL: URL = URL(string: "http://127.0.0.1:3210")!, session: URLSession? = nil) {
         self.baseURL = baseURL
         let settings = URLSessionConfiguration.ephemeral
         settings.timeoutIntervalForRequest = 190
         settings.timeoutIntervalForResource = 195
         settings.urlCache = nil
         settings.httpCookieStorage = nil
-        session = URLSession(configuration: settings)
+        self.session = session ?? URLSession(configuration: settings)
     }
 
     func config(expectedBackendID: String? = nil, expectedInstanceID: String? = nil) async throws -> ServiceConfig {
@@ -72,7 +95,7 @@ final class PromptClient {
         if let expectedBackendID, config.backendID != expectedBackendID {
             throw ToolError.message(L10n.text(.backendVersionMismatch))
         }
-        if let expectedInstanceID, let reportedInstanceID = config.backendInstanceID, reportedInstanceID != expectedInstanceID {
+        if let expectedInstanceID, config.backendInstanceID != expectedInstanceID {
             throw ToolError.message(L10n.text(.backendInstanceMismatch))
         }
         return config

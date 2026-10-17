@@ -12,6 +12,6 @@ Das Modell soll Ziel, Eingaben und Einschränkungen klären, sinnvolle Schritte 
 
 Die macOS-App verbindet manuellen Arbeitsbereich und Auswahlassistent; ein Browser-Arbeitsbereich ist verfügbar. Echte Generierung benötigt einen konfigurierten API-Schlüssel für ein Modell. Der Simulationsmodus zeigt den Ablauf, ohne zu übersetzen oder zu optimieren.
 
-Die macOS-Oberfläche unterstützt traditionelles Chinesisch (Standard), Englisch, Japanisch und Koreanisch; die Sprache lässt sich in den Einstellungen wählen. Die Browser-Oberfläche bleibt auf traditionellem Chinesisch. Hinweise zu Verbesserungen und Annahmen werden beim Modell auf traditionellem Chinesisch angefordert und bei einem Wechsel der Oberflächensprache nicht übersetzt. Die Sprachlinks im README wechseln nur zwischen Dokumentationsseiten.
+Die macOS-App bietet traditionelles Chinesisch (Standard), Englisch, Japanisch und Koreanisch. Neue Hinweise zu Verbesserungen und Annahmen werden in der Sprache der Oberfläche erstellt. Die Browser-Oberfläche bleibt auf traditionellem Chinesisch und hat eine separate Auswahl für die Sprache der Hinweise. Die Links im README wechseln nur die Dokumentation. Bereits vorhandene Ergebnisse werden bei einem Sprachwechsel nicht neu geschrieben.
 
 **Ablauf:** Text markieren → Rechtsklick → **Convert to English prompt** auswählen → Ergebnispanel (kompatible Apps).

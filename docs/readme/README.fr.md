@@ -12,6 +12,6 @@ Le modèle est invité à clarifier l’objectif, les données d’entrée et le
 
 L’application macOS associe espace manuel et assistant de sélection; espace web disponible. Génération réelle: clé API de modèle configurée. Mode simulé: aperçu du parcours sans traduction ni optimisation.
 
-L’interface macOS propose le chinois traditionnel (par défaut), l’anglais, le japonais et le coréen, au choix dans les réglages. L’interface du navigateur reste en chinois traditionnel. Les notes sur les améliorations et les hypothèses sont demandées au modèle en chinois traditionnel et ne sont pas traduites lors d’un changement de langue de l’interface. Les liens de langue du README changent uniquement la page de documentation.
+L’application macOS propose le chinois traditionnel (par défaut), l’anglais, le japonais et le coréen. Les nouvelles notes sur les améliorations et les hypothèses suivent la langue de l’interface. L’interface du navigateur reste en chinois traditionnel et dispose d’un sélecteur distinct pour la langue des notes. Les liens du README changent uniquement la documentation. Les résultats existants ne sont pas réécrits lors d’un changement de langue.
 
 **Parcours:** sélectionner du texte → clic droit → choisir **Convert to English prompt** → panneau de résultats (applications compatibles).

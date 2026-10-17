@@ -28,8 +28,16 @@ No new native install, physical mouse acceptance, browser UI suite or live model
 
 ## Remaining limits
 
-The native version metadata is still `0.1.0`, build `11`; release/package naming remains `1.0.0`. This audit documents that mismatch without retagging or silently replacing an old download. The release is not a notarized or Universal distribution. Intel/minimum-macOS hardware, all host/CLI combinations, mobile hardware, Docker and remote deployment remain outside the recorded verification scope.
+At the end of that documentation-only audit, native metadata was `0.1.0`, build `11`, while the release/package naming was `1.0.0`. That historical mismatch was documented without retagging or replacing the old download. The later v1.1.0 release preparation aligns its own package/native version at `1.1.0`, build `12`; it does not change the old artifact. Neither snapshot is a notarized or Universal distribution. Intel/minimum-macOS hardware, all host/CLI combinations, mobile hardware, Docker and remote deployment remain outside the recorded verification scope.
 
 The new optimization policy still has no successful live before/after comparison; previous attempts failed with 502/504. Documentation wording and the synthetic GIF do not resolve that evidence gap. Older multilingual scores belong to their own revisions. Translated introductions received a consistency pass, not independent native-speaker certification across every language.
 
 Private vulnerability reporting was disabled when checked; no private reporting address was invented or security setting changed. Ignored handoff notes, local configuration, raw private recordings and unrelated untracked files were neither published nor included in the source archive.
+
+## v1.1.0 release follow-up (2026-10-17)
+
+A separate release preparation adds [v1.1.0 notes](releases/v1.1.0.md), updates the download links and changelog, aligns package/native version metadata, and documents the explicit Settings action for adopting an installed app's bundled backend. Existing model configuration, Node path and preferences are retained; simply replacing the app continues to preserve a separately updated backend. Source updates remain available.
+
+The public packaging path, `npm run package:mac`, uses a clean copy of allowlisted public inputs and ad-hoc signing, with source/App ZIPs, checksums and a relative input-hash manifest. It does not read real private configuration, bundle Node, notarize or publish. The original v1.0.0 notes link to the newer release without rewriting the tag or replacing its asset. Historical test records above retain their own scope.
+
+The later [improvement verification](improvement-verification.md) records the actual v1.1.0 archive, reliability and live-sample checks, with explicit remaining semantic errors. Earlier failed requests remain failed evidence; the newer samples do not certify all host apps/languages or downstream performance.

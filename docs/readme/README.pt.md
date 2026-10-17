@@ -12,6 +12,6 @@ Pede-se ao modelo que esclareça o objetivo, os dados de entrada e as restriçõ
 
 A aplicação para macOS combina espaço manual e assistente de seleção; há versão web. Geração real: chave API de modelo configurada. Modo simulado: pré-visualização do fluxo, sem tradução nem otimização.
 
-A interface macOS permite escolher chinês tradicional (predefinido), inglês, japonês ou coreano nas definições. A interface do navegador permanece em chinês tradicional. As notas sobre melhorias e pressupostos são solicitadas ao modelo em chinês tradicional e não são traduzidas ao mudar o idioma da interface. Os links de idiomas do README mudam apenas a página de documentação.
+A aplicação macOS oferece chinês tradicional (predefinido), inglês, japonês e coreano. As novas notas sobre melhorias e pressupostos seguem o idioma da interface. A interface do navegador permanece em chinês tradicional e tem um seletor separado para o idioma das notas. Os links do README mudam apenas a documentação. Os resultados existentes não são reescritos ao mudar de idioma.
 
 **Fluxo:** selecionar texto → clique direito → escolher **Convert to English prompt** → painel de resultados (aplicações compatíveis).

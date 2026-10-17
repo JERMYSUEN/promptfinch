@@ -128,3 +128,17 @@ h2 { margin: 0; font-size: 16px; font-weight: 650; }
   .privacy-note { margin-top: 18px; padding-top: 18px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Result comparison remains in memory with the result and clears with the form. */
+.comparison { margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.comparison summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.comparison-help { color: var(--muted); font-size: 12px; }
+.comparison-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.comparison-columns section { min-width: 0; }
+.comparison h3 { font-size: 13px; }
+.comparison pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.8 ui-monospace, monospace; max-height: 380px; overflow: auto; padding: 10px; background: #f8faff; border-radius: 6px; }
+.comparison pre span { white-space: pre-wrap; }
+.line-added { background: #e6f4eb; color: #1c5635; }
+.line-removed { background: #fff0ef; color: #8b302c; }
+@media (max-width: 1050px) { .settings { flex-wrap: wrap; } }
+@media (max-width: 760px) { .comparison-columns { grid-template-columns: 1fr; } }

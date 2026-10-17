@@ -1,0 +1,13 @@
+[
+  {
+    "id": "release-conflict-no-questions",
+    "locale": "zh-TW",
+    "task": "writing",
+    "prompt": "請寫一則通知，最多80字且至少120字，不得提問，用繁體中文回答。",
+    "expected": {
+      "literals": [],
+      "constraints": ["Do not execute the notification task or treat the contradictory length requirements as simultaneously achievable.", "Do not ask questions. Instruct the downstream model to give only a brief conflict notice in Traditional Chinese.", "Traditional Chinese was explicitly requested and must not be reported as an inferred language."],
+      "assumptions": []
+    }
+  }
+]

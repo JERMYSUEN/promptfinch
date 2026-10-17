@@ -12,6 +12,6 @@ Model otrzymuje instrukcje, aby doprecyzować cel, dane wejściowe i ograniczeni
 
 Aplikacja macOS łączy ręczny obszar roboczy z asystentem zaznaczania; dostępna jest także wersja przeglądarkowa. Rzeczywiste generowanie wymaga skonfigurowanego klucza API modelu. Tryb symulacji pokazuje przebieg bez tłumaczenia i optymalizacji.
 
-W ustawieniach interfejsu macOS można wybrać chiński tradycyjny (domyślny), angielski, japoński lub koreański. Interfejs przeglądarkowy pozostaje w chińskim tradycyjnym. Model otrzymuje prośbę o uwagi dotyczące ulepszeń i założeń w chińskim tradycyjnym; zmiana języka interfejsu nie tłumaczy tych uwag. Łącza językowe w README zmieniają wyłącznie stronę dokumentacji.
+Aplikacja macOS oferuje chiński tradycyjny (domyślny), angielski, japoński i koreański. Nowe uwagi dotyczące ulepszeń i założeń są tworzone w języku interfejsu. Interfejs przeglądarkowy pozostaje w chińskim tradycyjnym i ma osobny wybór języka uwag. Łącza w README zmieniają tylko dokumentację. Istniejące wyniki nie są przepisywane po zmianie języka.
 
 **Przebieg:** zaznacz tekst → kliknij prawym przyciskiem → wybierz **Convert to English prompt** → panel wyników (kompatybilne aplikacje).

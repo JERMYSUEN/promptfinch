@@ -6,7 +6,7 @@ Use this guide with the [quick start](../README.md#quick-start). For detailed na
 
 The browser/API can run with Node.js 22+; cross-app selection requires the native macOS app. A browser tab alone cannot add a system-wide context-menu action. Terminal support is the macOS selection assistant alongside a CLI, not a `promptfinch` shell command, CLI plugin, or use of Claude Code/Codex credentials.
 
-The macOS interface has four languages. The browser interface is Traditional Chinese. Changing documentation language or interface language does not change the provider model or translate the explanation notes. See [language coverage](../README.md#documentation-languages).
+The macOS interface has four languages. The browser interface is Traditional Chinese. New native explanation notes follow the interface language; existing results are kept as generated. The browser has a separate notes-language selector. These settings do not change the generation model or the task’s requested answer language. See [language coverage](../README.md#documentation-languages).
 
 ## Startup, installation and updates
 
@@ -14,9 +14,9 @@ The macOS interface has four languages. The browser interface is Traditional Chi
 | --- | --- |
 | `node` is missing or the app cannot find it | Install Node.js 22+ separately. The app does not bundle Node. Select its executable in native Settings, particularly for nvm or another version manager. |
 | `install:mac` says the app is missing | Run `npm run build:mac` first; installation does not compile the app. Build prerequisites include Apple's Command Line Tools. |
-| A downloaded ZIP behaves differently from this README | The v1.0.0 archive is an older snapshot. Use current trusted source for later features; see [release scope](releases/v1.0.0.md). It is not a notarized installer. |
-| The app's version label says 0.1.0 | The native plist still uses 0.1.0 / build 11, while the release/package version is 1.0.0. It does not identify the latest backend or source commit. Use the checkout's commit and `/api/config` backend ID when reporting a problem. |
-| A rebuilt app still uses old prompt rules | Existing external backend files are retained at reinstall. Run `npm run update:mac-backend` from the updated checkout. For native changes, build and install first, then update the backend. |
+| A downloaded ZIP behaves differently from this README | Check the release tag and [changelog](../CHANGELOG.md). The [v1.1.0 download](releases/v1.1.0.md) includes newer features; the original v1.0.0 asset remains unchanged. No release is a notarized installer. |
+| The app's version label says 0.1.0 | That is the original v1.0.0 download's internal version (build 11). The v1.1.0 app uses version 1.1.0 / build 12. App version alone does not identify a separately updated backend; include the source commit and `/api/config` backend ID when reporting a problem. |
+| A replaced app still uses old prompt rules | Existing external backend files are retained when the app is replaced. In the new app's Settings, choose **Use this app’s bundled backend** to adopt its included rules. Private model configuration, Node path and preferences are retained, with rollback attempted if startup fails. Source users can instead run `npm run update:mac-backend` from a trusted updated checkout; for native changes, build and install first. |
 | Stable signing fails after moving machines | The private signing identity belongs to that machine's Keychain. Follow the macOS signing setup on the new machine; a same-name certificate is not the same identity. |
 | Port 3000 is busy | Stop the standalone server you own or change its `PORT` and open that matching URL. Do not terminate an unidentified process. |
 | Port 3210 is busy | The native backend uses this fixed port. Quit an older PromptFinch instance normally. If another program owns the port, resolve that conflict before restarting; the updater will not kill it. |
@@ -37,7 +37,7 @@ The browser server normally uses port 3000; the app owns port 3210. A model conf
 | Local API returns 403 | Check the service URL and Host/Origin policy. This is different from provider-key rejection. See the [API status reference](api.md#errors-and-limits). |
 | Provider rejects the request format | Use an OpenAI-compatible Chat Completions endpoint. The backend appends `/chat/completions`; do not append it twice. Use `LLM_JSON_MODE=false` if unsupported and leave `LLM_THINKING_MODE` blank outside compatible DeepSeek configurations. The output must still follow the JSON contract. |
 | API returns 429 | The local concurrency limit or provider usage limit was reached. Stop automatic retry loops and check account limits. |
-| API returns 502/504 or takes too long | Check provider availability and configuration. A format retry can extend the total beyond one `LLM_TIMEOUT_MS` period. Increasing a timeout cannot repair an unavailable service. A failure is not replaced with a fake successful result. |
+| API returns 502/504 or takes too long | Check provider availability and configuration. The initial call and format retry share one `LLM_TIMEOUT_MS` deadline. Increasing a timeout cannot repair an unavailable service. A failure is not replaced with a fake successful result. |
 
 Use the model identifier your provider currently accepts. `.env.deepseek.example` is a configurable example, not a bundled model or guarantee of account access. There is no automatic paid fallback provider.
 
@@ -51,6 +51,7 @@ The optional selection button, right-click menu and automatic paste-back are ena
 | --- | --- |
 | Only the original right-click menu appears | Keep PromptFinch running, enable its right-click setting and Accessibility permission, then make a fresh readable text selection. The app supplies a separate companion panel, not a new item inside every host's menu. |
 | A notice asks you to select again | Some hosts need a brief Accessibility activation interval. Wait about two seconds and make a new selection. |
+| Service reload, upgrade or quit reports a stop error | Only the app’s owned child is stopped, with bounded waiting. The app refuses a second service if cleanup fails. Retry after the reported error; do not kill unrelated processes by port or name. |
 | The offered action disappears | Switching apps, typing, clicking elsewhere, cancellation and the 12-second action timeout invalidate it. Make a fresh selection rather than reusing the previous one. |
 | Selection cannot be read | The host may expose no usable text, for example a protected field, image or canvas. There is no OCR or forced-copy fallback. Deliberately copy the intended text and use the menu-bar clipboard action or manual workspace. |
 | The result did not replace selected terminal text | This is expected for recognized terminals. Copy/review and paste into the intended CLI input manually, then submit yourself. Do not assume every custom terminal is identified. See the [Terminal guide](terminal.md). |

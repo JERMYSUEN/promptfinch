@@ -14,6 +14,6 @@ Modeli inaagizwa kufafanua lengo, ingizo na mipaka, kupanga hatua muhimu, kuzing
 
 Programu ya macOS ina sehemu ya kuandika na msaidizi wa maandishi yaliyochaguliwa; chagua maandishi katika programu inayooana, bofya kulia, kisha chagua **Convert to English prompt** kwenye menyu saidizi ili kuona matokeo. Sehemu ya kivinjari pia inapatikana. Uzalishaji halisi unahitaji ufunguo wa API wa modeli uliosanidiwa. Mock huonyesha mchakato bila kutafsiri au kuboresha.
 
-Katika Mipangilio ya macOS unaweza kuchagua Kichina cha Jadi (chaguo-msingi), Kiingereza, Kijapani au Kikorea kwa kiolesura. Kiolesura cha kivinjari kinabaki katika Kichina cha Jadi. Maelezo ya maboresho na makisio yanaombwa kutoka kwa modeli katika Kichina cha Jadi; kubadili lugha ya kiolesura hakuyatafsiri. Viungo vya lugha katika README hubadili kurasa za nyaraka pekee.
+Programu ya macOS inatoa Kichina cha Jadi (chaguo-msingi), Kiingereza, Kijapani na Kikorea. Maelezo mapya ya maboresho na makisio hutumia lugha ya kiolesura. Kiolesura cha kivinjari kinabaki katika Kichina cha Jadi na kina chaguo tofauti la lugha ya maelezo. Viungo vya README hubadili nyaraka pekee. Matokeo yaliyopo hayaandikwi upya lugha inapobadilishwa.
 
 **Hatua:** Ingiza/chagua → zalisha → kagua/nakili.

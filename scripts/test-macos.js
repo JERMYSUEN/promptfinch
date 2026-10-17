@@ -9,7 +9,7 @@ if (process.platform !== 'darwin') throw new Error('Swift 檢查需要 macOS。'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 mkdirSync(resolve(root, 'build/swift-cache'), { recursive: true });
 const binary = resolve(root, 'build/core-tests');
-const compile = spawnSync('xcrun', ['swiftc', '-swift-version', '5', '-D', 'PROMPTFINCH_TESTS', '-parse-as-library', '-module-cache-path', resolve(root, 'build/swift-cache'), ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), resolve(root, 'macos/Tests/CoreTests.swift'), resolve(root, 'macos/Tests/WorkspaceTests.swift'), '-o', binary], { stdio: 'inherit' });
+const compile = spawnSync('xcrun', ['swiftc', '-swift-version', '5', '-D', 'PROMPTFINCH_TESTS', '-parse-as-library', '-module-cache-path', resolve(root, 'build/swift-cache'), ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), resolve(root, 'macos/Tests/CoreTests.swift'), resolve(root, 'macos/Tests/WorkspaceTests.swift'), resolve(root, 'macos/Tests/BackendTests.swift'), resolve(root, 'macos/Tests/ClientTests.swift'), resolve(root, 'macos/Tests/ProcessTests.swift'), '-o', binary], { stdio: 'inherit' });
 if (compile.error) throw compile.error;
 if (compile.status !== 0) process.exit(compile.status || 1);
 const server = createApp(readConfig({

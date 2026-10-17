@@ -3,9 +3,10 @@ const form = $('optimizer-form');
 const original = $('original-prompt');
 const target = $('target-model');
 const promptLanguage = $('prompt-language');
+const notesLanguage = $('notes-language');
 const submitButton = $('optimize-button');
 const copyButton = $('copy-button');
-const controls = [original, target, promptLanguage, ...form.querySelectorAll('input[name="task"], [data-example]')];
+const controls = [original, target, promptLanguage, notesLanguage, ...form.querySelectorAll('input[name="task"], [data-example]')];
 let config = null;
 let result = null;
 let lastInput = '';
@@ -20,7 +21,7 @@ const EXAMPLES = {
 };
 
 function inputValue() {
-  return { prompt: original.value, task: form.querySelector('input[name="task"]:checked').value, targetModel: target.value, promptLanguage: promptLanguage.value };
+  return { prompt: original.value, task: form.querySelector('input[name="task"]:checked').value, targetModel: target.value, promptLanguage: promptLanguage.value, notesLanguage: notesLanguage.value };
 }
 
 function status(message, kind = '') {
@@ -45,6 +46,7 @@ function setBusy(value) {
   $('empty-state').hidden = value || Boolean(result);
   $('result-state').hidden = value || !result;
   $('explanation').hidden = value || !result;
+  $('comparison').hidden = value || !result;
 }
 
 function updatedInput() {
@@ -69,8 +71,45 @@ function fillList(id, values) {
   }));
 }
 
-function renderResult(data) {
+// Whole-line comparison is bounded and renders only text, including model output.
+function renderComparison(source, output) {
+  const before = source.split('\n');
+  const after = output.split('\n');
+  const oldView = $('comparison-source'), newView = $('comparison-result');
+  oldView.replaceChildren(); newView.replaceChildren();
+  if (before.length > 200 || after.length > 200) {
+    oldView.textContent = source; newView.textContent = output;
+    return;
+  }
+  const table = Array.from({ length: before.length + 1 }, () => new Uint16Array(after.length + 1));
+  for (let i = before.length - 1; i >= 0; i--) {
+    for (let j = after.length - 1; j >= 0; j--) {
+      table[i][j] = before[i] === after[j] ? table[i + 1][j + 1] + 1 : Math.max(table[i + 1][j], table[i][j + 1]);
+    }
+  }
+  const unchangedBefore = new Set(), unchangedAfter = new Set();
+  let i = 0, j = 0;
+  while (i < before.length && j < after.length) {
+    if (before[i] === after[j]) { unchangedBefore.add(i++); unchangedAfter.add(j++); }
+    else if (table[i + 1][j] >= table[i][j + 1]) i++;
+    else j++;
+  }
+  function render(container, lines, unchanged, insertion) {
+    container.replaceChildren(...lines.map((line, index) => {
+      const changed = !unchanged.has(index);
+      const span = document.createElement('span');
+      span.className = changed ? (insertion ? 'line-added' : 'line-removed') : 'line-unchanged';
+      span.textContent = (changed ? (insertion ? '+ ' : '− ') : '  ') + line + (index < lines.length - 1 ? '\n' : '');
+      return span;
+    }));
+  }
+  render(oldView, before, unchangedBefore, false);
+  render(newView, after, unchangedAfter, true);
+}
+
+function renderResult(data, source) {
   result = data;
+  renderComparison(source, data.prompt);
   $('optimized-prompt').value = data.prompt;
   fillList('improvements', data.improvements);
   fillList('assumptions-list', data.assumptions);
@@ -115,7 +154,7 @@ async function requestOptimization(event) {
     if (!data || typeof data.prompt !== 'string' || !Array.isArray(data.improvements) || !Array.isArray(data.assumptions) || !['mock', 'live'].includes(data.mode)) {
       throw new Error('服務回傳的結果不完整，請重新嘗試。');
     }
-    renderResult(data);
+    renderResult(data, input.prompt);
     lastInput = JSON.stringify(input);
     status(data.mode === 'mock' ? '示範整理完成。這是固定範本結果，未呼叫 AI。' : '優化完成。可以複製 Prompt，或調整輸入後再優化。');
   } catch (error) {
@@ -134,6 +173,7 @@ async function requestOptimization(event) {
 form.addEventListener('submit', requestOptimization);
 form.addEventListener('input', updatedInput);
 promptLanguage.addEventListener('change', updatedInput);
+notesLanguage.addEventListener('change', updatedInput);
 original.addEventListener('keydown', event => {
   if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !event.isComposing) requestOptimization(event);
 });
@@ -148,6 +188,9 @@ $('clear-button').addEventListener('click', () => {
   lastInput = '';
   $('result-tag').hidden = true;
   $('result-source').textContent = '';
+  $('comparison-source').replaceChildren();
+  $('comparison-result').replaceChildren();
+  $('comparison').open = false;
   fillList('improvements', []);
   fillList('assumptions-list', []);
   updatedInput();

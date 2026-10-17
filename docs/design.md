@@ -20,19 +20,21 @@
 | [server.js](../server.js) | Node.js 22+ 原生 HTTP 服務、明確靜態檔案清單、`GET /api/config`、`POST /api/optimize`、Host／Origin 與大小限制、取消及每程序最多 4 個優化請求；沒有資料庫、帳號或一般內容歷史。 |
 | [lib/optimizer.js](../lib/optimizer.js) | 設定、輸入與模型回應驗證，繁中／英文編輯規則，mock，以及 OpenAI 相容 Chat Completions adapter。更換 API 協定時從這個 adapter 著手；同協定供應商通常只需環境設定。 |
 | [public/](../public/) | 無前端框架的 HTML／CSS／JavaScript；繁中介面、英文／繁中指令切換、範例、取消、清除、複製與狀態。無遠端字型、追蹤或內容儲存。 |
-| [macos/Sources/App.swift](../macos/Sources/App.swift)、[Localization.swift](../macos/Sources/Localization.swift) | SwiftUI／AppKit 手動工作台、設定、狀態與生成協調；繁中、英文、日文、韓文介面。語言偏好不會翻譯使用者內容或模型回傳的說明。 |
+| [macos/Sources/App.swift](../macos/Sources/App.swift)、[Localization.swift](../macos/Sources/Localization.swift) | SwiftUI／AppKit 手動工作台、設定、狀態與生成協調；繁中、英文、日文、韓文介面。新生成的說明依介面語言送出 `notesLanguage`；不重寫原文或既有模型結果。對照功能使用生成時原文快照，只標示文字差異。 |
 | [Selection.swift](../macos/Sources/Selection.swift)、[Watcher.swift](../macos/Sources/Watcher.swift) | Accessibility 選取、全域快捷鍵、獨立右鍵附加選單與結果浮窗；明確操作後再次核對來源。已辨識終端只複製，其他可靠可編輯來源才允許要求貼回。 |
 | [Backend.swift](../macos/Sources/Backend.swift)、[Core.swift](../macos/Sources/Core.swift) | App 管理的本機服務與 API 契約；讀取設定檔路徑，核對後端內容 ID 與本次程序識別，原生請求固定英文指令。App 包含後端來源，另需本機 Node 執行環境。 |
-| [scripts/](../scripts/) | 建置／安裝、個人本機簽章、來源封裝、內容定址的本機後端更新及明示 live 測例工具；沒有自動下載 GitHub release 的更新器。 |
+| [scripts/](../scripts/) | 建置／安裝、個人本機簽章、公開來源封裝、乾淨副本的 ad-hoc App 封裝、內容定址的本機後端更新及明示 live 測例工具；沒有自動下載 GitHub release 的更新器。 |
 | [tests/](../tests/)、[macos/Tests/](../macos/Tests/)、[CI](../.github/workflows/check.yml) | 受控 API／錯誤測試、可選瀏覽器流程、合成原生狀態檢查。CI 執行語法、Node、原生測試與 macOS 建置；瀏覽器／付費模型與真人宿主驗收需另外執行。 |
 
 用途 ID 為 `general`、`writing`、`analysis`、`coding`、`summary`、`marketing`。目標模型欄位是編輯提示；真正呼叫的模型來自伺服器 `LLM_MODEL`，不會因選取該欄就切換供應商。輸入上限為 12,000 個 UTF-16 code units，不等於可見字元數。
 
 模型回應固定分成 `prompt`、`improvements`、`assumptions`，複製僅使用 `prompt`。英文模式直接回傳整理過的英文任務指令，繁中 live 模式會保留完整原文並加上生成的補充指引；這兩種組裝方式不同。模型必須改善同一任務的可執行性，不能執行原任務、捏造事實或強制套用固定章節；這是模型規則及人工覆核目標，程式格式驗證本身不能證明語意正確。
 
+首次啟動會由 App 隨附來源建立外部後端；存在 `current` 後，單純替換 App 仍保留先前的選擇。設定中的「使用此 App 隨附後端」是明確採用目前 App 種子的入口：先暫存與驗證，切換自身服務，失敗時嘗試回復，不修改模型檔案或 Node／介面偏好。原始碼更新指令則可部署可信任工作目錄的後端，兩者都不是網路自動更新。
+
 一般內容只留在記憶體，live 明確生成後送往所設定的模型服務。App 另保存介面／操作偏好及設定路徑，私有環境檔存金鑰；使用者選擇複製後，結果也會存在系統剪貼簿。明示測試工具會把測例與結果寫到指定輸出檔，與一般工作台不同。Host／Origin 保護不是公開服務的登入或授權機制，部署前請閱讀 [SECURITY.md](../SECURITY.md)。
 
-相容性與品質以具體版本證據為準：[終端](terminal.md)、[跨語言對照](multilingual-parity-verification.md)、[任務優化](optimization-value-verification.md)。附加選單不會修改 Codex、Claude Code 或宿主的原生選單，GIF 是合成示意；既有 `v1.0.0` 下載也不會自動包含最新 `main` 的變更。
+相容性與品質以具體版本證據為準：[終端](terminal.md)、[跨語言對照](multilingual-parity-verification.md)、[任務優化](optimization-value-verification.md)。附加選單不會修改 Codex、Claude Code 或宿主的原生選單，GIF 是合成示意。[v1.1.0](releases/v1.1.0.md)另提供對應的新下載；既有 `v1.0.0` tag 與資產保持原樣，不會自動包含新版變更。
 
 ## 初始設計紀錄（2026-10-05）
 

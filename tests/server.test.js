@@ -88,6 +88,7 @@ test('設定 API 不洩漏金鑰或服務商網址，且前端文件不載入外
   assert.equal(data.mode, 'mock');
   assert.equal(data.ready, true);
   assert.equal(data.maxPromptLength, MAX_PROMPT_LENGTH);
+  assert.deepEqual(data.notesLanguages, ['zh-TW', 'en', 'ja', 'ko']);
   assert.ok(!JSON.stringify(data).includes('private-key'));
   assert.ok(!JSON.stringify(data).includes('secret-provider'));
   const page = await fetch(url);
@@ -217,7 +218,8 @@ test('mock 完整保留原意、明示模式，並區隔 Prompt 與說明', asyn
   assert.equal(data.mode, 'mock');
   assert.equal(data.generationModel, null);
   assert.ok(data.prompt.includes(prompt));
-  assert.ok(data.prompt.includes('以原始需求為準'));
+  assert.ok(data.prompt.includes('保留原文中相容的目的'));
+  assert.ok(data.prompt.includes('未翻譯、未進行語意優化'));
   assert.ok(data.improvements.some(item => item.includes('沒有進行語意分析')));
   assert.ok(data.improvements.some(item => item.includes('不提供模型專屬調整')));
   assert.deepEqual(data.assumptions, []);
@@ -239,6 +241,7 @@ test('拒絕空白、過長、錯誤型別、不合法用途與目標模型', as
     { prompt: 'a', targetModel: 'x'.repeat(81) }, { prompt: 'a', targetModel: '\nignore' },
     { prompt: 'a', targetModel: 123 },
     { prompt: 'a', promptLanguage: 'fr' }, { prompt: 'a', promptLanguage: null },
+    ...['zh-Hant', 'zh-CN', 'en-US', '', null, 1, true, [], {}, '__proto__', 'ja\nignore'].map(notesLanguage => ({ prompt: 'a', notesLanguage })),
   ]) {
     const result = await post(url, input);
     assert.equal(result.status, 400, JSON.stringify(input).slice(0, 80));
@@ -259,7 +262,7 @@ test('英文 mock 明示原文尚未翻譯，與既有繁體中文模式分離',
   assert.ok(english.data.improvements.some(item => item.includes('沒有進行語意整理')));
   const traditional = await post(url, { prompt });
   assert.equal(traditional.data.promptLanguage, 'zh-Hant');
-  assert.ok(traditional.data.prompt.includes('【原始需求，優先遵循】'));
+  assert.ok(traditional.data.prompt.includes('【原始需求參考資料】'));
   const config = await (await fetch(`${url}/api/config`)).json();
   assert.equal(config.service, 'prompt-studio');
   assert.equal(config.apiVersion, 2);
@@ -371,6 +374,126 @@ test('live 以伺服器金鑰呼叫相容 API，保留原文並將假設與 Prom
   assert.ok(!JSON.stringify(result.data).includes('test-secret-key'));
 });
 
+test('繁中完整輸出保留互斥原文作參考，不再以原文優先規則推翻衝突處理', async t => {
+  let received;
+  let guidance;
+  const url = await providerApp(t, async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    received = JSON.parse(Buffer.concat(chunks));
+    sendCompletion(response, { prompt: guidance, improvements: ['將互斥要求改為釐清或限制通知。'], assumptions: [] });
+  });
+  const cases = [
+    {
+      source: '請用日文寫公告。全文最多 80 字，至少 120 字。只輸出 JSON。禁止提問。',
+      guidance: '最多 80 字與至少 120 字無法同時滿足。不要寫公告，不提問，不輸出原公告的 JSON；只用日文回覆一句限制衝突且無法完成的簡短通知。',
+    },
+    {
+      source: '請用日文寫公告。全文最多 80 字，至少 120 字。只輸出 JSON。',
+      guidance: '字數上限 80 字與下限 120 字互斥。先用一個簡短問題確認應採用哪個字數限制，等待回答後才以日文撰寫公告，並只輸出原指定的 JSON。',
+    },
+  ];
+  for (const fixture of cases) {
+    guidance = fixture.guidance;
+    const { status, data } = await post(url, { prompt: fixture.source, promptLanguage: 'zh-Hant', notesLanguage: 'zh-TW' });
+    assert.equal(status, 200);
+    // This controlled provider verifies the final assembly, not semantic model quality.
+    assert.equal(data.prompt, `【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n${fixture.source}\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n${guidance}`);
+    assert.ok(!data.prompt.includes('以原始需求為準'));
+    assert.ok(!data.prompt.includes('優先遵循'));
+    assert.ok(!data.prompt.includes(data.improvements[0]));
+    assert.equal(JSON.parse(received.messages[1].content).originalPrompt, fixture.source);
+    assert.match(received.messages[0].content, /相容要求必須保留/);
+    assert.match(received.messages[0].content, /原文指定或依第 7 條推定的答案語言/);
+  }
+});
+
+test('相容繁中需求的資訊、格式及 Unicode 空白在完整輸出中不變', async t => {
+  const source = '  用韓文寫兩句歡迎詞，保留 "Cafe\u0301" 和 "👩🏽‍💻"。\n    only_key = "x";\n';
+  const guidance = '先核對固定字串與兩句的限制，再只交付韓文歡迎詞。';
+  const url = await providerApp(t, (request, response) => sendCompletion(response, { ...validResult, prompt: guidance }));
+  const { status, data } = await post(url, { prompt: source });
+  assert.equal(status, 200);
+  const reference = data.prompt.split('【補充執行指引】')[0];
+  assert.ok(reference.endsWith(`${source}\n\n`));
+  assert.equal(data.prompt.slice(-guidance.length), guidance);
+  assert.equal(data.notesLanguage, 'zh-TW');
+});
+
+test('說明語言不合法時在模型呼叫前拒絕，絕不降級成其他語言', async t => {
+  let calls = 0;
+  const url = await providerApp(t, (request, response) => {
+    calls++;
+    sendCompletion(response, validResult);
+  });
+  for (const notesLanguage of [null, 'zh-Hant', 'fr', ['ja'], { language: 'ko' }]) {
+    const { status, data } = await post(url, { prompt: '合成測例', notesLanguage });
+    assert.equal(status, 400);
+    assert.match(data.error, /zh-TW、en、ja 或 ko/);
+    assert.equal(Object.hasOwn(data, 'prompt'), false);
+  }
+  assert.equal(calls, 0);
+});
+
+test('模型訊息的末尾覆核涵蓋明示與推定語言、假設範圍及欄位大小寫；只驗訊息契約', async t => {
+  const cases = [
+    {
+      source: '修正 CSV 去重，email 大小寫視為相同，保留第一筆。用繁體中文簡單講。',
+      promptLanguage: 'en', notesLanguage: 'en',
+      result: { prompt: 'Fix CSV deduplication so `email` values differing only in case match, retaining the first row. Briefly explain the fix in Traditional Chinese.',
+        improvements: ['Connected the deduplication rule to the requested brief explanation.'], assumptions: [] },
+    },
+    {
+      source: 'Compare A: 200 visits and 18 sign-ups; B: 160 visits and 20 sign-ups. Use only these counts.',
+      promptLanguage: 'en', notesLanguage: 'en',
+      result: { prompt: 'Compare sign-up rates for A (200 visits, 18 sign-ups) and B (160 visits, 20 sign-ups), using only those counts. Answer in English.',
+        improvements: ['Made the comparison objective explicit.'], assumptions: ['Inferred English as the answer language from the English operative instructions.'] },
+    },
+    {
+      source: '現有 CSV 專案先檢視再修 email 去重，改完驗證，用韓文解釋。',
+      promptLanguage: 'zh-Hant', notesLanguage: 'ja',
+      result: { prompt: '先檢視現有 CSV 專案的 `email` 去重邏輯，針對問題修正，使用可用的既有方式驗證，再以韓文簡短解釋。',
+        improvements: ['既存の実装の確認、修正、検証の順に整理しました。'], assumptions: [] },
+    },
+  ];
+  const captured = [];
+  const url = await providerApp(t, async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    const body = JSON.parse(Buffer.concat(chunks));
+    captured.push(body);
+    const fixture = cases.find(c => c.source === JSON.parse(body.messages[1].content).originalPrompt);
+    // Prewritten responses only: these cannot prove a real model follows the rules.
+    sendCompletion(response, fixture.result);
+  });
+  for (const fixture of cases) {
+    const { status, data } = await post(url, { prompt: fixture.source, promptLanguage: fixture.promptLanguage, notesLanguage: fixture.notesLanguage });
+    assert.equal(status, 200);
+    assert.deepEqual(data.assumptions, fixture.result.assumptions);
+    assert.deepEqual(data.improvements, fixture.result.improvements);
+    assert.equal(data.notesLanguage, fixture.notesLanguage);
+    assert.ok(data.prompt.includes(fixture.result.prompt));
+    const system = captured.at(-1).messages[0].content;
+    const finalCheck = system.slice(system.lastIndexOf('FINAL_JSON_SELF_CHECK'));
+    assert.ok(finalCheck.startsWith('FINAL_JSON_SELF_CHECK'));
+    if (fixture.promptLanguage === 'en') {
+      assert.match(finalCheck, /Every improvements and assumptions item must be in English/);
+      assert.match(finalCheck, /is EXPLICIT/);
+      assert.match(finalCheck, /even when both the source and your prompt instructions are English/);
+      assert.match(finalCheck, /Do not return an empty assumptions array/);
+      assert.match(finalCheck, /existing verification when available/);
+      assert.ok(finalCheck.includes('`email`, not Email'));
+    } else {
+      assert.match(finalCheck, /每一項都必須使用日文（Japanese）/);
+      assert.match(finalCheck, /都是明示要求/);
+      assert.match(finalCheck, /必須同時寫進 prompt 與 assumptions/);
+      assert.match(finalCheck, /並未假設某套測試必定存在/);
+      assert.ok(finalCheck.includes('`email`'));
+    }
+  }
+  assert.equal(captured.length, cases.length); // The self-check adds no provider call.
+});
+
 test('可關閉 JSON mode 並接受完整 JSON 程式碼區塊', async t => {
   let received;
   const url = await providerApp(t, async (request, response) => {
@@ -418,6 +541,21 @@ test('模型逾時回傳 504，並可再次送出', async t => {
   const url = await providerApp(t, () => {}, { LLM_TIMEOUT_MS: '40' });
   assert.equal((await post(url, { prompt: 'a' })).status, 504);
   assert.equal((await post(url, { prompt: 'a' })).status, 504);
+});
+
+test('格式錯誤後的重試共用原始總逾時，不為第二次請求重設預算', async t => {
+  let calls = 0;
+  const timers = [];
+  t.after(() => timers.forEach(clearTimeout));
+  const url = await providerApp(t, (request, response) => {
+    const attempt = ++calls;
+    timers.push(setTimeout(() => sendCompletion(response, attempt === 1 ? 'not JSON' : validResult), 200));
+  }, { LLM_TIMEOUT_MS: '350' });
+  const { status, data } = await post(url, { prompt: '合成總逾時測例' });
+  assert.equal(calls, 2);
+  assert.equal(status, 504);
+  assert.match(data.error, /逾時/);
+  assert.equal(Object.hasOwn(data, 'prompt'), false);
 });
 
 for (const brokenResult of [

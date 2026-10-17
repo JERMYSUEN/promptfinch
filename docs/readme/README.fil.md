@@ -14,6 +14,6 @@ Hinihiling sa modelo na linawin ang layunin, input at mga limitasyon, ayusin ang
 
 May manwal na workspace at selection assistant ang macOS app; pumili ng teksto sa katugmang app, mag-right-click, at piliin ang **Convert to English prompt** sa kasamang menu para makita ang resulta. May browser workspace din. Kailangan ng naka-configure na model API key para sa aktuwal na generation. Preview lang ang Mock, walang pagsasalin o pagpapahusay.
 
-Maaaring piliin sa Settings ang Traditional Chinese (default), English, Japanese o Korean para sa interface ng macOS. Traditional Chinese pa rin ang interface ng browser. Hinihiling sa modelo ang mga tala tungkol sa pagpapahusay at mga palagay sa Traditional Chinese; hindi isinasalin ang mga ito kapag binago ang wika ng interface. Mga pahina ng dokumentasyon lang ang pinapalitan ng mga link ng wika sa README.
+Nag-aalok ang macOS app ng Traditional Chinese (default), English, Japanese at Korean. Ang mga bagong tala tungkol sa pagpapahusay at mga palagay ay sumusunod sa wika ng interface. Nananatiling Traditional Chinese ang interface ng browser at may hiwalay na pagpili ng wika para sa mga tala. Dokumentasyon lang ang pinapalitan ng mga link sa README. Hindi muling isinusulat ang mga kasalukuyang resulta kapag binago ang wika.
 
 **Hakbang:** Ilagay/piliin → bumuo → suriin/kopyahin.

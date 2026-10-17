@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { isIP } from 'node:net';
-import { AppError, MAX_PROMPT_LENGTH, TASKS, readConfig, validateInput, optimize } from './lib/optimizer.js';
+import { AppError, MAX_PROMPT_LENGTH, TASKS, NOTES_LANGUAGES, readConfig, validateInput, optimize } from './lib/optimizer.js';
 
 const PUBLIC_DIR = new URL('./public/', import.meta.url);
 const STATIC_FILES = new Map([
@@ -144,7 +144,7 @@ export function createApp(config = readConfig()) {
           backendInstanceID: config.backendInstanceID || null,
           mode: config.mode, ready: config.mode === 'mock' || Boolean(config.apiKey && config.model),
           generationModel: config.mode === 'live' ? config.model || null : null,
-          maxPromptLength: MAX_PROMPT_LENGTH, tasks: TASKS, promptLanguages: ['zh-Hant', 'en'],
+          maxPromptLength: MAX_PROMPT_LENGTH, tasks: TASKS, promptLanguages: ['zh-Hant', 'en'], notesLanguages: NOTES_LANGUAGES,
         });
         return;
       }

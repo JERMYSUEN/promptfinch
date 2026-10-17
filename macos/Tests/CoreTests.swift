@@ -20,6 +20,16 @@ struct CoreTests {
         try input.validate()
         let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(input)) as! [String: Any]
         check(encoded["promptLanguage"] as? String == "en", "explicit English prompt language")
+        check(encoded["notesLanguage"] as? String == "zh-TW", "existing request call sites retain Traditional Chinese notes")
+        for locale in ["en", "ja", "ko", "zh-TW"] {
+            let request = PromptRequest(prompt: "Synthetic request", task: "general", targetModel: "", notesLanguage: locale)
+            try request.validate()
+            let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as! [String: Any]
+            check(object["notesLanguage"] as? String == locale && object["promptLanguage"] as? String == "en",
+                  "notes language encodes independently of English prompt output")
+        }
+        check(invalid(PromptRequest(prompt: "Synthetic request", task: "general", targetModel: "", notesLanguage: "invalid")),
+              "unsupported notes locale is rejected before sending")
         check(encoded["prompt"] as? String == input.prompt, "raw input preserved for provider")
         let multilingual = PromptRequest(prompt: "日本語の依頼。Escribe un aviso breve en español. أجب بالعربية. Keep 「設定変更」 exactly.",
                                          task: "writing", targetModel: "")
@@ -55,6 +65,10 @@ struct CoreTests {
             check(slice?.utf16.elementsEqual(source.utf16) == true, "bounded AX range keeps Hangul/Cyrillic/RTL/combining/emoji units")
         }
         check(!invalid(PromptRequest(prompt: String(repeating: "😀", count: 6000), task: "general", targetModel: "")), "exact UTF-16 limit accepted without truncation")
+
+        try await runPromptClientIdentityTests { check($0, $1) }
+        try await runBackendStoreTests { check($0, $1) }
+        try await runProcessLifecycleTests { check($0, $1) }
 
         _ = NSApplication.shared
         // Localization checks use temporary preferences and a volatile argument

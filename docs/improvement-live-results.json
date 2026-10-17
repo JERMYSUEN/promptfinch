@@ -1,0 +1,1513 @@
+{
+  "beforeRefinement": {
+    "date": "2026-10-17T04:09:21.863Z",
+    "backendID": "0bfa73da8d382428db967ec6431fdbe78a87c1ae4ab509674fddd9ae352cba48",
+    "generationModel": "deepseek-flash",
+    "status": "requires-semantic-review",
+    "timeoutMs": 20000,
+    "evidence": "Synthetic source fixtures only. Actual configured model API. Structural/literal checks are separate from semantic review. No downstream task-performance comparison was run.",
+    "stopReason": null,
+    "batches": {
+      "smoke": {
+        "code": 0,
+        "date": "2026-10-17T04:09:00.539Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "0bfa73da8d382428db967ec6431fdbe78a87c1ae4ab509674fddd9ae352cba48",
+        "promptLanguage": "en",
+        "notesLanguage": "en",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "value-writing-zh-clear-notice",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "writing",
+            "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English instructions, not the finished notice.",
+                "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+                "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+                "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+              ],
+              "valueCriteria": [
+                "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+                "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+            "sourceUTF16Length": 91,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a notification to people who have already registered for a workshop, in Traditional Chinese. The tone should be friendly but not too casual. The workshop's date and time have changed to November 8 at 2 p.m.; the venue is unchanged; people who have already registered do not need to register again. Do not add any information that is not provided. Return only a subject line and the body text, with no other content.",
+              "improvements": [
+                "Converted the request into a direct English instruction while preserving the audience, tone, changed details, and the no-registration-required point.",
+                "Clarified that the deliverable consists only of a subject line and body text, and explicitly prohibited inventing unprovided information."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 421,
+            "literalChecks": [],
+            "elapsedMs": 1625
+          },
+          {
+            "id": "value-coding-zh-csv-dedup",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "coding",
+            "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "email",
+                "CSV"
+              ],
+              "constraints": [
+                "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+                "Inspect the existing project implementation before changing its CSV deduplication logic.",
+                "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+                "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+                "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+              ],
+              "valueCriteria": [
+                "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+                "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+                "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+            "sourceUTF16Length": 75,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Fix the CSV deduplication bug in the current project. Treat email addresses that differ only in letter case as the same value, keep the first occurrence, and do not change the row order or the header. First inspect and locate the existing deduplication implementation in the workspace, then apply the smallest applicable fix while preserving the project's existing language, framework, and interfaces. After the fix, verify that the bug is resolved by checking the current behavior or running the relevant existing verification. If the project or relevant implementation cannot be accessed, ask for the needed files or access and wait. When finished, briefly explain the fix in Traditional Chinese.",
+              "improvements": [
+                "Placed the instruction to inspect the existing implementation before changing code, matching the user's requested order.",
+                "Separated the original Chinese request into detailed English task instructions while keeping the requested answer language as Traditional Chinese.",
+                "Added a conditional ask-first step only for when the project or relevant implementation is inaccessible."
+              ],
+              "assumptions": [
+                "Inferred Traditional Chinese as the answer language from the user's phrase \"用繁體中文簡單講\" and stated it explicitly in the prompt."
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 698,
+            "literalChecks": [
+              {
+                "text": "email",
+                "preserved": true
+              },
+              {
+                "text": "CSV",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 1826
+          }
+        ]
+      },
+      "english": {
+        "code": 1,
+        "date": "2026-10-17T04:09:04.050Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "0bfa73da8d382428db967ec6431fdbe78a87c1ae4ab509674fddd9ae352cba48",
+        "promptLanguage": "en",
+        "notesLanguage": "en",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "value-writing-zh-clear-notice",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "writing",
+            "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English instructions, not the finished notice.",
+                "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+                "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+                "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+              ],
+              "valueCriteria": [
+                "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+                "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+            "sourceUTF16Length": 91,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a notice to people who have already registered for a workshop, in Traditional Chinese. Use a friendly but not overly casual tone. The requested output is only a subject line and a body.\n\nInclude these supplied facts:\n- The workshop has been moved to November 8 at 2:00 p.m.\n- The location is unchanged.\n- People who have already registered do not need to register again.\n\nDo not add information that is not provided, and do not invent details such as the original date, the venue name, a reason for the change, or contact information. Make the subject line clear enough that registered participants can tell the notice concerns a schedule change, and organize the body so the new date and time, the unchanged location, and the no-reregistration point are easy to find. Before returning the answer, check that every stated fact comes from the list above and that no extra details were added.",
+              "improvements": [
+                "Structured the request as a directly usable English instruction with the supplied facts listed explicitly.",
+                "Added a pre-delivery check that all stated facts come from the provided list and that no unprovided details are added."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 896,
+            "literalChecks": [],
+            "elapsedMs": 2096
+          },
+          {
+            "id": "value-coding-zh-csv-dedup",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "coding",
+            "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "email",
+                "CSV"
+              ],
+              "constraints": [
+                "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+                "Inspect the existing project implementation before changing its CSV deduplication logic.",
+                "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+                "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+                "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+              ],
+              "valueCriteria": [
+                "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+                "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+                "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+            "sourceUTF16Length": 75,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Fix the CSV deduplication bug in the current project. Email values that differ only by letter case must be treated as the same entry; keep the first occurrence. Do not change the row order or the header. First inspect the existing implementation in the project workspace, then make the fix and verify that the bug is resolved. If the relevant project files cannot be accessed, ask for them before making changes. When done, briefly explain in Traditional Chinese what the bug was and how it was fixed.",
+              "improvements": [
+                "Organized the request into a clear inspect-fix-verify sequence while keeping the original constraints intact.",
+                "Added a conditional instruction to ask for the project files only if the workspace is inaccessible."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 501,
+            "literalChecks": [
+              {
+                "text": "email",
+                "preserved": false
+              },
+              {
+                "text": "CSV",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 1283
+          },
+          {
+            "id": "value-analysis-en-conversion-comparison",
+            "locale": "en",
+            "language": "English",
+            "task": "analysis",
+            "prompt": "Compare these two landing-page versions for me. A had 200 visits and 18 sign-ups; B had 160 visits and 20 sign-ups. Tell me which has the higher sign-up rate and how far apart they are in percentage points. Use only these counts, don't claim the page caused the difference, and keep the answer under 120 words.",
+            "expected": {
+              "answerLanguage": "English",
+              "answerLanguageSource": "inferred",
+              "literals": [],
+              "constraints": [
+                "Return reusable English analysis instructions, not calculated results.",
+                "Preserve A: 200 visits and 18 sign-ups; B: 160 visits and 20 sign-ups.",
+                "Request the higher sign-up rate and their percentage-point difference, using only the supplied counts and fewer than 120 words.",
+                "Do not infer causality, statistical significance, experiment design, business value, or missing segmentation data."
+              ],
+              "valueCriteria": [
+                "Make the comparison method explicit by defining each sign-up rate as sign-ups divided by visits, and keep percentage-point difference distinct from relative percentage change.",
+                "Give the downstream analyst a clear, concise comparison objective without adding confidence intervals, charts, recommendations, or other unrequested analysis."
+              ],
+              "assumptions": [
+                "English is inferred as the downstream answer language from the English request."
+              ],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Reward a relevant method clarification and preservation of the causal limitation. Do not reward volume or unrelated analytical sophistication.",
+            "sourceUTF16Length": 310,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Compare landing-page versions A and B using only these counts: A had 200 visits and 18 sign-ups; B had 160 visits and 20 sign-ups. Calculate each version's sign-up rate, state which rate is higher, and give the gap in percentage points. Do not claim or imply that either page caused the difference. Keep the answer under 120 words. Write the answer in English.",
+              "improvements": [
+                "Turned the comparison into an explicit sequence: calculate both rates, identify the higher one, then report the gap in percentage points.",
+                "Kept the causal-claim prohibition and the under-120-word limit tied directly to the deliverable."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 360,
+            "literalChecks": [],
+            "elapsedMs": 1412
+          },
+          {
+            "id": "value-summary-ja-meeting-notes",
+            "locale": "ja",
+            "language": "Japanese",
+            "task": "summary",
+            "prompt": "次のメモを、欠席したメンバーがすぐ分かるように日本語で3つの箇条書きにまとめて。決まったことと未決のことを混ぜず、書かれていない担当者や期限は足さないで。メモ：デモは録画で共有することに決定。公開日は未定。字幕の確認は佐藤さんが担当する。",
+            "expected": {
+              "answerLanguage": "Japanese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English summarization instructions, not the completed summary.",
+                "Request exactly 3 Japanese bullet points for absent team members.",
+                "Preserve the three supplied facts: the demo will be shared as a recording, the publication date is undecided, and Sato (佐藤) is responsible for checking subtitles.",
+                "Keep decided and undecided matters distinct; do not invent owners, deadlines, or a publication date."
+              ],
+              "valueCriteria": [
+                "Clearly separate the meeting notes as source material from the summary instructions and identify the distinction between decisions, open matters, and responsibility.",
+                "Make the absent-reader goal useful to the summarizer while keeping exactly the requested three bullets and no extra sections."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the optimized instructions improve source handling and information priority without generating the summary or inventing project-management details. Preserve the named subtitle-checking owner; either the original surname 佐藤 or its unambiguous transliteration Sato is acceptable.",
+            "sourceUTF16Length": 119,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Summarize the following memo in Japanese as exactly three bullet points so that a member who was absent can understand it quickly. Keep decided items and undecided items separate; do not mix them. Do not add any owner or deadline that is not written in the memo. Source memo: デモは録画で共有することに決定。公開日は未定。字幕の確認は佐藤さんが担当する。",
+              "improvements": [
+                "Converted the request into a directly usable English instruction while preserving the Japanese output requirement.",
+                "Explicitly grouped the decided/undecided separation and the no-added-owners-or-deadlines rule with the source memo so constraints are applied to the actual content."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 315,
+            "literalChecks": [],
+            "elapsedMs": 1447
+          },
+          {
+            "id": "value-marketing-ko-feature-boundary",
+            "locale": "ko",
+            "language": "Korean",
+            "task": "marketing",
+            "prompt": "Nimbus Notes 업데이트 소개 문구를 한국어로 2문장 써 줘. 친근하게 쓰되 과장하지 마. 확인된 내용은 기기에 이미 저장된 메모를 인터넷 없이 검색할 수 있다는 것뿐이야. 제품명은 Nimbus Notes 그대로 쓰고, 무료라는 말이나 지원 기기, 출시일은 넣지 마.",
+            "expected": {
+              "answerLanguage": "Korean",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "Nimbus Notes"
+              ],
+              "constraints": [
+                "Return reusable English marketing instructions, not the completed update copy.",
+                "Request exactly 2 Korean sentences in a friendly, restrained tone and retain Nimbus Notes exactly.",
+                "The only confirmed capability is searching notes already stored on the device without an internet connection.",
+                "Do not imply every account note is stored offline; do not add free-access claims, supported devices, a release date, or other features."
+              ],
+              "valueCriteria": [
+                "Connect the feature's practical benefit to the copywriting goal while preserving its local-storage boundary and all claim restrictions.",
+                "Provide focused drafting instructions without inventing an audience, channel, call to action, campaign strategy, or additional variants."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "A useful marketing optimization clarifies the confirmed benefit and its limits. Generic promotional embellishment or unsupported product promises fail even if the English reads fluently.",
+            "sourceUTF16Length": 153,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a two-sentence update announcement in Korean for Nimbus Notes. Use a friendly tone but do not exaggerate. The only confirmed information is that users can search notes already saved on their device without an internet connection. Keep the product name as \"Nimbus Notes\" exactly. Do not mention that it is free, do not list supported devices, and do not include a release date. Do not fabricate any other features, results, prices, or promises. Before finalizing, check that the text is exactly two sentences, only the confirmed offline search of on-device notes is claimed, and none of the excluded items (free, supported devices, release date) appear.",
+              "improvements": [
+                "Consolidated the confirmed feature and the exclusions into one directly usable English instruction for a future model.",
+                "Added a short pre-delivery check that enforces the two-sentence limit and the no-fabrication/exclusion rules."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 658,
+            "literalChecks": [
+              {
+                "text": "Nimbus Notes",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 1633
+          },
+          {
+            "id": "value-general-zh-bounded-plan",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "general",
+            "prompt": "我週末只有兩小時，想整理書桌和旁邊的書架。請用家裡現有的東西，不買收納用品。幫我排一個能照做的順序，用繁體中文列步驟，最後給一張短的檢查清單。不用規劃其他房間。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English planning instructions, not the completed cleanup plan.",
+                "Keep the total available time at 2 hours during the weekend and limit the area to the desk and adjacent bookshelf.",
+                "Use existing household items only, with no purchases of storage supplies.",
+                "Request actionable ordered steps in Traditional Chinese and a short final checklist; do not add other rooms."
+              ],
+              "valueCriteria": [
+                "Turn the informal request into a bounded planning objective, connecting the action order to the two-hour total and the stated two areas.",
+                "Make the eventual checklist check completion of this task rather than adding maintenance routines, product recommendations, or assumptions about available containers and furniture."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Useful structure is welcome, but the optimizer must not perform the plan, invent the home layout, prescribe purchases, or expand the scope. Exact time allocations are not required.",
+            "sourceUTF16Length": 80,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "I have only two hours this weekend and want to tidy my desk and the bookshelf next to it. Use only items already in my home; do not buy any storage supplies. Create a practical sequence I can follow, list the steps in Traditional Chinese, and end with a short checklist. Do not plan for any other rooms.",
+              "improvements": [
+                "Turned the request into a clear, directly actionable English instruction while keeping the two-hour limit, the no-purchase constraint, and the desk-plus-adjacent-bookshelf scope."
+              ],
+              "assumptions": [
+                "Inferred Traditional Chinese as the answer language from the explicit request to list the steps in Traditional Chinese."
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 303,
+            "literalChecks": [],
+            "elapsedMs": 1281
+          },
+          {
+            "id": "value-writing-en-minimal-edit",
+            "locale": "en",
+            "language": "English",
+            "task": "writing",
+            "prompt": "Write a friendly one-sentence reminder to bring a reusable bottle to Friday's team walk. Return only the reminder, with no heading, explanation, or checklist.",
+            "expected": {
+              "answerLanguage": "English",
+              "answerLanguageSource": "inferred",
+              "literals": [
+                "Friday"
+              ],
+              "constraints": [
+                "Return a reusable English prompt, not the completed reminder.",
+                "Preserve the friendly tone, exactly one sentence, reusable bottle, and Friday team walk.",
+                "Keep the downstream output limited to the reminder with no heading, explanation, or checklist.",
+                "Do not invent a time, location, recipient names, meeting duration, or other walk details."
+              ],
+              "valueCriteria": [
+                "Recognize that the input already specifies a complete small task; an unchanged or lightly clarified prompt is an acceptable result.",
+                "Any edit must preserve the compact, directly usable instructions. Added roles, phases, acceptance sections, or extra deliverables are regressions rather than evidence of value."
+              ],
+              "assumptions": [
+                "English is inferred as the downstream answer language from the English request."
+              ],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "This is the restraint control. Do not demand a visible structural rewrite when the original prompt is already clear, and distinguish the optimizer's reusable prompt from the downstream one-sentence artifact.",
+            "sourceUTF16Length": 158,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a friendly one-sentence reminder to bring a reusable bottle to Friday's team walk. Return only the reminder, with no heading, explanation, or checklist.",
+              "improvements": [
+                "The request is already clear and actionable, so it was kept with minimal edits."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 158,
+            "literalChecks": [
+              {
+                "text": "Friday",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 636
+          },
+          {
+            "id": "value-analysis-ja-ko-missing-options",
+            "locale": "ja-KR",
+            "language": "Japanese instructions with explicit Korean output",
+            "task": "analysis",
+            "prompt": "チーム用のノートアプリを2つ比べて選びたい。比較する製品名と必要な条件はこのあと送ります。それを受け取ってから、条件ごとの違いと分からない点を韓国語の短い表にして、最後に理由つきの候補を1つ示してください。제품 정보가 없으면 추측하지 마세요. 条件が足りなければ、判断に必要な質問を先にして。",
+            "expected": {
+              "answerLanguage": "Korean",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English comparison instructions, not a guessed product recommendation.",
+                "Preserve the plan to compare exactly 2 note-taking apps for a team, with product names and selection requirements forthcoming.",
+                "After the promised inputs arrive, request a short Korean table of requirement-by-requirement differences and unknowns, then exactly one justified candidate.",
+                "Do not invent products, requirements, or unavailable product facts; ask necessary decision questions first if requirements are insufficient."
+              ],
+              "valueCriteria": [
+                "Make the dependency order explicit: receive the named products and requirements, clarify only decision-critical gaps, then compare and recommend using those requirements.",
+                "Distinguish unknown product information from known facts and connect the final choice to the user's supplied conditions without adding assumed budgets, platforms, or team size."
+              ],
+              "assumptions": [],
+              "needsClarification": true,
+              "clarification": "Wait for the promised product names and requirements, then ask only decision-critical questions if needed before comparison.",
+              "answersTask": false
+            },
+            "review": "Mixed-language instructions must receive the same task-directed improvement as Chinese, while retaining explicit Korean output. A generic English translation that omits the staged comparison workflow is insufficient.",
+            "sourceUTF16Length": 148,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "After receiving the product names and criteria, compare two team note-taking apps and help select one. The user will send the two product names and the required criteria in a follow-up message; wait for that follow-up before doing any comparison.\n\nDo not guess when product information is unavailable. If the user has not yet sent the product names or criteria, ask for them and wait. If the supplied criteria are insufficient to make a decision, ask the questions needed for the judgment first, before producing the comparison.\n\nOnce you have the products and criteria: compare the products against each criterion, clearly separating confirmed facts, inferences, and unknown or unverified points, and never invent findings. Present the differences and unknowns per criterion in a short table, then end by recommending exactly one candidate with reasons. Write the answer in Korean.",
+              "improvements": [
+                "Clarified that the model must wait for the follow-up product names and criteria before comparing.",
+                "Made the no-guessing and ask-first rules explicit conditions tied to missing product information or insufficient criteria.",
+                "Structured the deliverable into a per-criterion difference/unknown table followed by exactly one reasoned recommendation, with facts, inferences, and uncertainty kept distinct."
+              ],
+              "assumptions": [
+                "Inferred Korean as the answer language from the operative instructions because none was explicitly named."
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 882,
+            "literalChecks": [],
+            "elapsedMs": 2302
+          }
+        ]
+      },
+      "traditionalChinese": {
+        "code": 0,
+        "date": "2026-10-17T04:09:16.356Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "0bfa73da8d382428db967ec6431fdbe78a87c1ae4ab509674fddd9ae352cba48",
+        "promptLanguage": "zh-Hant",
+        "notesLanguage": "ja",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "value-writing-zh-clear-notice",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "writing",
+            "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English instructions, not the finished notice.",
+                "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+                "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+                "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+              ],
+              "valueCriteria": [
+                "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+                "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+            "sourceUTF16Length": 91,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n請依原需求撰寫這封給已報名者的通知，並遵守以下執行指引：\n1. 僅使用原文已提供的資訊（工作坊改至 11 月 8 日下午 2 點、地點不變、已報名者無須重新報名）。原文未提供的資訊（如工作坊名稱、原定時間、地點名稱、聯絡方式、交通或議程等）一律不得補寫、揣測或留下佔位符。\n2. 語氣維持友善但不過於隨便，用詞清楚、可直接發送；段落依通知所需自然安排，不額外加上未要求的段落或制式結尾。\n3. 交付物僅包含主旨與內文兩部分，以繁體中文撰寫，不要附加說明、備註或其他格式。\n4. 完成前核對：三項已提供資訊是否完整且正確呈現、是否誤加未提供的內容、語氣是否符合要求、輸出是否僅有主旨與內文。",
+              "improvements": [
+                "未提供資訊的處理方式具體化為「不得補寫、揣測或留下佔位符」，避免模型自行補齊工作坊名稱、地點或聯絡方式。",
+                "把「主旨和內文就好」明確化為僅輸出這兩部分、不附加說明或備註，確保交付格式不被擴大。",
+                "將語氣要求與段落安排連結，並禁止加入未要求的制式段落或結尾，避免通知被過度擴寫。",
+                "加入交付前的核對項目，聚焦於已提供資訊是否正確呈現、是否誤加內容與格式是否符合。"
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "zh-Hant",
+              "notesLanguage": "ja"
+            },
+            "resultUTF16Length": 581,
+            "literalChecks": [],
+            "elapsedMs": 2700
+          },
+          {
+            "id": "value-coding-zh-csv-dedup",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "coding",
+            "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "email",
+                "CSV"
+              ],
+              "constraints": [
+                "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+                "Inspect the existing project implementation before changing its CSV deduplication logic.",
+                "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+                "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+                "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+              ],
+              "valueCriteria": [
+                "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+                "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+                "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+            "sourceUTF16Length": 75,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n請修正目前工作目錄中這個專案既有的 CSV 去重邏輯 bug。修正前，先定位並閱讀現有的去重實作與相關結構，再進行修改；不要憑空重寫成無關的新模組。\n\n修正需求：\n- email 欄位的比對要視為不分大小寫（例如僅在大小寫上不同的值視為同一筆）。\n- 遇到重複時保留第一筆資料。\n- 輸出的資料列順序不得改變。\n- 標頭必須保持原樣，不得更動或重排。\n\n修改完成後，請實際執行既有可行的方式（例如專案既有的測試或可用的執行指令）驗證修正結果；若無法執行驗證，明確說明原因，不要聲稱已驗證。\n\n最後以繁體中文簡要說明：問題所在、修改了什麼、以及如何確認修正結果。",
+              "improvements": [
+                "「先看現有寫法再改」與「改完確認修好了」を、既存実装の読取り→修正→実行検証→報告という実行順序に整理した。",
+                "「順序和標頭不要動」を、行順不変とヘッダー原样維持という個別の確認可能な条件に分解した。",
+                "検証できない場合に完了を偽らないよう、実行結果の報告条件を明示した。",
+                "報告内容を「問題点・修正内容・確認方法」に絞り、原文の「簡単に説明」と繁體中文指定を維持した。"
+              ],
+              "assumptions": [
+                "検証はプロジェクト既存のテストや実行可能なコマンドを用いることを想定した。"
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "zh-Hant",
+              "notesLanguage": "ja"
+            },
+            "resultUTF16Length": 551,
+            "literalChecks": [
+              {
+                "text": "email",
+                "preserved": true
+              },
+              {
+                "text": "CSV",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 2791
+          }
+        ]
+      }
+    }
+  },
+  "afterRefinement": {
+    "date": "2026-10-17T04:12:52.834Z",
+    "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+    "generationModel": "deepseek-flash",
+    "status": "requires-semantic-review",
+    "timeoutMs": 20000,
+    "evidence": "Synthetic source fixtures only. Actual configured model API. Structural/literal checks are separate from semantic review. No downstream task-performance comparison was run.",
+    "stopReason": null,
+    "batches": {
+      "smoke": {
+        "code": 0,
+        "date": "2026-10-17T04:12:27.470Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "en",
+        "notesLanguage": "en",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "value-writing-zh-clear-notice",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "writing",
+            "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English instructions, not the finished notice.",
+                "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+                "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+                "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+              ],
+              "valueCriteria": [
+                "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+                "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+            "sourceUTF16Length": 91,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a notification to people who have already registered, in Traditional Chinese. Use a friendly tone that is not too casual. Include only these facts: the workshop has been moved to November 8 at 2:00 p.m., and the location is unchanged; people who have already registered do not need to register again. Do not add or infer any information that is not given (for example, do not invent a venue, a reason for the change, a deadline, or contact details). Return only a subject line and the body text.",
+              "improvements": [
+                "Consolidated the change details, unchanged location, and no-re-registration rule into one explicit fact list so nothing extra gets added.",
+                "Made the no-fabrication rule concrete by naming examples of information that must not be invented."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 501,
+            "literalChecks": [],
+            "elapsedMs": 1312
+          },
+          {
+            "id": "value-coding-zh-csv-dedup",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "coding",
+            "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "email",
+                "CSV"
+              ],
+              "constraints": [
+                "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+                "Inspect the existing project implementation before changing its CSV deduplication logic.",
+                "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+                "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+                "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+              ],
+              "valueCriteria": [
+                "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+                "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+                "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+            "sourceUTF16Length": 75,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Fix the CSV deduplication bug in the current project. Treat email addresses that differ only by letter case as duplicates and keep the first occurrence; do not change the row order or the header. First inspect the existing implementation, then make the smallest correction needed, and verify that the bug is fixed. If the project or relevant files cannot be accessed, ask for them and wait. When finished, give a brief explanation in Traditional Chinese.",
+              "improvements": [
+                "Made the inspect-then-fix-then-verify sequence explicit while keeping the original scope.",
+                "Stated that the fix should be minimal and that the existing behavior and interfaces must be preserved."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 454,
+            "literalChecks": [
+              {
+                "text": "email",
+                "preserved": true
+              },
+              {
+                "text": "CSV",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 1090
+          }
+        ]
+      },
+      "english": {
+        "code": 0,
+        "date": "2026-10-17T04:12:29.971Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "en",
+        "notesLanguage": "en",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "value-writing-zh-clear-notice",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "writing",
+            "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English instructions, not the finished notice.",
+                "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+                "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+                "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+              ],
+              "valueCriteria": [
+                "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+                "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+            "sourceUTF16Length": 91,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a clear notice to people who have already registered, in Traditional Chinese. Use a friendly tone, but do not make it too casual. Give only the subject line and the body text, and nothing else.\n\nInclude these facts:\n- The workshop has been moved to November 8 at 2:00 p.m.\n- The location is unchanged.\n- People who have already registered do not need to register again.\n\nDo not add any information that is not provided here, such as the workshop name, venue, date year, or contact details. If a detail needed for the notice is not given, omit it rather than inventing it. Before returning the notice, check that it contains the subject and body in Traditional Chinese and that all three provided facts above are included and none are contradicted.",
+              "improvements": [
+                "Consolidated the notice's required facts and output structure into one directly usable English instruction.",
+                "Added an explicit no-fabrication check tied only to the supplied facts, without expanding it into a blanket prohibition.",
+                "Kept the friendly-but-not-too-casual tone and the subject-plus-body-only format."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 753,
+            "literalChecks": [],
+            "elapsedMs": 1728
+          },
+          {
+            "id": "value-coding-zh-csv-dedup",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "coding",
+            "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "email",
+                "CSV"
+              ],
+              "constraints": [
+                "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+                "Inspect the existing project implementation before changing its CSV deduplication logic.",
+                "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+                "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+                "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+              ],
+              "valueCriteria": [
+                "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+                "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+                "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+            "sourceUTF16Length": 75,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Fix the CSV de-duplication bug in this project. Treat email values that differ only by letter case as duplicates; keep the first occurrence; do not change the row order or the header. First inspect the existing de-duplication implementation in the workspace before editing it. After the change, verify that the bug is actually fixed using the project's existing tests or a minimal check, if available. If this workspace or the relevant implementation cannot be accessed, ask for the relevant files or access and wait. Otherwise, make the fix and confirm the result. Explain the fix simply in Traditional Chinese, at a level a non-specialist can understand.",
+              "improvements": [
+                "Made the edit-then-verify sequence explicit: inspect the existing implementation, apply the fix, then confirm with existing tests or a minimal check.",
+                "Preserved all constraints exactly: case-insensitive email matching, keep the first row, and do not change row order or the header.",
+                "Added a conditional ask-first path when the workspace or relevant implementation is inaccessible, without treating the code as missing."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 656,
+            "literalChecks": [
+              {
+                "text": "email",
+                "preserved": true
+              },
+              {
+                "text": "CSV",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 1621
+          },
+          {
+            "id": "value-analysis-en-conversion-comparison",
+            "locale": "en",
+            "language": "English",
+            "task": "analysis",
+            "prompt": "Compare these two landing-page versions for me. A had 200 visits and 18 sign-ups; B had 160 visits and 20 sign-ups. Tell me which has the higher sign-up rate and how far apart they are in percentage points. Use only these counts, don't claim the page caused the difference, and keep the answer under 120 words.",
+            "expected": {
+              "answerLanguage": "English",
+              "answerLanguageSource": "inferred",
+              "literals": [],
+              "constraints": [
+                "Return reusable English analysis instructions, not calculated results.",
+                "Preserve A: 200 visits and 18 sign-ups; B: 160 visits and 20 sign-ups.",
+                "Request the higher sign-up rate and their percentage-point difference, using only the supplied counts and fewer than 120 words.",
+                "Do not infer causality, statistical significance, experiment design, business value, or missing segmentation data."
+              ],
+              "valueCriteria": [
+                "Make the comparison method explicit by defining each sign-up rate as sign-ups divided by visits, and keep percentage-point difference distinct from relative percentage change.",
+                "Give the downstream analyst a clear, concise comparison objective without adding confidence intervals, charts, recommendations, or other unrequested analysis."
+              ],
+              "assumptions": [
+                "English is inferred as the downstream answer language from the English request."
+              ],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Reward a relevant method clarification and preservation of the causal limitation. Do not reward volume or unrelated analytical sophistication.",
+            "sourceUTF16Length": 310,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Compare the sign-up rates of two landing-page versions using only these counts: A had 200 visits and 18 sign-ups; B had 160 visits and 20 sign-ups. State which version has the higher sign-up rate and the gap between the two rates in percentage points. Do not claim or imply that the page caused the difference. Keep the answer under 120 words.",
+              "improvements": [
+                "Restated the calculation and wording constraints as a single, directly usable task.",
+                "Made the no-causation limit explicit and bound the under-120-word limit to the whole answer."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 343,
+            "literalChecks": [],
+            "elapsedMs": 1171
+          },
+          {
+            "id": "value-summary-ja-meeting-notes",
+            "locale": "ja",
+            "language": "Japanese",
+            "task": "summary",
+            "prompt": "次のメモを、欠席したメンバーがすぐ分かるように日本語で3つの箇条書きにまとめて。決まったことと未決のことを混ぜず、書かれていない担当者や期限は足さないで。メモ：デモは録画で共有することに決定。公開日は未定。字幕の確認は佐藤さんが担当する。",
+            "expected": {
+              "answerLanguage": "Japanese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English summarization instructions, not the completed summary.",
+                "Request exactly 3 Japanese bullet points for absent team members.",
+                "Preserve the three supplied facts: the demo will be shared as a recording, the publication date is undecided, and Sato (佐藤) is responsible for checking subtitles.",
+                "Keep decided and undecided matters distinct; do not invent owners, deadlines, or a publication date."
+              ],
+              "valueCriteria": [
+                "Clearly separate the meeting notes as source material from the summary instructions and identify the distinction between decisions, open matters, and responsibility.",
+                "Make the absent-reader goal useful to the summarizer while keeping exactly the requested three bullets and no extra sections."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the optimized instructions improve source handling and information priority without generating the summary or inventing project-management details. Preserve the named subtitle-checking owner; either the original surname 佐藤 or its unambiguous transliteration Sato is acceptable.",
+            "sourceUTF16Length": 119,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Summarize the following memo into exactly three bullet points in Japanese so that a member who was absent can understand it quickly. Keep decided items separate from undecided items, and do not add any owners or deadlines that are not stated in the memo.\n\nMemo: デモは録画で共有することに決定。公開日は未定。字幕の確認は佐藤さんが担当する。",
+              "improvements": [
+                "Combined the summary goal, the three-bullet limit, the decided/undecided separation, and the no-invented-details rule into one clear instruction.",
+                "Kept the memo verbatim as the source to summarize."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 301,
+            "literalChecks": [],
+            "elapsedMs": 1096
+          },
+          {
+            "id": "value-marketing-ko-feature-boundary",
+            "locale": "ko",
+            "language": "Korean",
+            "task": "marketing",
+            "prompt": "Nimbus Notes 업데이트 소개 문구를 한국어로 2문장 써 줘. 친근하게 쓰되 과장하지 마. 확인된 내용은 기기에 이미 저장된 메모를 인터넷 없이 검색할 수 있다는 것뿐이야. 제품명은 Nimbus Notes 그대로 쓰고, 무료라는 말이나 지원 기기, 출시일은 넣지 마.",
+            "expected": {
+              "answerLanguage": "Korean",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "Nimbus Notes"
+              ],
+              "constraints": [
+                "Return reusable English marketing instructions, not the completed update copy.",
+                "Request exactly 2 Korean sentences in a friendly, restrained tone and retain Nimbus Notes exactly.",
+                "The only confirmed capability is searching notes already stored on the device without an internet connection.",
+                "Do not imply every account note is stored offline; do not add free-access claims, supported devices, a release date, or other features."
+              ],
+              "valueCriteria": [
+                "Connect the feature's practical benefit to the copywriting goal while preserving its local-storage boundary and all claim restrictions.",
+                "Provide focused drafting instructions without inventing an audience, channel, call to action, campaign strategy, or additional variants."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "A useful marketing optimization clarifies the confirmed benefit and its limits. Generic promotional embellishment or unsupported product promises fail even if the English reads fluently.",
+            "sourceUTF16Length": 153,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write exactly two sentences in Korean introducing an update to Nimbus Notes. Use a friendly tone but do not exaggerate. The only confirmed information is that users can search notes already saved on the device without an internet connection. Write the product name exactly as \"Nimbus Notes\". Do not include any mention of the product being free, supported devices, or a release date. Do not invent or imply any other features, results, prices, or promises.",
+              "improvements": [
+                "Turned the request into clear English instructions while keeping the two-sentence Korean deliverable and friendly tone.",
+                "Bound the content to the single confirmed fact and made the prohibitions explicit against fabrication."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 456,
+            "literalChecks": [
+              {
+                "text": "Nimbus Notes",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 1111
+          },
+          {
+            "id": "value-general-zh-bounded-plan",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "general",
+            "prompt": "我週末只有兩小時，想整理書桌和旁邊的書架。請用家裡現有的東西，不買收納用品。幫我排一個能照做的順序，用繁體中文列步驟，最後給一張短的檢查清單。不用規劃其他房間。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English planning instructions, not the completed cleanup plan.",
+                "Keep the total available time at 2 hours during the weekend and limit the area to the desk and adjacent bookshelf.",
+                "Use existing household items only, with no purchases of storage supplies.",
+                "Request actionable ordered steps in Traditional Chinese and a short final checklist; do not add other rooms."
+              ],
+              "valueCriteria": [
+                "Turn the informal request into a bounded planning objective, connecting the action order to the two-hour total and the stated two areas.",
+                "Make the eventual checklist check completion of this task rather than adding maintenance routines, product recommendations, or assumptions about available containers and furniture."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Useful structure is welcome, but the optimizer must not perform the plan, invent the home layout, prescribe purchases, or expand the scope. Exact time allocations are not required.",
+            "sourceUTF16Length": 80,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "I have only two hours this weekend and want to tidy my desk and the bookshelf next to it. Using only items already in my home, without buying any storage products, give me a practical step-by-step order I can actually follow. List the steps in Traditional Chinese, and finish with a short checklist. Do not plan for any other rooms.",
+              "improvements": [
+                "Reorganized the request into one clear English instruction while keeping the scope limited to the desk and adjacent bookshelf."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 332,
+            "literalChecks": [],
+            "elapsedMs": 906
+          },
+          {
+            "id": "value-writing-en-minimal-edit",
+            "locale": "en",
+            "language": "English",
+            "task": "writing",
+            "prompt": "Write a friendly one-sentence reminder to bring a reusable bottle to Friday's team walk. Return only the reminder, with no heading, explanation, or checklist.",
+            "expected": {
+              "answerLanguage": "English",
+              "answerLanguageSource": "inferred",
+              "literals": [
+                "Friday"
+              ],
+              "constraints": [
+                "Return a reusable English prompt, not the completed reminder.",
+                "Preserve the friendly tone, exactly one sentence, reusable bottle, and Friday team walk.",
+                "Keep the downstream output limited to the reminder with no heading, explanation, or checklist.",
+                "Do not invent a time, location, recipient names, meeting duration, or other walk details."
+              ],
+              "valueCriteria": [
+                "Recognize that the input already specifies a complete small task; an unchanged or lightly clarified prompt is an acceptable result.",
+                "Any edit must preserve the compact, directly usable instructions. Added roles, phases, acceptance sections, or extra deliverables are regressions rather than evidence of value."
+              ],
+              "assumptions": [
+                "English is inferred as the downstream answer language from the English request."
+              ],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "This is the restraint control. Do not demand a visible structural rewrite when the original prompt is already clear, and distinguish the optimizer's reusable prompt from the downstream one-sentence artifact.",
+            "sourceUTF16Length": 158,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "Write a friendly one-sentence reminder to bring a reusable bottle to Friday's team walk. Return only the reminder, with no heading, explanation, or checklist.",
+              "improvements": [
+                "Kept the already clear English request as a directly usable instruction without adding scope."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 158,
+            "literalChecks": [
+              {
+                "text": "Friday",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 794
+          },
+          {
+            "id": "value-analysis-ja-ko-missing-options",
+            "locale": "ja-KR",
+            "language": "Japanese instructions with explicit Korean output",
+            "task": "analysis",
+            "prompt": "チーム用のノートアプリを2つ比べて選びたい。比較する製品名と必要な条件はこのあと送ります。それを受け取ってから、条件ごとの違いと分からない点を韓国語の短い表にして、最後に理由つきの候補を1つ示してください。제품 정보가 없으면 추측하지 마세요. 条件が足りなければ、判断に必要な質問を先にして。",
+            "expected": {
+              "answerLanguage": "Korean",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English comparison instructions, not a guessed product recommendation.",
+                "Preserve the plan to compare exactly 2 note-taking apps for a team, with product names and selection requirements forthcoming.",
+                "After the promised inputs arrive, request a short Korean table of requirement-by-requirement differences and unknowns, then exactly one justified candidate.",
+                "Do not invent products, requirements, or unavailable product facts; ask necessary decision questions first if requirements are insufficient."
+              ],
+              "valueCriteria": [
+                "Make the dependency order explicit: receive the named products and requirements, clarify only decision-critical gaps, then compare and recommend using those requirements.",
+                "Distinguish unknown product information from known facts and connect the final choice to the user's supplied conditions without adding assumed budgets, platforms, or team size."
+              ],
+              "assumptions": [],
+              "needsClarification": true,
+              "clarification": "Wait for the promised product names and requirements, then ask only decision-critical questions if needed before comparison.",
+              "answersTask": false
+            },
+            "review": "Mixed-language instructions must receive the same task-directed improvement as Chinese, while retaining explicit Korean output. A generic English translation that omits the staged comparison workflow is insufficient.",
+            "sourceUTF16Length": 148,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "The user wants to choose between two note-taking apps for team use. The product names and the required criteria will be sent in a later message; treat them as [PRODUCTS] and [REQUIREMENTS]. Do not infer or invent product information or missing requirements. If [PRODUCTS] or [REQUIREMENTS] has not been provided, first ask the questions needed to make the comparison before producing any artifact; otherwise, produce the comparison as follows. Compare the two products criterion by criterion and present the differences and any unknown or unverified points in a short table. Distinguish clearly what is confirmed fact, what is inference, and what is uncertain; do not present inference or uncertainty as fact. After the table, recommend exactly one candidate and give the reasons. Write the table and the recommendation in Korean.",
+              "improvements": [
+                "Since the products and criteria will arrive later, I marked them as placeholders and made asking for them a precondition for producing the comparison.",
+                "Added an explicit rule to separate facts, inferences and uncertainties so that guesses are not presented as confirmed differences.",
+                "Specified that the output is a short per-criterion comparison table followed by a single reasoned recommendation in Korean."
+              ],
+              "assumptions": [
+                "Inferred Korean as the answer language because the source explicitly asks for a Korean-language table and the source's operative instructions are predominantly Japanese, with only the no-guessing clause in Korean."
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 830,
+            "literalChecks": [],
+            "elapsedMs": 2321
+          }
+        ]
+      },
+      "traditionalChinese": {
+        "code": 0,
+        "date": "2026-10-17T04:12:40.824Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "zh-Hant",
+        "notesLanguage": "ja",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "value-writing-zh-clear-notice",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "writing",
+            "prompt": "幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [],
+              "constraints": [
+                "Return reusable English instructions, not the finished notice.",
+                "Keep the audience as people who already registered, the new time as November 8 at 2 PM, the unchanged location, and the fact that registration need not be repeated.",
+                "Preserve Traditional Chinese output, a friendly but professional tone, and only a subject and body.",
+                "Do not invent a year, venue, reason for rescheduling, sender, or additional registration requirements."
+              ],
+              "valueCriteria": [
+                "Make the communication goal and the three practical facts easy for the downstream writer to use, rather than merely translating the informal phrasing sentence by sentence.",
+                "Connect the requested subject/body format and tone to the notification task without adding unrelated deliverables or a long generic checklist."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge task-specific clarity, fidelity of dates and registration facts, restrained scope, and whether the English prompt is directly reusable. Natural restructuring is sufficient; extra headings are not required.",
+            "sourceUTF16Length": 91,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n幫我寫清楚這封給已報名者的通知，語氣友善但不要太隨便。工作坊改到 11 月 8 日下午 2 點，地點不變；已報名的人不用重新報名。不知道的資訊不要補。用繁體中文，給我主旨和內文就好。\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n請依下方「參考資料」中的原始需求撰寫通知，並遵守以下執行指引：\n1. 僅使用原文已提供的資訊：受眾為已報名者、變更後時間為 11 月 8 日下午 2 點、地點不變、已報名者無須重新報名。原文未提供的資訊一律不補、不推測，也不預留或虛構欄位內容。\n2. 語氣友善但保持正式、不過於隨便；不要自行指定原文未給的風格。\n3. 輸出僅包含主旨與內文兩部分，內文段落安排以清楚傳達上述變更與無須重新報名為準，不加其他說明、檢查表或寄件提醒。\n4. 以繁體中文撰寫，全文完成後核對是否只含主旨與內文兩部分，且未出現原文未提供的資訊。",
+              "improvements": [
+                "既存の指示を「使用してよい情報」と「補ってはいけない情報」に分け、原文にない情報の追加や推測を防ぐ形に整理した。",
+                "出力を主旨と本文の二部分に限定する制約を、実行時の最終確認項目として明示した。",
+                "原文の受衆・変更内容・再申込不要という要点を漏れなく反映するよう、確認の観点を具体化した。"
+              ],
+              "assumptions": [
+                "原文が繁体字中国語で書かれているため、タスクの回答言語は繁体字中国語とする。"
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "zh-Hant",
+              "notesLanguage": "ja"
+            },
+            "resultUTF16Length": 547,
+            "literalChecks": [],
+            "elapsedMs": 2829
+          },
+          {
+            "id": "value-coding-zh-csv-dedup",
+            "locale": "zh-Hant",
+            "language": "Traditional Chinese",
+            "task": "coding",
+            "prompt": "幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。",
+            "expected": {
+              "answerLanguage": "Traditional Chinese",
+              "answerLanguageSource": "explicit",
+              "literals": [
+                "email",
+                "CSV"
+              ],
+              "constraints": [
+                "Return reusable English debugging instructions, not a guessed patch or an answer to the coding task.",
+                "Inspect the existing project implementation before changing its CSV deduplication logic.",
+                "Treat email values differing only in letter case as the same address and retain the first row for each address.",
+                "Preserve row order and the CSV header; verify the fix and explain it briefly in Traditional Chinese.",
+                "Do not invent the project language, framework, file paths, parser implementation, or unrelated refactoring requirements. Do not require the user to paste every file when the task is to inspect the existing project."
+              ],
+              "valueCriteria": [
+                "Turn the rough bug report into an actionable sequence: locate and inspect the existing parsing and deduplication behavior, make a focused fix, verify it, and give the requested brief explanation.",
+                "Make verification concrete and directly relevant: mixed-case duplicate email addresses should retain their first row, distinct addresses should remain, and both row order and header must stay unchanged.",
+                "Keep the change bounded to the specified behavior rather than prescribing a new parser, broad rewrite, added dependencies, or invented handling of missing email fields."
+              ],
+              "assumptions": [],
+              "needsClarification": false,
+              "answersTask": false
+            },
+            "review": "Judge whether the English prompt directs useful project inspection and behavior-specific verification beyond translation. It must retain first occurrence, order, header, and case-insensitive email matching without executing the task or inventing implementation details.",
+            "sourceUTF16Length": 75,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n幫我修這個專案 CSV 去重的 bug。email 大小寫要當同一個，留第一筆，順序和標頭不要動。先看現有寫法再改，改完確認修好了，用繁體中文簡單講。\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n請先在工作目錄中找出處理此專案 CSV 去重的既有實作與相關測試，確認目前的比對邏輯、資料流與既有介面後再進行修改，不要憑空假設程式碼內容，也不得宣稱已完成檢視。\n\n修改時須符合下列要求：\n- email 的比對須視為不分大小寫，僅大小寫不同的值視為同一個 email。\n- 重複時保留在原始檔案中第一筆出現的資料。\n- 不得改變資料列的原有順序。\n- 不得更動標頭（含內容、位置與格式）。\n- 沿用專案既有的語言、框架與介面，不擅自新增技術需求或改變既有行為。\n\n修改完成後，實際執行或撰寫能重現此問題的驗證，確認大小寫不同的 email 已正確去重、保留第一筆、順序與標頭皆未變動；若專案已有測試或驗證方式，優先使用並說明執行方式。若無法存取專案或找不到相關實作，請明確說明並索取所需檔案或存取方式，不要假裝已完成修改或驗證。\n\n最後用繁體中文簡單說明問題原因、修改內容與驗證結果。",
+              "improvements": [
+                "「先看現有寫法再改」を、作業ディレクトリで既存実装とテストを確認してから修正する手順として具体化し、未確認のまま修正・検証済みと主張しないよう明示した。",
+                "email の大文字小文字を同一視する条件、最初の1件を残す条件、行順とヘッダーを変えない条件を、それぞれ独立した確認項目として整理した。",
+                "「改完確認修好了」を、重複除去・先頭保持・順序・ヘッダーを実際に検証する具体的な確認内容に落とし、既存のテストがあれば優先する条件を加えた。",
+                "プロジェクトに到達できない場合の対応（明示して必要ファイルやアクセス手段を求める）を補い、未実施の検証を実施済みと装わないようにした。"
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "zh-Hant",
+              "notesLanguage": "ja"
+            },
+            "resultUTF16Length": 664,
+            "literalChecks": [
+              {
+                "text": "email",
+                "preserved": true
+              },
+              {
+                "text": "CSV",
+                "preserved": true
+              }
+            ],
+            "elapsedMs": 3139
+          }
+        ]
+      },
+      "conflict-zh-TW": {
+        "code": 0,
+        "date": "2026-10-17T04:12:46.887Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "zh-Hant",
+        "notesLanguage": "zh-TW",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "release-conflict-no-questions",
+            "locale": "zh-TW",
+            "task": "writing",
+            "prompt": "請寫一則通知，最多80字且至少120字，不得提問，用繁體中文回答。",
+            "expected": {
+              "literals": [],
+              "constraints": [
+                "Do not execute the notification task or treat the contradictory length requirements as simultaneously achievable.",
+                "Do not ask questions. Instruct the downstream model to give only a brief conflict notice in Traditional Chinese.",
+                "Traditional Chinese was explicitly requested and must not be reported as an inferred language."
+              ],
+              "assumptions": []
+            },
+            "sourceUTF16Length": 33,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n請寫一則通知，最多80字且至少120字，不得提問，用繁體中文回答。\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n請用繁體中文撰寫一則通知。原始需求同時要求「最多80字」與「至少120字」，兩者無法同時成立，且不得提問；因此不要產生該則通知，只回覆一句簡短通知，說明篇幅限制互相衝突、無法完成。",
+              "improvements": [
+                "辨識出「最多80字」與「至少120字」無法同時滿足，改依衝突處理規則產出替代回應，而非把兩者並列為成功標準。",
+                "將不得提問與篇幅衝突一併納入，指示直接以繁體中文回覆一句衝突說明，不產生原定的通知。"
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "zh-Hant",
+              "notesLanguage": "zh-TW"
+            },
+            "resultUTF16Length": 319,
+            "literalChecks": [],
+            "elapsedMs": 1592
+          }
+        ]
+      },
+      "conflict-en": {
+        "code": 0,
+        "date": "2026-10-17T04:12:48.607Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "en",
+        "notesLanguage": "en",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "release-conflict-no-questions",
+            "locale": "zh-TW",
+            "task": "writing",
+            "prompt": "請寫一則通知，最多80字且至少120字，不得提問，用繁體中文回答。",
+            "expected": {
+              "literals": [],
+              "constraints": [
+                "Do not execute the notification task or treat the contradictory length requirements as simultaneously achievable.",
+                "Do not ask questions. Instruct the downstream model to give only a brief conflict notice in Traditional Chinese.",
+                "Traditional Chinese was explicitly requested and must not be reported as an inferred language."
+              ],
+              "assumptions": []
+            },
+            "sourceUTF16Length": 33,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "The request contains an impossible length conflict: a maximum of 80 characters and a minimum of 120 characters cannot both be satisfied for the same notice. Do not write the notice and do not ask questions. Return only one brief notice in Traditional Chinese stating that the length constraints conflict and that the notice cannot be completed.",
+              "improvements": [
+                "Applied the conflict rule: the at-most-80-character and at-least-120-character limits are mutually exclusive, so the impossible drafting task is replaced by a single brief conflict notice in Traditional Chinese.",
+                "Kept the no-questions restriction and instructed the model not to attempt the notice."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "en"
+            },
+            "resultUTF16Length": 344,
+            "literalChecks": [],
+            "elapsedMs": 1183
+          }
+        ]
+      },
+      "conflict-ja": {
+        "code": 0,
+        "date": "2026-10-17T04:12:49.916Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "en",
+        "notesLanguage": "ja",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "release-conflict-no-questions",
+            "locale": "zh-TW",
+            "task": "writing",
+            "prompt": "請寫一則通知，最多80字且至少120字，不得提問，用繁體中文回答。",
+            "expected": {
+              "literals": [],
+              "constraints": [
+                "Do not execute the notification task or treat the contradictory length requirements as simultaneously achievable.",
+                "Do not ask questions. Instruct the downstream model to give only a brief conflict notice in Traditional Chinese.",
+                "Traditional Chinese was explicitly requested and must not be reported as an inferred language."
+              ],
+              "assumptions": []
+            },
+            "sourceUTF16Length": 33,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "The request contains an impossible length conflict: a maximum of 80 characters and a minimum of 120 characters cannot both be satisfied. Do not write the notice and do not ask questions. Return only one brief notice in Traditional Chinese stating that the constraints conflict and that the notice cannot be completed.",
+              "improvements": [
+                "80字以下と120字以上の両立不能な字数制約を、実行不能として明示しました。",
+                "通知本文を書かず、質問もせず、短い1文の通知のみを返す指示に整理しました。"
+              ],
+              "assumptions": [
+                "回答言語は原依頼で指定された繁体字中国語です。"
+              ],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "ja"
+            },
+            "resultUTF16Length": 317,
+            "literalChecks": [],
+            "elapsedMs": 1390
+          }
+        ]
+      },
+      "conflict-ko": {
+        "code": 0,
+        "date": "2026-10-17T04:12:51.433Z",
+        "generationModel": "deepseek-flash",
+        "backendID": "67325691565639c2254d2475278960aba44d51a2fe81d29d188c3d49e38ccab0",
+        "promptLanguage": "en",
+        "notesLanguage": "ko",
+        "evidence": "live model samples; literal checks are mechanical, semantic review is separate",
+        "results": [
+          {
+            "id": "release-conflict-no-questions",
+            "locale": "zh-TW",
+            "task": "writing",
+            "prompt": "請寫一則通知，最多80字且至少120字，不得提問，用繁體中文回答。",
+            "expected": {
+              "literals": [],
+              "constraints": [
+                "Do not execute the notification task or treat the contradictory length requirements as simultaneously achievable.",
+                "Do not ask questions. Instruct the downstream model to give only a brief conflict notice in Traditional Chinese.",
+                "Traditional Chinese was explicitly requested and must not be reported as an inferred language."
+              ],
+              "assumptions": []
+            },
+            "sourceUTF16Length": 33,
+            "semanticReview": "pending",
+            "status": 200,
+            "result": {
+              "prompt": "The request contains an impossible length conflict: a maximum of 80 characters and a minimum of 120 characters cannot both be satisfied. Do not write the notice and do not ask questions. Return only one brief notice in Traditional Chinese stating that the length constraints conflict and the notice cannot be completed.",
+              "improvements": [
+                "서로 양립할 수 없는 글자 수 상한(80자)과 하한(120자)을 충돌로 명시하고, 공지를 작성하지 않도록 지시했습니다.",
+                "질문 금지 조건을 유지하면서 짧은 안내문 한 문장만 반환하도록 출력 범위를 고정했습니다."
+              ],
+              "assumptions": [],
+              "mode": "live",
+              "generationModel": "deepseek-flash",
+              "promptLanguage": "en",
+              "notesLanguage": "ko"
+            },
+            "resultUTF16Length": 319,
+            "literalChecks": [],
+            "elapsedMs": 1315
+          }
+        ]
+      }
+    }
+  },
+  "semanticReview": {
+    "status": "reviewed-with-known-issues",
+    "scope": "Manual review of all 16 final synthetic model outputs; 12 preceding samples retained for comparison. No downstream tasks were executed and no v1.0.0 performance baseline was measured.",
+    "automaticChecks": {
+      "finalRequests": 16,
+      "successfulHTTPResponses": 16,
+      "requiredLiteralFailures": 0,
+      "semanticSuccessIsNotInferredFromTheseCounts": true
+    },
+    "observableImprovements": [
+      "The final CSV sample retains lowercase email.",
+      "Several explicitly requested answer languages are no longer listed as inferred assumptions.",
+      "Both final Traditional Chinese instruction samples use Japanese review notes as requested.",
+      "Existing verification methods are no longer reported as an assumption in the final Traditional Chinese coding sample."
+    ],
+    "remainingIssues": [
+      {
+        "category": "answer-language-and-assumption-consistency",
+        "cases": [
+          "english/value-analysis-en-conversion-comparison",
+          "english/value-writing-en-minimal-edit",
+          "english/value-analysis-ja-ko-missing-options",
+          "traditionalChinese/value-writing-zh-clear-notice",
+          "conflict-ja/release-conflict-no-questions"
+        ],
+        "detail": "Two English-source samples omit an explicit inferred answer language and corresponding assumption; three samples incorrectly list an explicitly requested language as an assumption."
+      },
+      {
+        "category": "conditional-requirements-and-note-fidelity",
+        "cases": [
+          "english/value-analysis-ja-ko-missing-options",
+          "traditionalChinese/value-coding-zh-csv-dedup",
+          "smoke/value-coding-zh-csv-dedup"
+        ],
+        "detail": "The missing-options sample omits the ask-first rule for criteria that are supplied but insufficient. A coding sample uses an unqualified prohibition on claiming inspection; one improvement note claims interface preservation more strongly than its prompt."
+      },
+      {
+        "category": "conflict-wording",
+        "cases": [
+          "conflict-zh-TW/release-conflict-no-questions"
+        ],
+        "detail": "The model guidance initially restates the drafting task before replacing it with a conflict notice. The English-mode conflict samples give a direct no-drafting instruction."
+      }
+    ],
+    "conclusion": "Partial observed improvements, with remaining semantic errors. These samples do not establish cross-language equivalence, universal fidelity or improved downstream task performance."
+  },
+  "optimizerSourceSHA256": "0b6005cfc20727063df36537c766e9a159c31b18c36a4ba369b459b9400758e3"
+}

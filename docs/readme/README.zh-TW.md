@@ -22,7 +22,7 @@ PromptFinch 會編輯指令，不會執行指令描述的任務。它以保留�
 
 最上方連結可切換 README 頁面。英文是原始版本；簡體中文（zh-CN）與繁體中文（zh-TW）包含完整參考內容。其他 26 個版本提供翻譯介紹，並連結至英文設定指引。這些連結切換文件，不會更改 App 語言。
 
-macOS App 的**設定 → 介面語言**可選繁體中文（預設）、英文、日文與韓文。瀏覽器介面仍為繁體中文。模型會被要求以繁體中文撰寫優化說明與假設；介面語言設定不會翻譯這些內容。
+macOS App 的**設定 → 介面語言**可選繁體中文（預設）、英文、日文與韓文。瀏覽器介面仍為繁體中文。新生成的優化說明與假設會使用原生介面語言；瀏覽器另有說明語言選單。切換語言不會重寫既有結果。
 
 macOS App 生成英文 Prompt 指令。瀏覽器預設生成英文指令，也提供繁體中文選項。API 使用 `promptLanguage: "en"` 取得英文指令；省略時保留 `zh-Hant` 預設值。最終答案語言是原始 Prompt 中的另一項需求。工具接受 Unicode 輸入，但文件翻譯不代表每種語言的模型品質均已驗證。
 
@@ -61,7 +61,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-要使用最新文件所述功能，請從目前的 `main` 原始碼建置。[v1.0.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.0.0) 也提供較早的 Apple Silicon ZIP；它早於後續 Terminal 與優化器變更，不是經公證的安裝程式，也不包含 Node.js。[修訂發行說明](../releases/v1.0.0.md)列明其涵蓋範圍與版本標籤注意事項。專案沒有自動更新功能，目前也未提供 Intel／Universal Binary 下載。
+[v1.1.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) 提供 `PromptFinch-1.1.0-macos-arm64.zip`、`PromptFinch-source-v1.1.0.zip` 及 `SHA256SUMS`。App 下載適用於 Apple Silicon，採 ad-hoc 簽章、未經公證；需另外安裝 Node.js 22+。解壓縮後將 App 移至應用程式資料夾。設定及驗證範圍見[發行說明](../releases/v1.1.0.md)，也可從此原始碼工作目錄自行建置。[變更紀錄](../../CHANGELOG.md)區分先前快照；目前沒有自動更新或 Intel／Universal Binary 下載。
 
 ### 瀏覽器示範（不需 API 金鑰）
 
@@ -186,11 +186,11 @@ curl --fail --silent --show-error http://127.0.0.1:3000/api/optimize \
 | `targetModel` | 可選的下游模型提示；單行，最多 80 個 UTF-16 code unit。 |
 | `promptLanguage` | `en` 表示英文指令；未提供時預設 `zh-Hant`。 |
 
-成功時回傳 `prompt`、`improvements`、`assumptions`、`mode`、`generationModel` 與 `promptLanguage`。重用結果時只複製 `prompt`；優化說明與假設是獨立的審閱備註。英文模式的備註仍使用繁體中文。
+成功時回傳 `prompt`、`improvements`、`assumptions`、`mode`、`generationModel` 與 `promptLanguage`。原文與結果對照會保留生成當時的原文，逐行標示文字改動；這不等於語意正確性驗證。重用結果時只複製 `prompt`；優化說明與假設是獨立的審閱備註。`notesLanguage` 支援 `zh-TW`（API 預設）、`en`、`ja`、`ko`，與 Prompt 指令及原文指定的答案語言分開。
 
 API 會驗證輸入與模型回應結構、限制同時進行的優化請求，並回報設定、供應商、格式錯誤及逾時問題。取消操作會關閉上游請求；供應商端的處理及計費仍由供應商控制。
 
-[完整 API 參考](../api.md)提供回應範例、設定就緒狀態、限制、狀態碼與取消行為。`LLM_TIMEOUT_MS` 適用於每次供應商請求；模型輸出格式錯誤時可能再嘗試一次，因此這不是整個操作的總時間上限。
+[完整 API 參考](../api.md)提供回應範例、設定就緒狀態、限制、狀態碼與取消行為。`LLM_TIMEOUT_MS` 是上游請求與格式重試共用的總時間預算；重試不會重新計時。
 
 ## macOS 操作流程
 
@@ -212,7 +212,7 @@ API 會驗證輸入與模型回應結構、限制同時進行的優化請求，�
 npm run update:mac-backend
 ```
 
-更新程式會先暫存並以 mock HTTP 檢查候選版本，正常關閉 App、檢查連接埠，再切換後端版本並重新啟動 App。若啟動失敗會嘗試復原。它不會更改所選模型設定，也不會終止無關的連接埠監聽程序。安裝重新建置的 App 會保留既有外部後端，不會自動選用較新的內附後端檔案。
+更新程式會先暫存並以 mock HTTP 檢查候選版本，正常關閉 App、檢查連接埠，再切換後端版本並重新啟動 App。若啟動失敗會嘗試復原。它不會更改所選模型設定，也不會終止無關的連接埠監聽程序。安裝重新建置的 App 會保留既有外部後端，不會自動選用較新的內附後端檔案。若要採用已安裝版本附帶的規則，請開啟**設定 → 使用此 App 隨附後端**。這是明確的本機操作，會暫存、驗證並啟動該 App 隨附的後端；失敗時會嘗試恢復原先版本。模型設定、Node 路徑與偏好會保留，不下載 GitHub 檔案，也不呼叫模型。切換前請先保留未完成的工作台文字。
 
 既有安裝若同時更新原生與後端程式碼，請先更新可信任的原始碼工作目錄，再執行：
 
@@ -275,7 +275,7 @@ Either backend
 
 使用者先前確認輔助選單出現時不會自動生成，且明確點擊一次即可取得英文結果。此版本在 Codex／Claude 中以實體滑鼠操作，以及完整的複製／貼回／取消行為仍需驗收。[選取驗證](../context-menu-verification.md)與[多語樣本審閱](../multilingual-verification.md)各自記錄不同的驗證範圍。
 
-目前限制包括宿主 App 的選取支援、沒有 OCR、不能自訂全域快捷鍵、未內含 Node、沒有自動更新，以及沒有現成且經公證的安裝程式或 Universal Binary 發行版。Intel／最低 macOS 版本硬體、實體行動裝置、Docker 與遠端部署仍未驗證。已知後續工作包括繁體中文輸出的衝突需求處理，以及重試的總逾時預算。
+目前限制包括宿主 App 的選取支援、沒有 OCR、不能自訂全域快捷鍵、未內含 Node、沒有自動更新，以及沒有現成且經公證的安裝程式或 Universal Binary 發行版。Intel／最低 macOS 版本硬體、實體行動裝置、Docker 與遠端部署仍未驗證。實際語意品質仍需人工覆核；最新檢查與限制見[改善驗證紀錄](../improvement-verification.md)。
 
 ## 開發
 
@@ -297,7 +297,9 @@ npm run test:mac
 npm run build:mac
 ```
 
-`npm run dev` 會以 Node watch 模式執行獨立伺服器。`npm run check:docs` 會檢查 README 導覽、翻譯結構與變更紀錄順序，不會認證翻譯準確度或模型品質。API 測試使用本機假模型服務；原生測試使用合成目標與具名測試剪貼簿。[GitHub 工作流程](../../.github/workflows/check.yml)會執行 JavaScript／文件檢查、Node 測試與 macOS 原生檢查／建置，不會發布發行檔案。瀏覽器測試目前在本機執行；特定提交的結果請查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
+在具備 Node.js 22+ 與 Xcode Command Line Tools 的 macOS 上執行 `npm run package:mac`，可產生公開用 Apple Silicon App ZIP 與來源 ZIP。它只複製明確列出的公開檔案，以 ad-hoc 簽章建置，不讀取真實 `.env` 或個人簽章設定。發行 manifest 記錄相對輸入路徑與 SHA-256；`SHA256SUMS` 列出下載檔案校驗碼。這項封裝不會公證 App 或發布到 GitHub。只需來源包時可執行 `npm run package:source`。
+
+`npm run dev` 會以 Node watch 模式執行獨立伺服器。`npm run check:docs` 會檢查 README 導覽、翻譯結構與變更紀錄順序，不會認證翻譯準確度或模型品質。API 測試使用本機假模型服務；原生測試使用合成目標與具名測試剪貼簿。[GitHub 工作流程](../../.github/workflows/check.yml)會執行 JavaScript／文件檢查、Node 測試與 macOS 原生檢查、公開封裝與解壓後驗證，不會發布發行檔案。瀏覽器測試目前在本機執行；特定提交的結果請查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
 
 ## 貢獻與授權
 

@@ -15,6 +15,10 @@ jobs:
       - run: npm run check
       - run: npm run check:docs
       - run: npm test
+      - name: Package only public source files
+        run: npm run package:source -- --public-only
+      - name: Verify unpacked source and isolated mock HTTP
+        run: npm run check:package -- --source-only
   macos:
     runs-on: macos-14
     steps:
@@ -23,4 +27,7 @@ jobs:
         with:
           node-version: 22
       - run: npm run test:mac
-      - run: npm run build:mac
+      - name: Build public app and complete release artifacts
+        run: npm run package:mac
+      - name: Verify unpacked app, source, manifest, checksums and mock HTTP
+        run: npm run check:package

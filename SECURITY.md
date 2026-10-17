@@ -16,6 +16,14 @@ As checked on 2026-10-15, this repository's GitHub private vulnerability reporti
 
 The browser uses no application cookies, browser storage, analytics or remote fonts. Clearing/reloading a workspace does not erase clipboard-manager history, provider-side data, local preferences or a file the user deliberately saved.
 
+## Release packages and backend selection
+
+The v1.1.0 public app ZIP is Apple Silicon only, ad-hoc signed and not Developer ID signed or notarized. It targets macOS 13+ without a completed physical minimum-OS or Intel validation. Node.js 22+ is required separately. Download checksums and a verification manifest help compare files and public source inputs; they do not establish publisher identity, notarization or semantic model quality.
+
+`npm run package:mac` builds from a clean copy of an explicit public-input list, without reading the real `.env`, local app preferences or personal signing configuration. Its manifest records relative input paths and SHA-256 hashes. Packaging is not publication, and private files are not release inputs. Keep the original release snapshots identifiable rather than silently replacing historical tags or assets.
+
+The app runs versioned backend files in the user's Application Support folder. Replacing the app preserves an already selected external backend. **Settings → Use this app’s bundled backend** explicitly stages, validates and adopts the installed app's bundled source; a startup failure attempts rollback. Model settings, Node selection and user preferences are retained. The operation makes no network download or model request. A source checkout can also update the backend with `npm run update:mac-backend`; only use source you trust. External backend files are not continuously protected by the app's code signature.
+
 ## Network boundary
 
 The native app binds its owned backend to `127.0.0.1:3210` and clears `ALLOWED_HOSTS`. The standalone server defaults to `127.0.0.1:3000`. Local processes can call a reachable local API without authenticating, so Host/Origin protections do not isolate users or processes.

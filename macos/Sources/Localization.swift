@@ -68,6 +68,9 @@ enum L10n {
         case modelService
         case resultPlaceholder
         case improvements
+        case compareChanges
+        case comparisonHelp
+        case sourceForResult
         case assumptions
         case cancel
         case originalChanged
@@ -98,6 +101,14 @@ enum L10n {
         case terminalHelp
         case runtime
         case chooseNode
+        case useBundledBackend
+        case bundledBackendHelp
+        case bundledBackendSelected
+        case backendSwitchInProgress
+        case backendSwitchRolledBack
+        case backendSwitchRollbackFailed
+        case backendStopFailed
+        case backendChanging
         case localPrivacy
         case done
         case chooseConfigTitle
@@ -195,6 +206,17 @@ enum L10n {
 
     static var language: UILanguage { UILanguage.load() }
     static let translations: [Key: [String]] = [
+        .backendChanging: ["正在重新啟動本機服務…", "Restarting the local service…", "ローカルサービスを再起動中…", "로컬 서비스를 다시 시작하는 중…"],
+        .backendStopFailed: ["本機後端未能在期限內停止。為避免同時啟動兩個服務，已停止本次操作。請稍後重試。", "The local backend did not stop within the time limit. The operation was stopped to avoid running two services. Try again shortly.", "ローカルのバックエンドを制限時間内に停止できませんでした。二重起動を避けるため処理を中止しました。少し待って再試行してください。", "로컬 백엔드를 제한 시간 안에 중지하지 못했습니다. 두 서비스가 동시에 실행되지 않도록 작업을 중단했습니다. 잠시 후 다시 시도하세요."],
+        .compareChanges: ["對照原文與結果", "Compare source and result", "原文と結果を比較", "원문과 결과 비교"],
+        .sourceForResult: ["產生此結果時的原文", "Source used for this result", "この結果の生成に使った原文", "이 결과 생성에 사용한 원문"],
+        .comparisonHelp: ["− 標示移除或改寫的原文行，+ 標示新增的結果行。請另行核對意思與限制；行數超過 200 時顯示完整對照。", "− marks removed or rewritten source lines; + marks added result lines. Review meaning and constraints separately. Above 200 lines, the full texts are compared.", "− は削除・変更された原文の行、+ は追加された結果の行です。意味や制約も確認してください。200 行を超える場合は全文を比較表示します。", "−는 삭제·수정된 원문 줄, +는 추가된 결과 줄입니다. 의미와 제약도 확인하세요. 200줄을 넘으면 전체 내용을 비교합니다."],
+        .useBundledBackend: ["使用此 App 隨附後端", "Use this app’s bundled backend", "この App 付属のバックエンドを使う", "이 앱에 포함된 백엔드 사용"],
+        .bundledBackendHelp: ["升級 App 後，按此採用隨附的生成規則，會取代目前選用的後端版本；模型設定與 Node.js 路徑會保留。", "After upgrading the app, choose its bundled generation rules here. This replaces the selected backend version and keeps your model settings and Node.js path.", "App 更新後、ここで付属の生成ルールを選択できます。現在のバックエンドを切り替えますが、モデル設定と Node.js のパスは保持します。", "앱 업데이트 후 포함된 생성 규칙을 선택합니다. 현재 백엔드 버전을 바꾸며 모델 설정과 Node.js 경로는 유지합니다."],
+        .bundledBackendSelected: ["已採用此 App 隨附後端，模型設定保持不變。", "This app’s bundled backend is active. Model settings were kept.", "この App 付属のバックエンドに切り替えました。モデル設定は保持されています。", "이 앱에 포함된 백엔드를 사용합니다. 모델 설정은 유지되었습니다."],
+        .backendSwitchInProgress: ["正在切換隨附後端…", "Switching to the bundled backend…", "付属のバックエンドに切り替え中…", "포함된 백엔드로 전환 중…"],
+        .backendSwitchRolledBack: ["無法使用隨附後端，已恢復原本版本。%@", "Could not use the bundled backend. The previous version was restored. %@", "付属のバックエンドを使用できませんでした。以前のバージョンに戻しました。%@", "포함된 백엔드를 사용할 수 없어 이전 버전으로 복원했습니다. %@"],
+        .backendSwitchRollbackFailed: ["無法使用隨附後端，且自動恢復未完成。請重新啟動 App 並檢查 Node.js 與模型設定。%@", "Could not use the bundled backend and automatic recovery did not complete. Restart the app and check Node.js and model settings. %@", "付属のバックエンドへの切り替えと自動復旧に失敗しました。App を再起動し、Node.js とモデル設定を確認してください。%@", "포함된 백엔드 전환과 자동 복구를 완료하지 못했습니다. 앱을 다시 시작하고 Node.js와 모델 설정을 확인하세요. %@"],
         .pasteRequested: ["已送出貼上操作，請確認來源文字；正在還原剪貼簿。", "Paste requested. Check the source text. Restoring the clipboard…", "貼り付け操作を送信しました。元のテキストを確認してください。クリップボードを復元中です。", "붙여넣기를 요청했습니다. 원래 텍스트를 확인하세요. 클립보드를 복원하는 중입니다."],
         .pasteRequestedRestored: ["已送出貼上操作；原剪貼簿已還原。請確認來源文字。", "Paste requested; the original clipboard was restored. Check the source text.", "貼り付け操作を送信し、元のクリップボードを復元しました。元のテキストを確認してください。", "붙여넣기를 요청하고 원래 클립보드를 복원했습니다. 원래 텍스트를 확인하세요."],
         .pasteRequestedNewCopy: ["已送出貼上操作，並保留你較新的剪貼簿內容。請確認來源文字。", "Paste requested. Your newer clipboard content was kept. Check the source text.", "貼り付け操作を送信しました。新しくコピーした内容は保持しています。元のテキストを確認してください。", "붙여넣기를 요청했습니다. 새로 복사한 클립보드 내용은 유지했습니다. 원래 텍스트를 확인하세요."],
@@ -244,7 +266,7 @@ enum L10n {
         .targetChanged: ["目標模型已變更，請重新生成；右側仍是上次結果。", "The target model has changed. Generate again; the previous result is still shown.", "対象モデルが変更されました。再生成してください。前の結果が表示されています。", "대상 모델이 변경되었습니다. 다시 생성하세요. 이전 결과가 표시되어 있습니다."],
         .settingsTitle: ["模型與取字設定", "Model and selection settings", "モデルとテキスト選択の設定", "모델 및 텍스트 선택 설정"],
         .interfaceLanguage: ["介面語言", "Interface language", "表示言語", "인터페이스 언어"],
-        .languageHelp: ["立即套用並記住選擇；不改變生成 Prompt 或原文指定的答案語言。", "Applied immediately and remembered. This does not change the prompt language or the requested answer language.", "すぐに反映し、選択を記憶します。プロンプトの言語や指定された回答言語は変更しません。", "즉시 적용되며 선택을 기억합니다. 프롬프트 언어나 지정한 답변 언어는 바꾸지 않습니다."],
+        .languageHelp: ["立即套用並記住選擇；下次生成的改善與假設說明也會使用此語言。英文指令與原文指定的答案語言保持不變。", "Applied immediately and remembered. New improvement and assumption notes use this language. English instructions and the requested answer language stay unchanged.", "すぐに反映し、選択を記憶します。次回の改善点と仮定の説明にもこの言語を使います。英語の指示や指定された回答言語は変更しません。", "즉시 적용되며 선택을 기억합니다. 다음 생성의 개선점과 가정 설명에도 이 언어를 사용합니다. 영어 지침과 지정한 답변 언어는 바꾸지 않습니다."],
         .modelSettingsHelp: ["使用伺服器 .env 設定 DeepSeek 或其他相容模型。金鑰由 Node.js 後端讀取，不會複製進 App。", "Configure DeepSeek or another compatible model in a server .env file. The Node.js backend reads the key; it is not copied into the app.", "サーバーの .env ファイルで DeepSeek などの互換モデルを設定します。キーは Node.js バックエンドが読み取り、App にはコピーしません。", "서버 .env 파일에서 DeepSeek 또는 호환 모델을 설정하세요. 키는 Node.js 백엔드가 읽으며 앱에 복사하지 않습니다."],
         .usingDemo: ["目前使用示範模式", "Currently using demo mode", "現在はデモモードです", "현재 데모 모드 사용 중"],
         .configFile: ["設定檔：%@", "Config file: %@", "設定ファイル：%@", "설정 파일: %@"],

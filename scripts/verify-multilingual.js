@@ -10,7 +10,7 @@ class EvaluationError extends Error {}
 async function main() {
   if (!args.includes('--live')) throw new EvaluationError('真實模型測試可能產生 API 費用；請明確傳入 --live。');
   const options = new Map();
-  const valueOptions = new Set(['--url', '--cases', '--output', '--ids']);
+  const valueOptions = new Set(['--url', '--cases', '--output', '--ids', '--prompt-language', '--notes-language']);
   for (let index = 0; index < args.length; index++) {
     const name = args[index];
     if (name !== '--live' && !valueOptions.has(name)) throw new EvaluationError('包含不支援的測試選項。');
@@ -51,6 +51,10 @@ async function main() {
     const selected = new Set(ids);
     fixtures = fixtures.filter(c => selected.has(c.id));
   }
+  const promptLanguage = option('--prompt-language', 'en');
+  const notesLanguage = options.get('--notes-language');
+  if (!['en', 'zh-Hant'].includes(promptLanguage)) throw new EvaluationError('--prompt-language 必須是 en 或 zh-Hant。');
+  if (notesLanguage !== undefined && !['zh-TW', 'en', 'ja', 'ko'].includes(notesLanguage)) throw new EvaluationError('--notes-language 不受支援。');
   const destination = resolve(option('--output', resolve(root, 'artifacts/multilingual-live-results.json')));
   const response = await fetch(new URL('/api/config', base), { signal: AbortSignal.timeout(5000) });
   const config = await response.json();
@@ -59,6 +63,7 @@ async function main() {
   }
   await mkdir(dirname(destination), { recursive: true });
   const run = { date: new Date().toISOString(), generationModel: config.generationModel, backendID: config.backendID || null,
+    promptLanguage, ...(notesLanguage ? { notesLanguage } : {}),
     evidence: 'live model samples; literal checks are mechanical, semantic review is separate', results: [] };
   for (const fixture of fixtures) {
     const start = Date.now();
@@ -66,13 +71,13 @@ async function main() {
     try {
       const response = await fetch(new URL('/api/optimize', base), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fixture.prompt, task: fixture.task || 'general', targetModel: '', promptLanguage: 'en' }),
+        body: JSON.stringify({ prompt: fixture.prompt, task: fixture.task || 'general', targetModel: '', promptLanguage, ...(notesLanguage ? { notesLanguage } : {}) }),
         signal: AbortSignal.timeout(195000),
       });
       const data = await response.json();
       entry.status = response.status;
       if (!response.ok) entry.error = data.error || '模型請求失敗';
-      else if (data.mode !== 'live' || data.promptLanguage !== 'en' || typeof data.prompt !== 'string') entry.error = '回應不是英文 live 結果';
+      else if (data.mode !== 'live' || data.promptLanguage !== promptLanguage || (notesLanguage && data.notesLanguage !== notesLanguage) || typeof data.prompt !== 'string') entry.error = '回應的 live 模式或語言設定不符';
       else {
         entry.result = data;
         entry.resultUTF16Length = data.prompt.length;

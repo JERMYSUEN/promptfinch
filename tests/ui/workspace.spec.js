@@ -161,3 +161,42 @@ test('服務設定失敗會停用優化並提供明確指引', async ({ page }) 
   await expect(page.locator('#mode-notice')).toContainText('請確認伺服器已啟動');
   await expect(page.getByRole('button', { name: '優化 Prompt', exact: true })).toBeDisabled();
 });
+
+test('對照鎖定生成時的原文，語言獨立且失敗或後續編輯不改寫快照', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const source = '保留 ACME-42\n<img src=x onerror="window.comparisonInjected=true">\n最後一行';
+  const output = 'Keep ACME-42\n<img src=x onerror="window.comparisonInjected=true">\nFinal line';
+  const bodies = [];
+  await page.route('**/api/optimize', async route => {
+    bodies.push(route.request().postDataJSON());
+    await route.fulfill({ json: { prompt: output, improvements: ['Preserved the identifier.'], assumptions: [], mode: 'live', promptLanguage: 'en', notesLanguage: 'en', generationModel: 'synthetic-provider' } });
+  });
+  await page.getByLabel('改善說明語言').selectOption('en');
+  await page.locator('#original-prompt').fill(source);
+  await page.getByRole('button', { name: '優化 Prompt', exact: true }).click();
+  await expect(page.locator('#result-state')).toBeVisible();
+  await page.locator('#comparison summary').click();
+  await expect(page.locator('#comparison-source')).toContainText('保留 ACME-42');
+  await expect(page.locator('#comparison-source .line-removed')).toHaveCount(2);
+  await expect(page.locator('#comparison-result .line-added')).toHaveCount(2);
+  await expect(page.locator('#comparison-source .line-unchanged')).toHaveCount(1);
+  expect(bodies[0]).toMatchObject({ prompt: source, promptLanguage: 'en', notesLanguage: 'en' });
+  expect(await page.locator('#comparison img').count()).toBe(0);
+  expect(await page.evaluate(() => window.comparisonInjected)).toBeUndefined();
+  await page.getByRole('button', { name: '複製 Prompt', exact: true }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(output);
+  await page.locator('#original-prompt').fill('後來修改的原文');
+  await page.getByLabel('改善說明語言').selectOption('ja');
+  await expect(page.locator('#result-tag')).toHaveText('上次結果');
+  await expect(page.locator('#comparison-source')).toContainText('保留 ACME-42');
+  await expect(page.locator('#comparison-source')).not.toContainText('後來修改');
+  await page.unroute('**/api/optimize');
+  await page.route('**/api/optimize', route => route.fulfill({ status: 502, json: { error: '合成服務錯誤' } }));
+  await page.getByRole('button', { name: '優化 Prompt', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('合成服務錯誤');
+  await expect(page.locator('#comparison-result')).toContainText('Keep ACME-42');
+  await page.getByRole('button', { name: '清除', exact: true }).click();
+  await expect(page.locator('#comparison')).toBeHidden();
+  expect(await page.locator('#comparison-source').textContent()).toBe('');
+  expect(await page.locator('#comparison-result').textContent()).toBe('');
+});

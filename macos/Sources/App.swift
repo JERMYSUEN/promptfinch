@@ -23,7 +23,10 @@ final class WorkspaceModel: ObservableObject {
     @Published var task = UserDefaults.standard.string(forKey: "task") ?? "general"
     @Published var targetModel = UserDefaults.standard.string(forKey: "targetModel") ?? ""
     @Published var result: PromptResult?
+    @Published private(set) var resultOriginal = ""
     @Published var busy = false
+    @Published private(set) var backendSwitching = false
+    var unavailable: Bool { busy || backendSwitching }
     @Published var message = ""
     @Published var isError = false
     @Published var config: ServiceConfig?
@@ -49,6 +52,7 @@ final class WorkspaceModel: ObservableObject {
     private var activeEventSequence: UInt64?
     private var operation: Task<Void, Never>?
     private var generationID = UUID()
+    private var configurationID = UUID()
     private var pasteFeedbackID = UUID()
     private let pasteOperations: PasteOperations
     var showWindow: (() -> Void)?
@@ -68,15 +72,25 @@ final class WorkspaceModel: ObservableObject {
     }
 
     func refresh() {
+        guard !backendSwitching else { return }
+        let token = UUID()
+        configurationID = token
         Task {
-            do { config = try await backend.ensureRunning() }
-            catch { notify(L10n.errorDescription(error), error: true) }
+            do {
+                let loaded = try await backend.ensureRunning()
+                guard configurationID == token, !backendSwitching else { return }
+                config = loaded
+            } catch {
+                guard configurationID == token, !backendSwitching else { return }
+                notify(L10n.errorDescription(error), error: true)
+            }
         }
     }
 
     func notify(_ text: String, error: Bool = false) { message = text; isError = error }
 
     func receive(_ text: String, generateImmediately: Bool = true) {
+        guard !backendSwitching else { return }
         clear()
         original = text
         sourcePID = nil
@@ -91,6 +105,7 @@ final class WorkspaceModel: ObservableObject {
     // suddenly-raised main window.
     func convert(_ text: String, sourcePID: pid_t?, sourceCapture: SelectionCapture? = nil,
                  anchor: CGPoint? = nil, eventSequence: UInt64? = nil) {
+        guard !backendSwitching else { return }
         clear()
         original = text
         self.sourcePID = sourcePID
@@ -101,9 +116,8 @@ final class WorkspaceModel: ObservableObject {
     }
 
     private var mouseAnchor: CGPoint {
-        let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main
-        return CGPoint(x: mouse.x, y: (screen?.frame.maxY ?? 0) - mouse.y)
+        // NSEvent and ResultPanel both use AppKit screen coordinates.
+        NSEvent.mouseLocation
     }
 
     func setWatcher(left: Bool, right: Bool) {
@@ -113,6 +127,7 @@ final class WorkspaceModel: ObservableObject {
     }
 
     func clipboard() {
+        guard !backendSwitching else { return }
         guard let text = NSPasteboard.general.string(forType: .string), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             showWindow?(); notify(L10n.text(.emptyClipboard), error: true); return
         }
@@ -120,6 +135,7 @@ final class WorkspaceModel: ObservableObject {
     }
 
     func selection() {
+        guard !backendSwitching else { return }
         do {
             let capture = try TextSelection.readCapture()
             convert(capture.text, sourcePID: capture.pid, sourceCapture: capture,
@@ -128,7 +144,8 @@ final class WorkspaceModel: ObservableObject {
     }
 
     func generate(autoPaste: Bool = false, background: Bool = false, anchor: CGPoint? = nil) {
-        let input = PromptRequest(prompt: original, task: task, targetModel: targetModel)
+        guard !backendSwitching else { return }
+        let input = PromptRequest(prompt: original, task: task, targetModel: targetModel, notesLanguage: language.rawValue)
         let eventID = activeEventSequence.map(String.init) ?? "-"
         do { try input.validate() }
         catch {
@@ -140,7 +157,7 @@ final class WorkspaceModel: ObservableObject {
         cancel()
         let token = UUID()
         generationID = token
-        result = nil; busy = true; notify(L10n.text(.refining))
+        result = nil; resultOriginal = ""; busy = true; notify(L10n.text(.refining))
         DebugLog.write("generate seq=\(eventID) started background=\(background) selectedUTF16=\(input.prompt.utf16.count)")
         if background { resultPanel.present(anchor: anchor ?? mouseAnchor, eventSequence: activeEventSequence) }
         UserDefaults.standard.set(task, forKey: "task")
@@ -154,6 +171,7 @@ final class WorkspaceModel: ObservableObject {
                 DebugLog.write("generate seq=\(eventID) done mode=\(output.mode) generatedUTF16=\(output.prompt.utf16.count)")
                 guard generationID == token, !Task.isCancelled else { return }
                 result = output
+                resultOriginal = input.prompt
                 if output.mode == "mock" {
                     notify(L10n.text(.mockNotice))
                     if background {
@@ -306,29 +324,71 @@ final class WorkspaceModel: ObservableObject {
         resultPanel.orderOut(nil)
         original = ""
         result = nil
+        resultOriginal = ""
         sourcePID = nil
         sourceCapture = nil
         activeEventSequence = nil
         notify("")
     }
 
-    func useConfig(_ url: URL?) {
-        cancel(); config = nil
+    private func changeBackend(_ success: L10n.Key, progress: L10n.Key = .backendChanging, action: @escaping () async throws -> ServiceConfig) {
+        guard !backendSwitching else { return }
+        cancel()
+        backendSwitching = true
+        let token = UUID()
+        configurationID = token
+        watcher.invalidatePendingActions()
+        notify(L10n.text(progress))
         Task {
-            do { config = try await backend.selectConfiguration(url); notify(L10n.text(.configLoaded)) }
-            catch { notify(L10n.errorDescription(error), error: true) }
+            defer { if configurationID == token { backendSwitching = false } }
+            do {
+                let loaded = try await action()
+                guard configurationID == token else { return }
+                config = loaded
+                notify(L10n.text(success))
+            } catch {
+                guard configurationID == token else { return }
+                notify(L10n.errorDescription(error), error: true)
+            }
         }
     }
 
-    func restart() {
-        cancel(); config = nil; backend.stop(); refresh()
+    func useConfig(_ url: URL?) {
+        changeBackend(.configLoaded) { try await self.backend.selectConfiguration(url) }
     }
+
+    func useBundledBackend() {
+        guard !unavailable else { return }
+        changeBackend(.bundledBackendSelected, progress: .backendSwitchInProgress) { try await self.backend.useBundledBackend() }
+    }
+
+    func restart() {
+        changeBackend(.configLoaded) {
+            try await self.backend.stop()
+            return try await self.backend.ensureRunning()
+        }
+    }
+
+    func shutdown() async throws {
+        backendSwitching = true
+        configurationID = UUID()
+        watcher.stop()
+        cancel()
+        do { try await backend.stop() }
+        catch {
+            backendSwitching = false
+            watcher.start()
+            throw error
+        }
+    }
+
 }
 
 private let accent = Color(red: 0.14, green: 0.39, blue: 0.31)
 
 struct WorkspaceView: View {
     @ObservedObject var model: WorkspaceModel
+    @State private var comparisonVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -356,7 +416,7 @@ struct WorkspaceView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
                         .frame(minHeight: 190)
-                        .disabled(model.busy).accessibilityIdentifier("originalPrompt")
+                        .disabled(model.unavailable).accessibilityIdentifier("originalPrompt")
                     HStack {
                         Picker(L10n.text(.purpose), selection: $model.task) {
                             Text(L10n.text(.general)).tag("general"); Text(L10n.text(.writing)).tag("writing"); Text(L10n.text(.analysis)).tag("analysis")
@@ -364,17 +424,17 @@ struct WorkspaceView: View {
                         }.frame(maxWidth: 185)
                         Spacer()
                         Text("\(model.original.utf16.count) / 12,000").font(.system(size: 11)).foregroundStyle(.secondary)
-                    }.disabled(model.busy)
-                    TextField(L10n.text(.targetPlaceholder), text: $model.targetModel).textFieldStyle(.roundedBorder).disabled(model.busy)
+                    }.disabled(model.unavailable)
+                    TextField(L10n.text(.targetPlaceholder), text: $model.targetModel).textFieldStyle(.roundedBorder).disabled(model.unavailable)
                     HStack {
-                        Button { model.clipboard() } label: { Label(L10n.text(.readClipboard), systemImage: "doc.on.clipboard") }.disabled(model.busy)
+                        Button { model.clipboard() } label: { Label(L10n.text(.readClipboard), systemImage: "doc.on.clipboard") }.disabled(model.unavailable)
                         Spacer()
                         Button(L10n.text(.clear)) { model.clear() }.accessibilityIdentifier("clear")
                     }
                     Button { model.generate() } label: {
                         HStack { if model.busy { ProgressView().controlSize(.small) }; Text(model.busy ? L10n.text(.generating) : L10n.text(.generate)).fontWeight(.semibold) }
                             .frame(maxWidth: .infinity).padding(.vertical, 5)
-                    }.buttonStyle(.borderedProminent).tint(accent).disabled(model.busy)
+                    }.buttonStyle(.borderedProminent).tint(accent).disabled(model.unavailable)
                         .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("generate")
                     Text(L10n.text(.privacy))
                         .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -399,6 +459,11 @@ struct WorkspaceView: View {
                         .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
                     if let result = model.result {
+                        Button(L10n.text(.compareChanges)) { comparisonVisible = true }
+                            .accessibilityIdentifier("compareChanges")
+                            .sheet(isPresented: $comparisonVisible) {
+                                PromptComparisonView(original: model.resultOriginal, optimized: result.prompt)
+                            }
                         DisclosureGroup(L10n.text(.improvements)) {
                             ScrollView {
                                 VStack(alignment: .leading, spacing: 6) {
@@ -436,6 +501,66 @@ struct WorkspaceView: View {
     }
 }
 
+// Compare the source captured for this result, never a later edit in the workspace.
+// Whole-line highlights describe text changes, not semantic correctness.
+struct PromptComparisonView: View {
+    let original: String
+    let optimized: String
+    @Environment(\.dismiss) private var dismiss
+
+    private func highlights() -> (Set<Int>, Set<Int>) {
+        let before = original.components(separatedBy: "\n")
+        let after = optimized.components(separatedBy: "\n")
+        // Bound diff work for prompts containing thousands of tiny lines.
+        guard before.count <= 200, after.count <= 200 else {
+            return (Set(before.indices), Set(after.indices))
+        }
+        let changes = after.difference(from: before)
+        var removed = Set<Int>(), added = Set<Int>()
+        for change in changes {
+            switch change {
+            case .remove(let offset, _, _): removed.insert(offset)
+            case .insert(let offset, _, _): added.insert(offset)
+            }
+        }
+        return (removed, added)
+    }
+
+    private func column(_ text: String, title: L10n.Key, changed: Set<Int>, insertion: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.text(title)).font(.headline)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if text.components(separatedBy: "\n").count > 200 {
+                        Text(text).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                    ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { index, line in
+                        Text((changed.contains(index) ? (insertion ? "+ " : "− ") : "  ") + line)
+                            .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 2)
+                            .background(changed.contains(index) ? (insertion ? Color.green.opacity(0.12) : Color.red.opacity(0.10)) : .clear)
+                    }
+                    }
+                }.padding(10)
+            }.background(Color(nsColor: .textBackgroundColor))
+        }.frame(maxWidth: .infinity)
+    }
+
+    var body: some View {
+        let (removed, added) = highlights()
+        VStack(alignment: .leading, spacing: 14) {
+            Text(L10n.text(.compareChanges)).font(.title2).fontWeight(.semibold)
+            Text(L10n.text(.comparisonHelp)).font(.caption).foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 16) {
+                column(original, title: .sourceForResult, changed: removed, insertion: false)
+                column(optimized, title: .copyablePrompt, changed: added, insertion: true)
+            }
+            HStack { Spacer(); Button(L10n.text(.done)) { dismiss() }.keyboardShortcut(.defaultAction) }
+        }.padding(22).frame(width: 760, height: 520)
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var model: WorkspaceModel
     @State private var permission = TextSelection.authorized
@@ -461,13 +586,13 @@ struct SettingsView: View {
                         Text(model.backend.configurationPath.isEmpty ? L10n.text(.usingDemo) : L10n.text(.configFile, URL(fileURLWithPath: model.backend.configurationPath).lastPathComponent))
                             .font(.system(size: 12)).lineLimit(1)
                         Spacer()
-                        Button(L10n.text(.chooseEnv)) { chooseConfig() }
+                        Button(L10n.text(.chooseEnv)) { chooseConfig() }.disabled(model.unavailable)
                     }
                     HStack {
                         Button(L10n.text(.editModelConfig)) { createConfig() }
                         Button(L10n.text(.reloadConfig)) { model.restart() }
                         Button(L10n.text(.useDemo)) { model.useConfig(nil) }
-                    }
+                    }.disabled(model.unavailable)
                     Divider()
                     Text(L10n.text(.globalShortcut)).font(.headline)
                     Text(L10n.text(.permissionHelp, L10n.text(permission ? .permissionGranted : .permissionMissing)))
@@ -499,7 +624,18 @@ struct SettingsView: View {
                     HStack {
                         Text(L10n.text(.runtime)).font(.system(size: 12))
                         Spacer()
-                        Button(L10n.text(.chooseNode)) { chooseNode() }
+                        Button(L10n.text(.chooseNode)) { chooseNode() }.disabled(model.unavailable)
+                    }
+                    HStack {
+                        Button(L10n.text(.useBundledBackend)) { model.useBundledBackend() }
+                            .disabled(model.unavailable).accessibilityIdentifier("useBundledBackend")
+                        if model.backendSwitching { ProgressView().controlSize(.small) }
+                    }
+                    Text(L10n.text(.bundledBackendHelp))
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if !model.message.isEmpty {
+                        Text(model.message).font(.caption).foregroundStyle(model.isError ? Color.red : .secondary)
+                            .textSelection(.enabled).accessibilityIdentifier("settingsStatus")
                     }
                     Text(L10n.text(.localPrivacy))
                         .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -550,6 +686,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let hotKey = SelectionHotKey()
     private var permissionTimer: Timer?
+    private var terminationTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 940, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
@@ -569,7 +706,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             model?.convert(capture.text, sourcePID: capture.pid, sourceCapture: capture, anchor: anchor,
                            eventSequence: eventSequence)
         }
-        model.watcher.canStartConversion = { [weak model] in model?.busy != true }
+        model.watcher.canStartConversion = { [weak model] in model?.unavailable != true }
         model.watcher.activate()
         if !TextSelection.authorized {
             model.notify(L10n.text(.permissionNeeded), error: true)
@@ -641,10 +778,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func quit() { NSApp.terminate(nil) }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { showWorkspace(); return true }
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard terminationTask == nil else { return .terminateLater }
+        terminationTask = Task {
+            do {
+                try await model.shutdown()
+                sender.reply(toApplicationShouldTerminate: true)
+            } catch {
+                model.notify(L10n.errorDescription(error), error: true)
+                showWorkspace()
+                terminationTask = nil
+                sender.reply(toApplicationShouldTerminate: false)
+            }
+        }
+        return .terminateLater
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
+        permissionTimer?.invalidate()
         model.watcher.stop()
         model.cancel()
-        model.backend.stop()
     }
 }
 

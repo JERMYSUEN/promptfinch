@@ -12,6 +12,6 @@ Al modello viene chiesto di chiarire obiettivo, dati di ingresso e vincoli, orga
 
 L’app per macOS combina spazio manuale e assistente di selezione; disponibile anche nel browser. Generazione reale: chiave API del modello configurata. Modalità simulata: anteprima del flusso senza traduzione né ottimizzazione.
 
-L’interfaccia macOS supporta cinese tradizionale (predefinito), inglese, giapponese e coreano, selezionabili nelle impostazioni. L’interfaccia del browser rimane in cinese tradizionale. Le note sui miglioramenti e sulle ipotesi vengono richieste al modello in cinese tradizionale e non vengono tradotte cambiando la lingua dell’interfaccia. I collegamenti alle lingue nel README cambiano solo la pagina della documentazione.
+L’app macOS offre cinese tradizionale (predefinito), inglese, giapponese e coreano. Le nuove note sui miglioramenti e sulle ipotesi seguono la lingua dell’interfaccia. L’interfaccia del browser rimane in cinese tradizionale e dispone di un selettore separato per la lingua delle note. I collegamenti nel README cambiano solo la documentazione. I risultati esistenti non vengono riscritti quando si cambia lingua.
 
 **Flusso:** seleziona testo → clic destro → scegliere **Convert to English prompt** → pannello dei risultati (app compatibili).

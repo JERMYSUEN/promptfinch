@@ -22,7 +22,7 @@ A 15-second recreation of the Codex desktop workflow: select a rough CSV bug-fix
 
 The links at the top switch between README pages. English is the source; Simplified Chinese (zh-CN) and Traditional Chinese (zh-TW) include the full reference. The other 26 editions contain translated introductions and link to the English setup instructions. These links change the documentation, not the app's language.
 
-In the macOS app, **Settings → Interface language** offers Traditional Chinese (default), English, Japanese and Korean. The browser interface remains Traditional Chinese. Improvement and assumption notes are requested in Traditional Chinese and are not translated by the interface.
+In the macOS app, **Settings → Interface language** offers Traditional Chinese (default), English, Japanese and Korean. The browser interface remains Traditional Chinese. New improvement and assumption notes follow the native interface language. The browser offers a separate notes-language selector; changing language does not rewrite an existing result.
 
 The macOS app generates English prompt instructions. The browser defaults to English instructions and also offers Traditional Chinese. API clients use `promptLanguage: "en"` for English; omitting it retains the `zh-Hant` default. The language of the eventual answer is a separate requirement in your original prompt. Unicode input is accepted, but documentation translations do not certify model quality in every language.
 
@@ -36,7 +36,7 @@ The macOS app generates English prompt instructions. The browser defaults to Eng
 
 - Accept a rough prompt, choose a task type, and optionally name the model that will receive the result.
 - Ask the model to improve task clarity and execution guidance while preserving intent, constraints and exact strings, rather than merely changing the language.
-- Produce a copyable prompt with improvements and assumptions shown separately. Copy and paste-back use the prompt field alone.
+- Produce a copyable prompt with improvements and assumptions shown separately. Copy and paste-back use the prompt field alone. Compare the captured source and result with whole-line change highlights before reuse.
 - Use one macOS app for manual input, selection actions, result panels, model settings, four interface languages, and optional paste-back.
 - Handle blank input, size limits, loading, cancellation, and understandable errors.
 - Run without a model key in clearly labeled mock mode, or call a configured OpenAI-compatible model from the Node.js backend.
@@ -65,7 +65,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-Build from the current `main` source for the latest documented behavior. The [v1.0.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.0.0) also has an older Apple Silicon ZIP; it predates later Terminal and optimizer changes and is not a notarized installer. It does not bundle Node.js. See the [corrected release notes](docs/releases/v1.0.0.md) for its scope and version-label caveat. The project has no automatic updater or current Intel/Universal binary download.
+The [v1.1.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) provides `PromptFinch-1.1.0-macos-arm64.zip`, `PromptFinch-source-v1.1.0.zip` and `SHA256SUMS`. The app download is for Apple Silicon, uses ad-hoc signing and is not notarized; install Node.js 22+ separately. Extract the ZIP and move the app to your Applications folder. See the [release notes](docs/releases/v1.1.0.md) for setup and verification scope, or build this source checkout. The [changelog](CHANGELOG.md) distinguishes earlier snapshots. There is no automatic updater or Intel/Universal binary download.
 
 #### Browser demo, no API key
 
@@ -140,7 +140,7 @@ A local compatible service that does not require authentication can use `LLM_API
 | `LLM_MODEL` | Empty | Provider model identifier; required in live configuration. |
 | `LLM_JSON_MODE` | `true` | Send `response_format: {type: "json_object"}`. |
 | `LLM_THINKING_MODE` | Empty | Omitted when blank; accepts `enabled` or `disabled`. |
-| `LLM_TIMEOUT_MS` | `45000` | Request/response timeout; integer from 10 to 180000 milliseconds. |
+| `LLM_TIMEOUT_MS` | `45000` | Total upstream timeout across any format retry; integer from 10 to 180000 milliseconds. |
 | `HOST` | `127.0.0.1` | Bind address for the standalone server. |
 | `PORT` | `3000` | Standalone server port. |
 | `ALLOWED_HOSTS` | Empty | Optional comma-separated exact host authorities for a reverse proxy, e.g. `prompts.example.com,prompts.example.com:8443`. No wildcards or URLs. |
@@ -190,7 +190,7 @@ curl --fail --silent --show-error http://127.0.0.1:3000/api/optimize \
 | `targetModel` | Optional downstream model hint; single line, up to 80 UTF-16 code units. |
 | `promptLanguage` | `en` for English instructions; `zh-Hant` by default when omitted. |
 
-A successful optimization returns `prompt`, `improvements`, `assumptions`, `mode`, `generationModel`, and `promptLanguage`. Copy only `prompt` when reusing the result; improvements and assumptions are separate review notes. English-mode notes are still Traditional Chinese.
+A successful optimization returns `prompt`, `improvements`, `assumptions`, `mode`, `generationModel`, `promptLanguage`, and `notesLanguage`. Copy only `prompt` when reusing the result; improvements and assumptions are separate review notes. `notesLanguage` accepts `zh-TW` (API default), `en`, `ja`, or `ko`, independently of the prompt instructions and downstream answer language.
 
 The API validates input and model response structure, limits concurrent optimization requests, and reports configuration, provider, malformed-output, and timeout errors. Cancellation closes the upstream request; provider-side processing and billing behavior remain under the provider's control.
 
@@ -216,7 +216,7 @@ After changing trusted backend or browser source, an installed app can update it
 npm run update:mac-backend
 ```
 
-The updater stages and validates a candidate with a mock HTTP check, closes the app normally, checks the port, switches the backend version, and restarts the app. If startup fails, it attempts rollback. It does not change the selected model configuration or terminate an unrelated port listener. Installing a rebuilt app preserves an existing external backend; it does not automatically select newer bundled backend files.
+The updater stages and validates a candidate with a mock HTTP check, closes the app normally, checks the port, switches the backend version, and restarts the app. If startup fails, it attempts rollback. It does not change the selected model configuration or terminate an unrelated port listener. Installing a rebuilt app preserves an existing external backend; it does not automatically select newer bundled backend files. To adopt the backend shipped with an installed release, open **Settings → Use this app’s bundled backend**. This explicit local operation stages that app's backend, validates it and starts it; failure attempts to restore the previously selected backend. Your model configuration, Node path and preferences are retained. It makes no GitHub download or model request. Save any unfinished workspace text before changing backends.
 
 For an existing installation after changes to both native and backend source, update your trusted checkout, then run:
 
@@ -273,13 +273,13 @@ This is a local personal tool without account authentication or multi-user isola
 
 ### Validation and limitations
 
-[The optimization-value verification record](docs/optimization-value-verification.md) defines eight synthetic cases for task guidance beyond translation and restraint on already-clear requests. Live checks encountered provider timeouts and service errors, so quality comparison remains unverified. The illustrated result is not evidence of better model or downstream task performance.
+[The optimization-value verification record](docs/optimization-value-verification.md) defines eight synthetic cases for task guidance beyond translation and restraint on already-clear requests. The original checks encountered provider timeouts and service errors. A later [improvement verification](docs/improvement-verification.md) records successful live samples, mechanical checks and separate semantic findings. The illustrated result is not evidence of better model or downstream task performance.
 
 [The previous reliability verification](docs/reliability-verification.md), on 2026-10-09, passed JavaScript syntax checks, 55 Node tests, 190 native checks, 10 Chrome flow tests and the macOS build/signature checks. For the Terminal change on 2026-10-11, syntax checks, 55 Node tests, 233 native checks, README/link checks and the macOS build/signature checks passed; the updated app was installed. Browser flow tests were not rerun for this native change. Automated tests use mock or controlled providers; they do not establish real-model output quality.
 
 The user previously confirmed that the companion menu appeared without automatic generation and that one explicit click produced an English result. Physical mouse and complete copy/paste-back/cancellation behavior in Codex/Claude still need verification for this build. See the [selection verification](docs/context-menu-verification.md) and [multilingual sample review](docs/multilingual-verification.md) for their separate scopes.
 
-Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Known follow-up work includes conflicting requirements in Traditional Chinese output and the total timeout budget for retries.
+Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Live semantic quality depends on the provider and still requires review. See the [improvement verification](docs/improvement-verification.md) for the latest checks and remaining limits.
 
 ### Development
 
@@ -300,6 +300,8 @@ PLAYWRIGHT_CHANNEL=chrome npm run test:ui
 npm run test:mac
 npm run build:mac
 ```
+
+To produce a public Apple Silicon app ZIP and source ZIP on macOS with Node.js 22+ and Xcode Command Line Tools, run `npm run package:mac`. It builds an ad-hoc-signed app from a clean copy of explicitly selected public files, without reading your real `.env` or personal signing configuration. The release manifest records relative input paths and SHA-256 hashes; `SHA256SUMS` covers the generated downloads. This packaging does not notarize the app or publish to GitHub. To create only the source archive, run `npm run package:source`.
 
 `npm run dev` runs the standalone server with Node's watch mode. `npm run check:docs` checks README navigation, translation structure and changelog ordering; it does not certify translation accuracy or model quality. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [GitHub workflow](.github/workflows/check.yml) runs JavaScript/documentation checks, Node tests and native macOS checks/builds. It does not publish release artifacts. Browser tests currently run locally; check [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for the result on a particular commit.
 

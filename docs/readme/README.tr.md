@@ -12,6 +12,6 @@ Modelden amacı, girdileri ve kısıtları netleştirmesi, yararlı adımları d
 
 macOS uygulaması, elle kullanılan çalışma alanını seçim asistanıyla birleştirir; tarayıcı çalışma alanı da mevcuttur. Üretim için yapılandırılmış model API anahtarı gerekir. Simülasyon modu işleyişi gösterir; çeviri veya iyileştirme yapmaz.
 
-macOS arayüzü için Ayarlar’dan Geleneksel Çince (varsayılan), İngilizce, Japonca veya Korece seçilebilir. Tarayıcı arayüzü Geleneksel Çince olarak kalır. İyileştirme ve varsayım notları modelden Geleneksel Çince olarak istenir; arayüz dilini değiştirmek bu notları çevirmez. README’deki dil bağlantıları yalnızca belge sayfalarını değiştirir.
+macOS uygulaması Geleneksel Çince (varsayılan), İngilizce, Japonca ve Korece sunar. Yeni iyileştirme ve varsayım notları arayüz diline göre oluşturulur. Tarayıcı arayüzü Geleneksel Çince olarak kalır ve not dili için ayrı bir seçim alanı bulunur. README bağlantıları yalnızca belgeleri değiştirir. Dil değiştirildiğinde mevcut sonuçlar yeniden yazılmaz.
 
 **Akış:** metni seçin → sağ tıklayın → **Convert to English prompt** seçin → sonuç paneli (uyumlu uygulamalar).

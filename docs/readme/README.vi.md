@@ -14,6 +14,6 @@ Mô hình được yêu cầu làm rõ mục tiêu, dữ liệu đầu vào và 
 
 Ứng dụng macOS có không gian làm việc và trợ lý văn bản được chọn: chọn văn bản, nhấp chuột phải trong ứng dụng tương thích, rồi chọn **Convert to English prompt** trong menu phụ để xem bảng kết quả. Có cả không gian làm việc trên trình duyệt. Tạo nội dung thực tế cần khóa API của mô hình. Chế độ mô phỏng chỉ xem trước quy trình, không dịch hay tối ưu.
 
-Trong Cài đặt của macOS, bạn có thể chọn giao diện tiếng Trung phồn thể (mặc định), tiếng Anh, tiếng Nhật hoặc tiếng Hàn. Giao diện trình duyệt vẫn dùng tiếng Trung phồn thể. Mô hình được yêu cầu viết ghi chú về cải tiến và giả định bằng tiếng Trung phồn thể; đổi ngôn ngữ giao diện không dịch các ghi chú này. Liên kết ngôn ngữ trong README chỉ chuyển trang tài liệu.
+Ứng dụng macOS hỗ trợ tiếng Trung phồn thể (mặc định), tiếng Anh, tiếng Nhật và tiếng Hàn. Các ghi chú mới về cải tiến và giả định được tạo theo ngôn ngữ giao diện. Giao diện trình duyệt vẫn dùng tiếng Trung phồn thể và có bộ chọn riêng cho ngôn ngữ ghi chú. Các liên kết trong README chỉ chuyển tài liệu. Kết quả hiện có không được viết lại khi đổi ngôn ngữ.
 
 **Quy trình:** Nhập hoặc chọn → Tạo prompt tiếng Anh → Xem kết quả

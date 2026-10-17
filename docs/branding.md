@@ -2,7 +2,7 @@
 
 **Select. Refine. Paste.**
 
-這份文件保留 2026-10-09 的更名範圍與當時驗證；不是目前安裝版本、測試數量或模型服務狀態的即時報告。最新操作見 [macOS 指南](macos.md)，版本與已發布下載的差異見 [CHANGELOG](../CHANGELOG.md)。
+這份文件保留 2026-10-09 的更名範圍與當時驗證；不是目前安裝版本、測試數量或模型服務狀態的即時報告。最新操作見 [macOS 指南](macos.md)，版本與已發布下載的差異見 [CHANGELOG](../CHANGELOG.md)。目前的 [v1.1.0 發行說明](releases/v1.1.0.md)另記錄新版下載、1.1.0／build 12 版本及保留原設定的明確後端切換；下列檔名與驗證仍屬歷史紀錄。
 
 國際化顯示名稱：**PromptFinch**。公開 GitHub 儲存庫：[JERMYSUEN/promptfinch](https://github.com/JERMYSUEN/promptfinch)。npm 專案名稱及來源包也使用新名稱。Finch 指小型鳥類，作為輕巧選取助手的名稱。
 
