@@ -23,7 +23,11 @@ async function isolatedProject(t) {
   return { root, source, backend };
 }
 
-test('後端版本在隔離目錄完成語法、mock HTTP 流程與原子切換', async t => {
+test('後端版本在隔離目錄完成語法、mock HTTP 流程與原子切換', {
+  // The native Mac updater relies on POSIX atomic symlink replacement.
+  // Windows Electron calls the optimizer directly and has no external updater.
+  skip: process.platform === 'win32' && 'Native macOS atomic symlink activation is not a Windows desktop feature.',
+}, async t => {
   const { source, backend } = await isolatedProject(t);
   const staged = await stageBackendRelease(source, backend);
   assert.match(staged.id, /^[a-f0-9]{64}$/);

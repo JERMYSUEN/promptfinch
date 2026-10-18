@@ -19,8 +19,11 @@ const path = require('node:path');
     const env = { ...process.env, OPTIMIZER_MODE: 'live', LLM_API_KEY: 'synthetic-do-not-inherit', LLM_MODEL: 'not-used' };
     delete env.ELECTRON_RUN_AS_NODE;
     application = await electron.launch({ executablePath, args, cwd: root, env, timeout: 45000 });
-    const page = await application.firstWindow();
-    await page.waitForURL('promptfinch://app/');
+    await application.firstWindow();
+    // Two windows start together; renderer scheduling can expose the companion
+    // first. Identify the workspace by its owned URL, never by event order.
+    await expect.poll(() => application.windows().some(page => page.url() === 'promptfinch://app/'), { timeout: 30000 }).toBe(true);
+    const page = application.windows().find(page => page.url() === 'promptfinch://app/');
     await expect(page.locator('body')).toHaveClass(/ready/);
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
