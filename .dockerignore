@@ -5,3 +5,8 @@ test-results
 playwright-report
 .git
 sources
+
+desktop-dist
+desktop/bin
+build
+release

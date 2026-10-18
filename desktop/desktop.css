@@ -1,0 +1,65 @@
+body:not(.ready) #workspace-shell { visibility: hidden; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.header-actions select { max-width: 145px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--paper); }
+.secondary-button { color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; }
+.secondary-button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: var(--soft-blue); }
+.desktop-settings { border: 1px solid var(--line); border-radius: 10px; background: var(--paper); padding: 20px; margin: 0 0 22px; }
+.desktop-settings p { color: var(--muted); margin: 9px 0; max-width: 95ch; overflow-wrap: anywhere; }
+.desktop-settings h3 { font-size: 14px; margin: 23px 0 8px; }
+.desktop-settings .config-name { color: var(--ink); font-weight: 550; }
+.settings-actions, .import-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.settings-actions { margin: 14px 0 10px; }
+.desktop-settings .settings-help { font-size: 12px; }
+.desktop-input-settings { align-items: flex-end; justify-content: flex-start; margin-bottom: 20px; gap: 18px; }
+.desktop-input-settings .model-field { min-width: 260px; flex: 1; max-width: 560px; }
+.desktop-input-settings .task-field { min-width: 170px; }
+.import-actions { margin: 14px 0 18px; }
+.import-actions button { font-size: 12px; }
+.input-actions { flex-wrap: wrap; }
+.input-actions .shortcut { margin-right: auto; }
+#original-prompt { min-height: 300px; }
+#optimized-prompt { height: 393px; }
+.input-pane, .output-pane { align-self: stretch; }
+#result-tag { max-width: 140px; white-space: normal; }
+.output-pane .pane-heading { flex-wrap: wrap; }
+#mode-notice:empty, #companion-status:empty { display: none; }
+#action-status { min-height: 23px; }
+body.companion { background: transparent; color: var(--ink); }
+body.companion #workspace-shell { display: none; }
+.companion-menu { width: 100%; padding: 7px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 5px 18px #13274022; }
+.companion-menu button { display: block; width: 100%; text-align: left; border: none; border-radius: 5px; background: transparent; color: var(--ink); padding: 9px 10px; line-height: 1.35; }
+.companion-menu button:hover:not(:disabled), .companion-menu button:focus-visible { color: var(--blue); background: var(--soft-blue); }
+.companion-menu #companion-cancel { color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); margin-top: 4px; border-radius: 0 0 5px 5px; }
+.companion-menu p { margin: 5px 9px; font-size: 11px; color: #aa2c29; line-height: 1.4; overflow-wrap: anywhere; }
+.companion-menu .selection-preview { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 17px; margin: 3px 10px 6px; }
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #20252e; --desk: #171c24; --ink: #e1e8f4; --blue: #8bb1ff; --muted: #a5b2c8; --line: #3d495c; --soft-blue: #2d3c57; --amber: #edc77e; color-scheme: dark; }
+  .mode-badge.mock, .mode-notice.mock { color: #edc77e; background: #393222; }
+  .mode-badge.live { color: #b4e8c8; background: #253b32; }
+  .mode-notice { background: #293344; color: #b7c6df; }
+  .mode-notice.error, .error-message { background: #3c282c; color: #ffc0ba; }
+  #original-prompt, #original-prompt:disabled { background: var(--paper); color: var(--ink); }
+  .editor-footer { background: #1b212b; border-top-color: var(--line); }
+  .input-actions { border-top-color: var(--line); }
+  .primary-button { color: #17243d; background: #8bb1ff; border-color: #8bb1ff; }
+  .primary-button:hover:not(:disabled) { background: #adc7ff; }
+  .copy-button { background: var(--paper); }
+  .empty-state, .loading-state, #optimized-prompt, .comparison pre { background: #192331; color: var(--ink); border-color: var(--line); }
+  .result-tag { background: #393222; color: #edc77e; }
+  .action-status { color: #add5bd; }
+  .action-status.error { color: #ffc0ba; }
+  .line-added { color: #c2ead0; background: #253f31; }
+  .line-removed { color: #f1bdb7; background: #492c31; }
+  .companion-menu p { color: #ffc0ba; }
+}
+@media (max-width: 760px) {
+  .header-actions { gap: 6px; }
+  .header-actions select { max-width: 110px; font-size: 12px; }
+  .header-actions button { font-size: 12px; }
+  .desktop-input-settings { gap: 13px; }
+  .desktop-input-settings .task-field, .desktop-input-settings .model-field { min-width: 0; width: 100%; max-width: none; }
+  .input-actions { justify-content: stretch; }
+  .input-actions .primary-button { flex: 1; width: auto; }
+  #optimized-prompt { height: 340px; }
+  .desktop-settings { padding: 17px; }
+}

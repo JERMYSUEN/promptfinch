@@ -139,7 +139,7 @@ try {
   assert.ok(files.length > 50, 'The source package is incomplete.');
   const packageInfo = JSON.parse(readFileSync(join(source, 'package.json'), 'utf8'));
   assert.equal(packageInfo.version, version);
-  assert.equal(packageInfo.engines.node, '>=22');
+  assert.equal(packageInfo.engines.node, '>=22.12.0');
   const lock = JSON.parse(readFileSync(join(source, 'package-lock.json'), 'utf8'));
   assert.equal(lock.version, version);
   assert.equal(lock.packages[''].version, version);

@@ -17,3 +17,7 @@ docs/macos-verification.md
 
 # Build artifacts
 /PromptFinch-*.zip
+
+# Desktop release and native helper outputs
+desktop-dist/
+desktop/bin/

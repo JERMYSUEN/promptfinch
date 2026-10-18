@@ -6,6 +6,20 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 
 No changes recorded yet.
 
+## [1.2.0] - 2026-10-19
+
+### Added
+
+- A Windows x64 and Linux x64 Electron desktop edition using the existing optimizer in the main process, without an HTTP listener or a separate Node installation in packaged apps.
+- An experimental companion menu that observes a right-click and offers conversion only after an explicit button click. Windows reads the focused UI Automation text selection; Linux X11 reads the selection buffer. Linux Wayland provides manual/clipboard use without a global right-click hook.
+- Four interface languages, model-file selection, explicit mock mode, clipboard import, result copy, comparison, cancellation and memory clearing in the new desktop workspace. Results are copy-only on Windows/Linux.
+- Native per-platform build jobs, packaged workspace smoke checks and public-artifact checksums. See the [desktop guide](docs/desktop.md) for installation, security boundaries and remaining physical-host verification.
+
+### Preserved
+
+- The macOS Swift edition and its existing selection workflow. Previous release tags/assets retain their original verification scope.
+- The model policy, browser workspace and HTTP API. No new live-model quality evaluation is claimed by this platform release.
+
 ## [1.1.0] - 2026-10-17
 
 ### Added

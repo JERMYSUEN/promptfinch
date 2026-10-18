@@ -61,3 +61,7 @@ Use [GitHub Issues](https://github.com/JERMYSUEN/promptfinch/issues) for ordinar
 Do not attach `.env`, API keys, real user prompts, clipboard contents, native preferences, signing keys or an unreviewed diagnostic log. Native diagnostics omit prompt text but contain application/process and timing metadata. Sensitive vulnerabilities follow [SECURITY.md](SECURITY.md), not a public exploit report.
 
 Pull requests should describe the resulting behavior and relevant verification. Keep generated media clearly labeled as synthetic or recorded. PromptFinch uses the [MIT License](LICENSE); retain required third-party notices and use compatible contributions.
+
+## Windows and Linux desktop development
+
+The Electron workspace shares `lib/optimizer.js` with the API. Run `npm ci`, `node scripts/build-desktop-helpers.cjs`, then `npm run desktop`. Native selection helpers and distributable packages must be built on the matching x64 Windows/Linux host. `npm run test:desktop` launches an isolated mock workspace with synthetic text and an in-memory clipboard. See [desktop development and support limits](docs/desktop.md) before changing platform behavior. Do not weaken the sandbox or simulate automatic paste into terminals.

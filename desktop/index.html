@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>PromptFinch</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/base.css">
+  <link rel="stylesheet" href="/desktop.css">
+  <script type="module" src="/renderer.js"></script>
+</head>
+<body>
+  <section id="companion-menu" class="companion-menu" hidden aria-label="PromptFinch">
+    <p id="selection-preview" class="selection-preview"></p>
+    <button id="companion-run" type="button" data-i18n="companionRun">轉為英文 Prompt</button>
+    <button id="companion-cancel" type="button" data-i18n="cancel">取消</button>
+    <p id="companion-status" role="status" aria-live="polite"></p>
+  </section>
+  <div id="workspace-shell">
+    <header class="topbar">
+      <div class="brand"><img class="brand-mark" src="/icon.svg" alt=""><span>PromptFinch</span></div>
+      <div class="header-actions">
+        <label for="language-select" class="sr-only" data-i18n="language">介面語言</label>
+        <select id="language-select" aria-label="介面語言">
+          <option value="zh-TW">繁體中文</option><option value="en">English</option>
+          <option value="ja">日本語</option><option value="ko">한국어</option>
+        </select>
+        <button id="settings-button" class="secondary-button" type="button" aria-expanded="false" aria-controls="settings-panel" data-i18n="settings">設定</button>
+      </div>
+    </header>
+    <main>
+      <section class="intro">
+        <div><h1 data-i18n="heading">將需求整理成英文 Prompt</h1><p data-i18n="intro">保留目的、限制、答案語言與原文中的具體資訊，整理指令而不執行任務。</p></div>
+        <span id="mode-badge" class="mode-badge" role="status"></span>
+      </section>
+
+      <section id="settings-panel" class="desktop-settings" hidden aria-labelledby="settings-heading">
+        <h2 id="settings-heading" data-i18n="modelSettings">模型與桌面設定</h2>
+        <p data-i18n="configHelp">選擇本機 .env 設定檔，或先建立範本並填入模型與金鑰。金鑰只由桌面主程序讀取。</p>
+        <p id="config-name" class="config-name"></p>
+        <div class="settings-actions">
+          <button id="choose-config" type="button" class="secondary-button" data-i18n="chooseConfig">選擇設定檔</button>
+          <button id="create-config" type="button" class="secondary-button" data-i18n="createConfig">建立設定範本</button>
+          <button id="use-demo" type="button" class="secondary-button" data-i18n="useDemo">使用示範模式</button>
+        </div>
+        <p class="settings-help" data-i18n="reloadConfig">修改檔案後，請再次選擇設定檔載入變更。示範模式不會呼叫模型。</p>
+        <h3 data-i18n="selectionHeading">跨軟體取字</h3>
+        <p id="selection-description"></p>
+        <p id="watch-status"></p>
+        <p id="shortcut-status"></p>
+        <p class="settings-help" data-i18n="selectionPrivacy">只有點選「轉為英文 Prompt」或工作台的生成按鈕才會傳送內容。右鍵本身不會呼叫模型，結果不會自動貼回其他軟體。</p>
+      </section>
+
+      <p id="mode-notice" class="mode-notice" role="status"></p>
+
+      <form id="optimizer-form" novalidate>
+        <div class="settings desktop-input-settings">
+          <div class="language-field task-field"><label for="task-select" data-i18n="task">用途</label>
+            <select id="task-select" name="task">
+              <option value="general" data-i18n="taskGeneral">通用用途</option><option value="writing" data-i18n="taskWriting">寫作</option>
+              <option value="analysis" data-i18n="taskAnalysis">分析</option><option value="coding" data-i18n="taskCoding">程式開發</option>
+              <option value="summary" data-i18n="taskSummary">摘要</option><option value="marketing" data-i18n="taskMarketing">行銷</option>
+            </select>
+          </div>
+          <div class="model-field"><label for="target-model" data-i18n="targetModel">目標模型（選填）</label>
+            <input id="target-model" maxlength="80" autocomplete="off" spellcheck="false" data-i18n-placeholder="targetPlaceholder" placeholder="例如 Claude、GPT、DeepSeek">
+          </div>
+        </div>
+        <div class="workspace">
+          <section class="input-pane" aria-labelledby="input-heading">
+            <div class="pane-heading"><div><span class="step" aria-hidden="true">1</span><h2 id="input-heading" data-i18n="original">原始需求</h2></div><button id="clear-button" type="button" class="text-button" data-i18n="clear">清除</button></div>
+            <p class="pane-description" data-i18n="inputHelp">貼上任何語言的需求，也可以匯入選取文字或剪貼簿。</p>
+            <div class="editor-wrap">
+              <label class="sr-only" for="original-prompt" data-i18n="original">原始需求</label>
+              <textarea id="original-prompt" maxlength="12000" autocomplete="off" spellcheck="false" aria-describedby="character-count input-help" data-i18n-placeholder="inputPlaceholder" placeholder="在這裡輸入想優化的指令…"></textarea>
+              <div class="editor-footer"><span id="input-help" data-i18n="inputMemory">內容只保留在記憶體</span><span id="character-count">0 / 12,000</span></div>
+            </div>
+            <div class="import-actions"><button id="import-clipboard" type="button" class="secondary-button" data-i18n="importClipboard">讀取剪貼簿</button><button id="capture-selection" type="button" class="secondary-button" data-i18n="captureSelection">讀取選取文字</button></div>
+            <p id="input-error" class="error-message" role="alert" hidden></p>
+            <div class="input-actions"><span class="shortcut" data-i18n="keyboardHint">Ctrl／⌘ + Enter 生成</span><button id="cancel-button" type="button" class="secondary-button" data-i18n="cancel" hidden>取消</button><button id="generate-button" type="submit" class="primary-button" data-i18n="generate">生成英文 Prompt</button></div>
+          </section>
+
+          <section class="output-pane" aria-labelledby="output-heading" aria-busy="false">
+            <div class="pane-heading"><div><span class="step" aria-hidden="true">2</span><h2 id="output-heading" data-i18n="output">可直接複製的 Prompt</h2><span id="result-tag" class="result-tag" hidden></span></div><button id="copy-button" type="button" class="copy-button" disabled data-i18n="copy">複製</button></div>
+            <p class="pane-description" data-i18n="outputHelp">以下只有 Prompt；改善說明與假設會分開顯示。</p>
+            <div id="empty-state" class="empty-state"><h3 data-i18n="emptyTitle">英文 Prompt 會顯示在這裡</h3><p data-i18n="emptyHelp">先輸入原始需求，再按生成。</p></div>
+            <div id="loading-state" class="loading-state" hidden><span class="spinner" aria-hidden="true"></span><h3 data-i18n="working">正在整理指令…</h3><p data-i18n="cancelHelp">可以隨時取消，原始輸入會保留。</p></div>
+            <div id="result-state" hidden><label class="sr-only" for="optimized-prompt" data-i18n="output">可直接複製的 Prompt</label><textarea id="optimized-prompt" readonly spellcheck="false" lang="en"></textarea><p id="result-source" class="result-source"></p></div>
+          </section>
+        </div>
+      </form>
+
+      <p id="action-status" class="action-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <section id="explanation" class="explanation" hidden aria-labelledby="explanation-heading"><div><h2 id="explanation-heading" data-i18n="improvements">改善重點</h2><p data-i18n="notesHelp">說明使用生成時的介面語言，切換語言後可重新生成。</p></div><div class="explanation-content"><ul id="improvements"></ul><div class="assumptions"><h3 data-i18n="assumptions">假設與待確認事項</h3><ul id="assumptions-list"></ul><p id="no-assumptions" data-i18n="noAssumptions">沒有新增假設。</p></div></div></section>
+      <details id="comparison" class="comparison" hidden><summary data-i18n="comparison">原文與結果對照</summary><p class="comparison-help" data-i18n="comparisonHelp">逐行對照只協助檢視文字差異，無法保證語意與限制皆被保留。使用前請檢查。</p><div class="comparison-columns"><section><h3 data-i18n="original">原始需求</h3><pre id="comparison-source"></pre></section><section><h3 data-i18n="comparisonResult">英文 Prompt</h3><pre id="comparison-result" lang="en"></pre></section></div></details>
+      <footer class="privacy-note"><p data-i18n="privacy">輸入與結果不保存到檔案，也不會自動貼回來源。真實模型模式只會在你執行轉換時傳送內容至設定的模型服務；使用前請檢查結果。</p></footer>
+    </main>
+  </div>
+</body>
+</html>

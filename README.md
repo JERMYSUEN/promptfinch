@@ -8,7 +8,7 @@
 
 A prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer, actionable instructions for the model you plan to use. The optimizer is instructed to clarify the objective, inputs and constraints, arrange useful steps, address critical information gaps and derive checks from your requirements. Already-clear requests should receive minimal edits; added structure should help the task, without inventing new requirements.
 
-Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. An optional **browser workspace and HTTP API** use the same backend.
+Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. The **Windows and Linux desktop preview** adds the same workspace and an experimental companion menu on Windows UI Automation and Linux X11. Linux Wayland supports manual input and clipboard import, without a global right-click menu. An optional **browser workspace and HTTP API** use the same backend. See the [desktop support guide](docs/desktop.md).
 
 PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API configuration. Without a key, a clearly labeled mock mode lets you try the workflow without translating or optimizing the text.
 
@@ -49,8 +49,9 @@ The task choices are general, writing, analysis, coding, summary, and marketing.
 | --- | --- |
 | Browser workspace / HTTP API | Node.js 22 or newer. No third-party runtime packages are required. |
 | Native macOS app | macOS 13 or newer as the compilation target, plus an installed Node.js 22+ runtime. Node is not bundled with the app. |
+| Windows / Linux desktop preview | Windows 10/11 x64, or Linux x64 with a supported Electron desktop runtime. Node is bundled. Global selection is experimental on Windows UIA / Linux X11; Wayland uses clipboard import. |
 | Build the macOS app | Apple Xcode Command Line Tools, including Swift and Apple's signing tools. Full Xcode is not required. |
-| Development and browser tests | `npm ci` installs the development dependencies; Playwright needs an installed test browser. |
+| Development and browser tests | Node.js 22.12+; `npm ci` installs the development dependencies; Playwright needs an installed test browser. |
 
 Native builds target `arm64` when the build's Node process is ARM64, otherwise `x86_64`; they are not Universal Binaries. Recorded native checks were on Apple Silicon. Intel and the minimum macOS 13 target have not been validated on physical machines.
 
@@ -105,6 +106,26 @@ npm run install:mac -- --config .env
 ```
 
 For more macOS setup details, see the [macOS guide](docs/macos.md), currently written in Traditional Chinese.
+
+### Windows and Linux desktop preview
+
+The desktop preview contains its own runtime and uses the shared optimizer inside its main process. It does not start a local HTTP server. The macOS Swift app remains the macOS edition.
+
+From a source checkout, install Node.js 22.12+ and run:
+
+```sh
+npm ci
+node scripts/build-desktop-helpers.cjs
+npm run desktop
+```
+
+Build Windows packages on Windows x64; build Linux packages on Linux x64. Run `npm run build:desktop` to produce a Windows installer/ZIP or Linux AppImage/tarball in `desktop-dist/<version>/`. End users of packaged apps do not need Node. Linux build prerequisites and portable-package launch steps are in the [desktop guide](docs/desktop.md).
+
+Select text in a compatible external app, right-click, then choose **Convert to English prompt** in PromptFinch's nearby companion menu. The original menu is not replaced. This action uses the text captured at that right-click, expires after ten seconds, and does not automatically paste or submit a result. UI Automation support varies by Windows app. Linux X11 uses its selection buffer and cannot prove that the click occurred inside the highlight. Wayland does not provide this global hook.
+
+If selection is unavailable, copy text yourself and choose **Import clipboard**. **Ctrl+Alt+P** imports the current selection where supported; **Ctrl+Alt+Shift+P** imports the clipboard. Shortcuts do not generate. Settings shows watcher and shortcut availability; Linux desktop shortcut registration can require desktop approval.
+
+Settings supports Traditional Chinese, English, Japanese and Korean. Create a private model template, edit it with your own API settings, then select it to load. New installs start in clearly labeled mock mode. Configured keys stay in the main process; only the language and configuration-file path are stored in preferences. Review the [support and verification limits](docs/desktop.md) before relying on a particular host app.
 
 ### Model configuration
 

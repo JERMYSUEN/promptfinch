@@ -10,6 +10,8 @@ PromptFinch 是适用于写作、编程、研究、摘要与规划的 Prompt 编
 
 **macOS App** 可作为手动工作台或文本选择助手：在兼容应用中选中文本、点击右键，在辅助操作菜单选择 **转为英文 Prompt**，再于附近面板查看结果。仅点击右键不会将文本发送给模型。另有使用相同后端的**浏览器工作台与 HTTP API**。
 
+Windows／Linux 桌面预览版新增相同工作台，以及 Windows UI Automation／Linux X11 的实验性右键附加菜单。Wayland 可使用手动输入及剪贴板导入，没有全局右键菜单。详见[桌面版支持指南（英文）](../desktop.md)。
+
 PromptFinch 会编辑指令，不会执行指令描述的任务。它以保留需求、指定的答案语言与固定字符串为设计目标。真正优化需要自行配置模型 API；没有密钥时，可用明确标注的 mock 模式试用操作流程，但不会翻译或优化文本。
 
 ## 演示动图
@@ -101,6 +103,22 @@ npm run install:mac -- --config .env
 ```
 
 更多 macOS 配置请参阅目前以繁体中文编写的 [macOS 指南](../macos.md)。
+
+## Windows 与 Linux 桌面预览版
+
+桌面版内含运行时，直接在主进程使用共用优化器，不启动本地 HTTP 服务器；macOS 仍使用现有 Swift App。从源码启动需要 Node.js 22.12+：
+
+```sh
+npm ci
+node scripts/build-desktop-helpers.cjs
+npm run desktop
+```
+
+Windows x64 上可构建安装程序及 ZIP；Linux x64 上可构建 AppImage 及 tar.gz。运行 `npm run build:desktop`，结果位于 `desktop-dist/<version>/`。已打包的桌面版不需另装 Node。Linux 构建依赖与启动方式见[桌面版指南（英文）](../desktop.md)。
+
+在兼容软件中选取文字后右键，再点击附加菜单的“转为英文 Prompt”才会生成。捕获文字十秒后失效，不自动粘贴回原处或提交。Windows 支持取决于来源软件的 UI Automation；Linux X11 读取选区缓冲区，无法证明点击位于高亮范围。Wayland 没有此全局监听功能。
+
+取字不可用时，可自行复制后点击“读取剪贴板”。`Ctrl+Alt+P` 导入选取文字，`Ctrl+Alt+Shift+P` 导入剪贴板；快捷键不会生成。设置中会显示右键监听与快捷键状态。界面提供繁体中文、英文、日文与韩文；创建模型配置模板、填入自己的密钥，再选取文件加载。新安装默认为演示模式；偏好设置只记录语言及配置文件路径。
 
 ## 模型配置
 

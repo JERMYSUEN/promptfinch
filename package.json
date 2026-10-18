@@ -1,16 +1,16 @@
 {
   "name": "promptfinch",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
-  "description": "PromptFinch — multilingual prompt editor and macOS selection assistant",
+  "description": "PromptFinch — multilingual prompt editor and desktop selection assistant",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "dev": "node --watch --env-file-if-exists=.env server.js",
-    "check": "node --check server.js && node --check lib/optimizer.js && node --check public/app.js && node --check scripts/backend-release.js && node --check scripts/app-lifecycle.js && node --check scripts/install-macos.js && node --check scripts/update-macos-backend.js && node --check scripts/setup-signing-macos.js && node --check scripts/verify-signing-macos.js && node --check scripts/build-macos.js && node --check scripts/package-source.js && node --check scripts/package-macos.js && node --check scripts/check-readmes.js && node --check scripts/app-install.js && node --check scripts/check-package.js && node --check scripts/verify-multilingual.js",
+    "check": "node --check server.js && node --check lib/optimizer.js && node --check public/app.js && node --check scripts/backend-release.js && node --check scripts/app-lifecycle.js && node --check scripts/install-macos.js && node --check scripts/update-macos-backend.js && node --check scripts/setup-signing-macos.js && node --check scripts/verify-signing-macos.js && node --check scripts/build-macos.js && node --check scripts/package-source.js && node --check scripts/package-macos.js && node --check scripts/check-readmes.js && node --check scripts/app-install.js && node --check scripts/check-package.js && node --check scripts/verify-multilingual.js && node --check desktop/main.cjs && node --check desktop/preload.cjs && node --check desktop/controller.mjs && node --check desktop/capture.cjs && node --check desktop/security.cjs && node --check desktop/renderer.js && node --check scripts/desktop-smoke.cjs && node --check scripts/build-desktop-helpers.cjs",
     "test": "node --test tests/*.test.js",
     "check:docs": "node scripts/check-readmes.js",
     "test:ui": "playwright test",
@@ -23,9 +23,18 @@
     "test:backend-release": "node --test tests/backend-release.test.js",
     "package:source": "node scripts/package-source.js",
     "package:mac": "node scripts/package-macos.js",
-    "check:package": "node scripts/check-package.js"
+    "check:package": "node scripts/check-package.js",
+    "desktop": "electron .",
+    "build:desktop": "node scripts/build-desktop-helpers.cjs && electron-builder --config desktop/builder.config.cjs",
+    "test:desktop": "node scripts/desktop-smoke.cjs"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.0"
+    "@playwright/test": "^1.58.0",
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3"
+  },
+  "main": "desktop/main.cjs",
+  "overrides": {
+    "@electron/get": "5.1.0"
   }
 }

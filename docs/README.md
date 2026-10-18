@@ -9,6 +9,7 @@ The guides describe current `main`. The [v1.1.0 release notes](releases/v1.1.0.m
 | Goal | Guide | Language |
 | --- | --- | --- |
 | Choose browser/API or macOS, install and configure a model | [Quick start and settings](../README.md#quick-start) | English; full Chinese editions above |
+| Install or build the Windows / Linux desktop preview; check X11 / Wayland limits | [Desktop guide](desktop.md) | English |
 | Set up the native app, permissions, signing and updates | [macOS guide](macos.md) | Traditional Chinese |
 | Use selected text in Apple Terminal with Claude Code/Codex CLI | [Terminal workflow](terminal.md) | English |
 | Diagnose configuration, model, selection and copy errors | [Troubleshooting](troubleshooting.md) | English |
