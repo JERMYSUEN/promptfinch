@@ -367,13 +367,30 @@ internal static class SelectionReader
             Stage("capture-element-metadata");
             AutomationElement.AutomationElementInformation info = element.Current;
             if (info.IsPassword) return Error("PASSWORD");
+            Stage(info.ControlType == ControlType.Edit ? "capture-role-edit"
+                : info.ControlType == ControlType.Document ? "capture-role-document"
+                : info.ControlType == ControlType.Pane ? "capture-role-pane" : "capture-role-other");
+            Stage(info.FrameworkId == "Chrome" ? "capture-framework-chrome"
+                : info.FrameworkId == "Win32" ? "capture-framework-win32" : "capture-framework-other");
             // A focused provider in another process is not a proven source.
             if (info.ProcessId != source.Pid) return Error("FOCUS_CHANGED");
             object raw;
             Stage("capture-text-pattern");
-            if (!element.TryGetCurrentPattern(TextPattern.Pattern, out raw)) return Error("UNSUPPORTED");
+            if (!element.TryGetCurrentPattern(TextPattern.Pattern, out raw))
+            {
+                Stage("capture-text-pattern-missing");
+                // Checking pattern availability is metadata only. Never read
+                // ValuePattern.Current.Value as a substitute for a selection.
+                object valuePattern;
+                Stage(element.TryGetCurrentPattern(ValuePattern.Pattern, out valuePattern)
+                    ? "capture-value-pattern-present" : "capture-value-pattern-absent");
+                return Error("UNSUPPORTED");
+            }
             TextPattern pattern = raw as TextPattern;
-            if (pattern == null || pattern.SupportedTextSelection == SupportedTextSelection.None) return Error("UNSUPPORTED");
+            if (pattern == null) { Stage("capture-text-pattern-invalid"); return Error("UNSUPPORTED"); }
+            Stage("capture-supported-selection");
+            if (pattern.SupportedTextSelection == SupportedTextSelection.None)
+            { Stage("capture-supported-selection-none"); return Error("UNSUPPORTED"); }
             Stage("capture-selection-range");
             TextPatternRange[] ranges = pattern.GetSelection();
             if (ranges == null || ranges.Length != 1) return Error("NO_SELECTION");

@@ -179,6 +179,8 @@ try {
 
     if ($ChromePath) {
         $ChromePath = (Resolve-Path $ChromePath).Path
+        $chromeVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($ChromePath).FileVersion
+        [Console]::Error.WriteLine("Synthetic Chromium fixture version: $chromeVersion; native UIA provider explicitly enabled.")
         [PromptFinchSelectionFixture]::Hide()
         $browserRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('promptfinch-uia-browser-' + [Guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $browserRoot | Out-Null
@@ -199,7 +201,10 @@ setTimeout(()=>{field.focus();field.select();document.title=selected()?'PromptFi
         $browserInfo.FileName = $ChromePath
         $fileUrl = ([Uri]$htmlPath).AbsoluteUri
         $profile = Join-Path $browserRoot 'profile'
-        $browserInfo.Arguments = "--app=`"$fileUrl`" --user-data-dir=`"$profile`" --window-position=100,100 --window-size=900,600 --force-renderer-accessibility --no-first-run --no-default-browser-check --disable-background-networking --disable-component-update --disable-sync"
+        # A new offline profile does not inherit a user's feature-trial seed.
+        # Exercise Chromium's documented native UIA provider deliberately; a
+        # legacy MSAA-to-UIA proxy may expose ValuePattern without TextPattern.
+        $browserInfo.Arguments = "--app=`"$fileUrl`" --user-data-dir=`"$profile`" --window-position=100,100 --window-size=900,600 --force-renderer-accessibility --enable-features=UiaProvider --no-first-run --no-default-browser-check --disable-background-networking --disable-component-update --disable-sync"
         $browserInfo.UseShellExecute = $false
         $browser = [System.Diagnostics.Process]::Start($browserInfo)
         $browserDeadline = [DateTime]::UtcNow.AddSeconds(12)
@@ -233,7 +238,7 @@ setTimeout(()=>{field.focus();field.select();document.title=selected()?'PromptFi
         if (-not $chrome.ok -or $chrome.text -cne [PromptFinchSelectionFixture]::Expected) {
             throw 'The Chromium virtual text selection was not preserved exactly.'
         }
-        Write-Output 'PASS: isolated headed Chrome virtual textarea selection through the right-click watcher (synthetic offline page only).'
+        Write-Output 'PASS: isolated headed Chrome native-UIA virtual textarea selection through the right-click watcher (synthetic offline page only; UiaProvider explicitly enabled).'
     }
     $dummyParent.Kill()
     Wait-ProcessWithMessages $dummyParent 2000 | Out-Null

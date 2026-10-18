@@ -15,7 +15,7 @@ Download only the package that matches your operating system and processor from 
 
 The external companion is separate from the source app's native context menu. It does not modify Codex, Claude Code, browsers, terminals, or their menu definitions. Right-clicking alone does not generate a prompt or send text to a model. Select the companion's conversion action to start a request. Closing or cancelling the companion does not submit the captured text.
 
-Windows compatibility depends on the source app exposing its selected range through UI Automation. Some custom editors, protected fields, elevated apps, remote desktops and terminal renderers do not expose that range. The assistant does not send synthetic Copy keystrokes or use old clipboard text as a substitute. Use the manual workspace if selection capture is unavailable.
+Windows compatibility depends on the source app exposing its selected range through UI Automation. Legacy Chromium accessibility modes can lack the required TextPattern; the isolated Chromium check explicitly enables its native UIA provider and does not certify every default Chrome/Electron configuration. Some custom editors, protected fields, elevated apps, remote desktops and terminal renderers do not expose that range. The assistant does not send synthetic Copy keystrokes or use old clipboard text as a substitute. Use the manual workspace if selection capture is unavailable.
 
 On X11, the PRIMARY selection is separate from the ordinary Copy/Paste clipboard. It can outlive visible highlighting in some applications, and a right-click is not proof that the pointer is inside the highlighted range. Read the source shown in the workspace before using the generated prompt. The assistant does not promise that every right-click corresponds to a fresh selection. Empty selections are ignored. A missing X11 RECORD extension disables the companion without preventing manual use.
 
@@ -38,9 +38,11 @@ chmod u+x PromptFinch-*-linux-x64.AppImage
 ./PromptFinch-*-linux-x64.AppImage
 ```
 
+The Linux packages are built and tested on Ubuntu 22.04 x86_64 and require a compatible glibc-based distribution. AppImage and tarball packages do not bundle every host library. Older distributions and musl-based systems such as Alpine have not been validated.
+
 Some distributions need the FUSE 2 compatibility library to mount AppImages. If mounting is unavailable, use the `tar.gz` package. Keep the extracted Chromium sandbox files with the app and run it as your normal user. The project does not ship `--no-sandbox` launch flags.
 
-X11 selection capture additionally needs the distribution's X11 and Xtst runtime libraries, an active X11 session, and the X server's RECORD extension. Ubuntu package names are `libx11-6` and `libxtst6`. The workspace remains available on Wayland; paste or import copied text there.
+X11 selection capture additionally needs the distribution's X11 and Xtst runtime libraries, an active X11 session, and the X server's RECORD extension. Ubuntu package names are `libx11-6` and `libxtst6`. If an observer stops or a provider times out, quit and reopen PromptFinch to restart observation. Manual input remains available. The workspace remains available on Wayland; paste or import copied text there.
 
 ## First use and model settings
 
