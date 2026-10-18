@@ -213,8 +213,10 @@ if (ownsLock) app.whenReady().then(async () => {
   await companion.loadURL(`${ORIGIN}/?window=companion`);
   mainWindow.show();
   if (!smoke) {
-    tray = new Tray(appIcon());
-    tray.setToolTip('PromptFinch'); tray.on('click', showWorkspace);
+    try {
+      tray = new Tray(appIcon());
+      tray.setToolTip('PromptFinch'); tray.on('click', showWorkspace);
+    } catch { tray = null; } // A desktop without a system tray still has a workspace.
     startWatcher();
     const registered = selectionSupport === 'clipboard-only' || globalShortcut.register('CommandOrControl+Alt+P', () => capture('selection').catch(error => { showWorkspace(); emit(mainWindow, 'error', safeError(error)); }));
     const imported = globalShortcut.register('CommandOrControl+Alt+Shift+P', () => capture('clipboard').catch(error => { showWorkspace(); emit(mainWindow, 'error', safeError(error)); }));
