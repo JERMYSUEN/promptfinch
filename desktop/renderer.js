@@ -127,7 +127,7 @@ function renderState() {
   $('config-name').textContent = state.configName ? t('configName', { name: state.configName }) : t('noConfig');
   $('selection-description').textContent = t(state.selectionSupport === 'windows-uia' ? 'selectionWindows' : state.selectionSupport === 'x11' ? 'selectionX11' : 'selectionClipboard');
   const watchKey = { running: 'watchRunning', unsupported: 'watchUnsupported', unavailable: 'watchUnavailable', disabled: 'watchDisabled' }[state.watchStatus] || 'watchUnavailable';
-  const shortcutKey = { registered: 'shortcutRegistered', unavailable: 'shortcutUnavailable', disabled: 'shortcutDisabled' }[state.shortcutStatus] || 'shortcutUnavailable';
+  const shortcutKey = { registered: 'shortcutRegistered', 'clipboard-only': 'shortcutClipboardOnly', unavailable: 'shortcutUnavailable', disabled: 'shortcutDisabled' }[state.shortcutStatus] || 'shortcutUnavailable';
   $('watch-status').textContent = t(watchKey);
   $('shortcut-status').textContent = t(shortcutKey);
   $('selection-preview').textContent = typeof state.selectionPreview === 'string' ? state.selectionPreview : '';

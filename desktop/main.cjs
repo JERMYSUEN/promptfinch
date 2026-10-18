@@ -216,9 +216,9 @@ if (ownsLock) app.whenReady().then(async () => {
     tray = new Tray(appIcon());
     tray.setToolTip('PromptFinch'); tray.on('click', showWorkspace);
     startWatcher();
-    const registered = globalShortcut.register('CommandOrControl+Alt+P', () => capture('selection').catch(error => { showWorkspace(); emit(mainWindow, 'error', safeError(error)); }));
+    const registered = selectionSupport === 'clipboard-only' || globalShortcut.register('CommandOrControl+Alt+P', () => capture('selection').catch(error => { showWorkspace(); emit(mainWindow, 'error', safeError(error)); }));
     const imported = globalShortcut.register('CommandOrControl+Alt+Shift+P', () => capture('clipboard').catch(error => { showWorkspace(); emit(mainWindow, 'error', safeError(error)); }));
-    shortcutStatus = registered && imported ? 'registered' : 'unavailable';
+    shortcutStatus = registered && imported ? (selectionSupport === 'clipboard-only' ? 'clipboard-only' : 'registered') : 'unavailable';
   }
   sendState();
   app.on('second-instance', showWorkspace);
