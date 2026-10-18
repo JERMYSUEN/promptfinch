@@ -32,6 +32,7 @@ internal static class SelectionReader
     private static Pending pending;
     private static FocusReference focusedReference;
     private static uint mainThread;
+    private static bool diagnostics;
 
     private sealed class Pending
     {
@@ -105,6 +106,7 @@ internal static class SelectionReader
         {
             if (args[index] == "--watch") watch = true;
             else if (args[index] == "--read") { }
+            else if (args[index] == "--diagnostics") diagnostics = true;
             else if (args[index] == "--verify-source" && index + 1 < args.Length) verification = args[++index];
             else if (args[index] == "--exclude-pid" && index + 1 < args.Length)
             {
@@ -127,6 +129,7 @@ internal static class SelectionReader
         }
         if (!watch)
         {
+            Stage("read-source");
             Result read = Capture(Source(GetForegroundWindow()));
             Write(read, null);
             return 0;
@@ -231,9 +234,12 @@ internal static class SelectionReader
             {
                 using (cache.Activate())
                 {
+                    Stage("focus-subscribe");
                     Automation.AddAutomationFocusChangedEventHandler(handler);
                     subscribed = true;
+                    Stage("focus-prime");
                     FocusChanged(AutomationElement.FocusedElement, null);
+                    Stage("focus-ready");
                 }
             }
             catch { lock (FocusLock) { focusedReference = null; } }
@@ -328,11 +334,16 @@ internal static class SelectionReader
     {
         try
         {
+            Stage("capture-source-check");
             if (!SameSource(source)) return Error("FOCUS_CHANGED");
+            Stage("capture-native-element");
             AutomationElement native = AutomationElement.FromHandle(source.Focus);
             if (native == null) return Error("NO_SELECTION");
+            Stage("capture-native-password");
             if (native.Current.IsPassword) return Error("PASSWORD");
+            Stage("capture-focused-element");
             AutomationElement focused = AutomationElement.FocusedElement;
+            Stage("capture-focus-metadata");
             bool focusedUsable = IsUsableFocus(focused, source);
             AutomationElement element = source.Element;
             if (element != null && focusedUsable && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
@@ -341,19 +352,24 @@ internal static class SelectionReader
             // context menu has taken UIA focus. Never enumerate a UIA subtree.
             if (element == null) element = focusedUsable ? focused : native;
             if (element == null) return Error("NO_SELECTION");
+            Stage("capture-element-metadata");
             AutomationElement.AutomationElementInformation info = element.Current;
             if (info.IsPassword) return Error("PASSWORD");
             // A focused provider in another process is not a proven source.
             if (info.ProcessId != source.Pid) return Error("FOCUS_CHANGED");
             object raw;
+            Stage("capture-text-pattern");
             if (!element.TryGetCurrentPattern(TextPattern.Pattern, out raw)) return Error("UNSUPPORTED");
             TextPattern pattern = raw as TextPattern;
             if (pattern == null || pattern.SupportedTextSelection == SupportedTextSelection.None) return Error("UNSUPPORTED");
+            Stage("capture-selection-range");
             TextPatternRange[] ranges = pattern.GetSelection();
             if (ranges == null || ranges.Length != 1) return Error("NO_SELECTION");
+            Stage("capture-selected-text");
             string text = ranges[0].GetText(Limit + 1);
             if (String.IsNullOrWhiteSpace(text) || text.IndexOf('\0') >= 0) return Error("NO_SELECTION");
             if (text.Length > Limit) return Error("TOO_LONG");
+            Stage("capture-recheck");
             if (!SameSource(source) || native.Current.IsPassword) return Error("FOCUS_CHANGED");
             focused = AutomationElement.FocusedElement;
             if (IsUsableFocus(focused, source) && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
@@ -361,6 +377,7 @@ internal static class SelectionReader
             TextPatternRange[] finalRanges = pattern.GetSelection();
             if (finalRanges == null || finalRanges.Length != 1
                 || !String.Equals(text, finalRanges[0].GetText(Limit + 1), StringComparison.Ordinal)) return Error("FOCUS_CHANGED");
+            Stage("capture-complete");
             return new Result { Text = text, Source = source.Pid.ToString() + ":" + source.Window.ToInt64().ToString() };
         }
         catch { return Error("HELPER_ERROR"); }
@@ -388,6 +405,11 @@ internal static class SelectionReader
     }
 
     private static Result Error(string code) { return new Result { Code = code }; }
+    // Test-only fixed stage names, never UI text, names, paths or provider data.
+    private static void Stage(string name)
+    {
+        if (diagnostics) { try { Console.Error.WriteLine("PromptFinch helper stage: " + name); Console.Error.Flush(); } catch { } }
+    }
     private static void Stop()
     {
         stopping = true; PendingReady.Set();

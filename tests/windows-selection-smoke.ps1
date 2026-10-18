@@ -75,7 +75,7 @@ public static class PromptFinchSelectionFixture {
 function Start-Helper([string]$Arguments) {
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $HelperPath
-    $info.Arguments = $Arguments
+    $info.Arguments = "$Arguments --diagnostics"
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true
     $info.RedirectStandardOutput = $true
@@ -84,18 +84,48 @@ function Start-Helper([string]$Arguments) {
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $info
     if (-not $process.Start()) { throw 'Could not start the synthetic helper check.' }
+    $process | Add-Member -NotePropertyName SmokeDiagnostics -NotePropertyValue ($process.StandardError.ReadToEndAsync())
     return $process
+}
+
+# The fixture host may itself be an STA COM provider. A blocking Wait() or
+# WaitForExit() on PowerShell's STA can prevent UIA from obtaining the control,
+# even though the visible WinForms UI has its own thread and message loop.
+function Wait-TaskWithMessages($Task, [int]$Milliseconds) {
+    $deadline = [DateTime]::UtcNow.AddMilliseconds($Milliseconds)
+    while (-not $Task.IsCompleted -and [DateTime]::UtcNow -lt $deadline) {
+        [System.Windows.Forms.Application]::DoEvents()
+        [System.Threading.Thread]::Sleep(10)
+    }
+    return $Task.IsCompleted
+}
+
+function Wait-ProcessWithMessages($Process, [int]$Milliseconds) {
+    $deadline = [DateTime]::UtcNow.AddMilliseconds($Milliseconds)
+    while (-not $Process.HasExited -and [DateTime]::UtcNow -lt $deadline) {
+        [System.Windows.Forms.Application]::DoEvents()
+        [System.Threading.Thread]::Sleep(10)
+    }
+    return $Process.HasExited
+}
+
+function Show-HelperDiagnostics($Process) {
+    if ($Process.SmokeDiagnostics -and (Wait-TaskWithMessages $Process.SmokeDiagnostics 1000)) {
+        $diagnostic = $Process.SmokeDiagnostics.Result
+        if ($diagnostic) { [Console]::Error.WriteLine($diagnostic.TrimEnd()) }
+    }
 }
 
 function Read-Once([string]$Arguments = '--read') {
     $process = Start-Helper $Arguments
     try {
         $read = $process.StandardOutput.ReadToEndAsync()
-        if (-not $process.WaitForExit(4000)) { throw 'The one-shot selection helper exceeded its time limit.' }
-        if (-not $read.Wait(1000)) { throw 'The selection helper output did not close.' }
+        if (-not (Wait-ProcessWithMessages $process 4000)) { throw 'The one-shot selection helper exceeded its time limit.' }
+        if (-not (Wait-TaskWithMessages $read 1000)) { throw 'The selection helper output did not close.' }
         return ($read.Result | ConvertFrom-Json)
     } finally {
-        if (-not $process.HasExited) { $process.Kill(); $process.WaitForExit(2000) | Out-Null }
+        if (-not $process.HasExited) { $process.Kill(); Wait-ProcessWithMessages $process 2000 | Out-Null }
+        Show-HelperDiagnostics $process
         $process.Dispose()
     }
 }
@@ -135,7 +165,7 @@ try {
     $eventLine = $watch.StandardOutput.ReadLineAsync()
     Start-Sleep -Milliseconds 600
     [PromptFinchSelectionFixture]::RightClickNormal()
-    if (-not $eventLine.Wait(5000)) { throw 'The global right-click watcher did not capture the synthetic selection.' }
+    if (-not (Wait-TaskWithMessages $eventLine 5000)) { throw 'The global right-click watcher did not capture the synthetic selection.' }
     $event = $eventLine.Result | ConvertFrom-Json
     if (-not $event.ok -or $event.text -cne [PromptFinchSelectionFixture]::Expected -or $event.sourceId -ne $normal.sourceId) {
         throw 'The right-click event did not preserve the captured synthetic source.'
@@ -178,7 +208,7 @@ try {
         Start-Sleep -Milliseconds 1500
         $chromeLine = $watch.StandardOutput.ReadLineAsync()
         [PromptFinchSelectionFixture]::RightClickWindow($browser.MainWindowHandle)
-        if (-not $chromeLine.Wait(5000)) { throw 'The watcher did not capture the Chromium virtual text selection.' }
+        if (-not (Wait-TaskWithMessages $chromeLine 5000)) { throw 'The watcher did not capture the Chromium virtual text selection.' }
         $chrome = $chromeLine.Result | ConvertFrom-Json
         if (-not $chrome.ok -or $chrome.text -cne [PromptFinchSelectionFixture]::Expected) {
             throw 'The Chromium virtual text selection was not preserved exactly.'
@@ -186,23 +216,24 @@ try {
         Write-Output 'PASS: isolated headed Chrome virtual textarea selection through the right-click watcher (synthetic offline page only).'
     }
     $dummyParent.Kill()
-    $dummyParent.WaitForExit(2000) | Out-Null
-    if (-not $watch.WaitForExit(3500)) { throw 'The watcher remained alive after its parent exited.' }
+    Wait-ProcessWithMessages $dummyParent 2000 | Out-Null
+    if (-not (Wait-ProcessWithMessages $watch 3500)) { throw 'The watcher remained alive after its parent exited.' }
     Write-Output 'PASS: native selected text, exact Unicode, password rejection, source check, global right-click with host menu, and parent-exit cleanup.'
 } finally {
     if ($browser) {
         if (-not $browser.HasExited) {
             $browser.CloseMainWindow() | Out-Null
-            if (-not $browser.WaitForExit(3000)) { $browser.Kill(); $browser.WaitForExit(2000) | Out-Null }
+            if (-not (Wait-ProcessWithMessages $browser 3000)) { $browser.Kill(); Wait-ProcessWithMessages $browser 2000 | Out-Null }
         }
         $browser.Dispose()
     }
     if ($watch) {
-        if (-not $watch.HasExited) { $watch.Kill(); $watch.WaitForExit(2000) | Out-Null }
+        if (-not $watch.HasExited) { $watch.Kill(); Wait-ProcessWithMessages $watch 2000 | Out-Null }
+        Show-HelperDiagnostics $watch
         $watch.Dispose()
     }
     if ($dummyParent) {
-        if (-not $dummyParent.HasExited) { $dummyParent.Kill(); $dummyParent.WaitForExit(2000) | Out-Null }
+        if (-not $dummyParent.HasExited) { $dummyParent.Kill(); Wait-ProcessWithMessages $dummyParent 2000 | Out-Null }
         $dummyParent.Dispose()
     }
     [PromptFinchSelectionFixture]::Stop()

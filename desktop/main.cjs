@@ -37,7 +37,13 @@ function state() { return { ...controller.snapshot(), platform: process.platform
 function companionState() { return { ...state(), selectionPreview: candidate?.text.slice(0, 70).replace(/\s+/g, ' ') || '' }; }
 function sendState() { const value = state(); emit(mainWindow, 'state', value); emit(companion, 'state', companionState()); updateTray(); return value; }
 function showWorkspace() { mainWindow.show(); mainWindow.focus(); }
-function dropCandidate() { clearTimeout(candidateTimer); candidate = null; if (companion && !companion.isDestroyed()) companion.hide(); }
+function dropCandidate() {
+  clearTimeout(candidateTimer); candidate = null;
+  if (companion && !companion.isDestroyed()) {
+    companion.hide();
+    if (controller) emit(companion, 'state', companionState());
+  }
+}
 function appIcon() {
   const pixels = Buffer.alloc(32 * 32 * 4);
   for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
