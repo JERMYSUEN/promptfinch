@@ -92,6 +92,9 @@ function renderBusy() {
     $(id).disabled = busy;
   }
   $('capture-selection').disabled = busy || state.selectionSupport === 'clipboard-only';
+  // Clicking this button would focus our own window before Windows UIA reads.
+  // External Windows selections use the companion or global shortcut instead.
+  $('capture-selection').hidden = state.selectionSupport === 'windows-uia';
   $('language-select').disabled = busy;
   $('generate-button').disabled = busy || !state.ready;
   $('generate-button').textContent = t(busy && !clearing ? 'working' : 'generate');

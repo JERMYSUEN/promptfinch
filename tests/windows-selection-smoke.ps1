@@ -131,6 +131,8 @@ try {
     if (-not ($event.x -is [int] -or $event.x -is [long]) -or -not ($event.y -is [int] -or $event.y -is [long]) -or $event.capturedAt -le 0) {
         throw 'The right-click event is missing bounded native coordinates and time.'
     }
+    $menuDeadline = [DateTime]::UtcNow.AddSeconds(1)
+    while (-not [PromptFinchSelectionFixture]::MenuOpened -and [DateTime]::UtcNow -lt $menuDeadline) { Start-Sleep -Milliseconds 20 }
     if (-not [PromptFinchSelectionFixture]::MenuOpened) { throw 'The watcher prevented the host context menu from opening.' }
     $dummyParent.Kill()
     $dummyParent.WaitForExit(2000) | Out-Null

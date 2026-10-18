@@ -37,7 +37,7 @@ function state() { return { ...controller.snapshot(), platform: process.platform
 function companionState() { return { ...state(), selectionPreview: candidate?.text.slice(0, 70).replace(/\s+/g, ' ') || '' }; }
 function sendState() { const value = state(); emit(mainWindow, 'state', value); emit(companion, 'state', companionState()); updateTray(); return value; }
 function showWorkspace() { mainWindow.show(); mainWindow.focus(); }
-function dropCandidate() { clearTimeout(candidateTimer); candidate = null; companion?.hide(); }
+function dropCandidate() { clearTimeout(candidateTimer); candidate = null; if (companion && !companion.isDestroyed()) companion.hide(); }
 function appIcon() {
   const pixels = Buffer.alloc(32 * 32 * 4);
   for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
@@ -216,7 +216,7 @@ if (ownsLock) app.whenReady().then(async () => {
 app.on('window-all-closed', () => app.quit());
 app.on('before-quit', event => {
   if (quitting) return;
-  event.preventDefault(); quitting = true; dropCandidate(); watcher?.stop(); globalShortcut.unregisterAll(); tray?.destroy();
+  event.preventDefault(); quitting = true; dropCandidate(); watcher?.stop(); globalShortcut.unregisterAll(); tray?.destroy(); tray = null;
   Promise.race([Promise.resolve(controller?.dispose()).catch(() => {}), new Promise(resolve => setTimeout(resolve, 1500))])
-    .finally(() => { result = null; mainWindow?.destroy(); companion?.destroy(); app.quit(); });
+    .finally(() => { result = null; for (const window of [mainWindow, companion]) if (window && !window.isDestroyed()) window.destroy(); app.quit(); });
 });
