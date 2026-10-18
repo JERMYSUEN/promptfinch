@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { copyFile, lstat, mkdir, readFile, readdir, readlink, rename, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const BACKEND_FILES = [
@@ -109,7 +109,8 @@ export async function currentBackendTarget(backendRoot) {
   try {
     const info = await lstat(current);
     if (!info.isSymbolicLink()) throw new Error('外部後端 current 不是受管理的符號連結，為保護現有資料不會覆蓋。');
-    const target = await readlink(current);
+    // Windows returns native separators even for a managed relative target.
+    const target = (await readlink(current)).split(sep).join('/');
     if (!/^releases\/[a-f0-9]{64}$/.test(target)) throw new Error('外部後端 current 指向非預期位置，未變更。');
     return target;
   } catch (error) {
