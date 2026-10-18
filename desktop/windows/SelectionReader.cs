@@ -257,6 +257,7 @@ internal static class SelectionReader
                 {
                     result = Capture(item);
                 }
+                Stage(result.Text == null ? "capture-result-" + result.Code : "capture-result-OK");
                 if (result.Text == null || item.Sequence != Interlocked.Read(ref sequence)
                     || Now() - item.At > MaxAge || stopping) continue;
                 Write(result, item);
@@ -289,16 +290,20 @@ internal static class SelectionReader
                     // reference matching this exact native source identity.
                     if (focusedReference != null && (focusedReference.Window != source.Window
                         || focusedReference.Pid != source.Pid || focusedReference.Focus != source.Focus)) focusedReference = null;
+                    Stage(focusedReference == null ? "focus-menu-no-reference" : "focus-menu-reference-preserved");
                     return;
                 }
                 focusedReference = null;
-                if (info.IsPassword || info.ProcessId != source.Pid || !info.HasKeyboardFocus
-                    || info.ControlType == ControlType.Window) return;
+                if (info.IsPassword) { Stage("focus-reference-rejected-password"); return; }
+                if (info.ProcessId != source.Pid) { Stage("focus-reference-rejected-process"); return; }
+                if (!info.HasKeyboardFocus) { Stage("focus-reference-rejected-not-focused"); return; }
+                if (info.ControlType == ControlType.Window) { Stage("focus-reference-rejected-window"); return; }
                 focusedReference = new FocusReference { Element = element, Window = source.Window,
                     Focus = source.Focus, Pid = source.Pid };
+                Stage("focus-reference-stored");
             }
         }
-        catch { lock (FocusLock) { focusedReference = null; } }
+        catch { lock (FocusLock) { focusedReference = null; } Stage("focus-reference-error"); }
     }
 
     private static Pending Source(IntPtr window)
@@ -341,16 +346,23 @@ internal static class SelectionReader
             if (native == null) return Error("NO_SELECTION");
             Stage("capture-native-password");
             if (native.Current.IsPassword) return Error("PASSWORD");
-            Stage("capture-focused-element");
-            AutomationElement focused = AutomationElement.FocusedElement;
-            Stage("capture-focus-metadata");
-            bool focusedUsable = IsUsableFocus(focused, source);
             AutomationElement element = source.Element;
-            if (element != null && focusedUsable && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
-            if (element != null && !focusedUsable && !IsSourceMenu(focused, source)) return Error("FOCUS_CHANGED");
+            bool cached = element != null;
+            AutomationElement focused = null;
+            if (cached) Stage("capture-cached-focus-reference");
+            else
+            {
+                Stage("capture-focused-element");
+                focused = AutomationElement.FocusedElement;
+                Stage("capture-focus-metadata");
+                element = IsUsableFocus(focused, source) ? focused : native;
+            }
             // Resolve only the captured native focus control when the native
-            // context menu has taken UIA focus. Never enumerate a UIA subtree.
-            if (element == null) element = focusedUsable ? focused : native;
+            // context menu has taken UIA focus. A proven pre-click virtual
+            // reference must not depend on the menu's live UIA focus metadata:
+            // Chromium can move that focus to a different native menu window.
+            // We still require the original foreground/native focus identity,
+            // source-element PID/password guards, and an unchanged selection.
             if (element == null) return Error("NO_SELECTION");
             Stage("capture-element-metadata");
             AutomationElement.AutomationElementInformation info = element.Current;
@@ -370,10 +382,13 @@ internal static class SelectionReader
             if (String.IsNullOrWhiteSpace(text) || text.IndexOf('\0') >= 0) return Error("NO_SELECTION");
             if (text.Length > Limit) return Error("TOO_LONG");
             Stage("capture-recheck");
-            if (!SameSource(source) || native.Current.IsPassword) return Error("FOCUS_CHANGED");
-            focused = AutomationElement.FocusedElement;
-            if (IsUsableFocus(focused, source) && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
-            if (source.Element != null && !IsUsableFocus(focused, source) && !IsSourceMenu(focused, source)) return Error("FOCUS_CHANGED");
+            if (!SameSource(source) || native.Current.IsPassword || element.Current.IsPassword
+                || element.Current.ProcessId != source.Pid) return Error("FOCUS_CHANGED");
+            if (!cached)
+            {
+                focused = AutomationElement.FocusedElement;
+                if (IsUsableFocus(focused, source) && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
+            }
             TextPatternRange[] finalRanges = pattern.GetSelection();
             if (finalRanges == null || finalRanges.Length != 1
                 || !String.Equals(text, finalRanges[0].GetText(Limit + 1), StringComparison.Ordinal)) return Error("FOCUS_CHANGED");

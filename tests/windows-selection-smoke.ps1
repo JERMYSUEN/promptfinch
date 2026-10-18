@@ -189,7 +189,10 @@ try {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
 <style>body{margin:0}textarea{position:fixed;left:20px;top:20px;width:800px;height:400px;padding:12px;font:20px/1.5 sans-serif}</style>
 <textarea id="prompt" aria-label="Synthetic prompt fixture" autofocus></textarea>
-<script>const field=document.getElementById('prompt');field.value=$expectedJson;setTimeout(()=>{field.focus();field.select()},300)</script>
+<script>const field=document.getElementById('prompt');field.value=$expectedJson;
+const selected=()=>document.activeElement===field&&field.selectionStart===0&&field.selectionEnd===field.value.length;
+field.addEventListener('contextmenu',()=>{document.title=selected()?'PromptFinch virtual menu with selection':'PromptFinch virtual menu without selection'});
+setTimeout(()=>{field.focus();field.select();document.title=selected()?'PromptFinch virtual selection ready':'PromptFinch virtual selection missing'},300)</script>
 "@
         [System.IO.File]::WriteAllText($htmlPath, $html, (New-Object System.Text.UTF8Encoding($false)))
         $browserInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -205,10 +208,27 @@ try {
             $browser.Refresh()
         }
         if ($browser.HasExited -or $browser.MainWindowHandle -eq [IntPtr]::Zero) { throw 'The isolated synthetic Chrome fixture did not open a native window.' }
-        Start-Sleep -Milliseconds 1500
+        $selectionDeadline = [DateTime]::UtcNow.AddSeconds(5)
+        while ($browser.MainWindowTitle -notlike '*PromptFinch virtual selection ready*' -and [DateTime]::UtcNow -lt $selectionDeadline) {
+            [System.Windows.Forms.Application]::DoEvents()
+            [System.Threading.Thread]::Sleep(20)
+            $browser.Refresh()
+        }
+        if ($browser.MainWindowTitle -notlike '*PromptFinch virtual selection ready*') { throw 'The isolated Chromium textarea did not confirm its complete synthetic selection.' }
+        # Give the subscribed UIA focus event time to deliver its metadata-only
+        # reference before the context menu takes focus. No content polling.
+        Start-Sleep -Milliseconds 300
         $chromeLine = $watch.StandardOutput.ReadLineAsync()
         [PromptFinchSelectionFixture]::RightClickWindow($browser.MainWindowHandle)
-        if (-not (Wait-TaskWithMessages $chromeLine 5000)) { throw 'The watcher did not capture the Chromium virtual text selection.' }
+        $capturedChrome = Wait-TaskWithMessages $chromeLine 5000
+        $chromeMenuDeadline = [DateTime]::UtcNow.AddSeconds(1)
+        do {
+            [System.Windows.Forms.Application]::DoEvents()
+            [System.Threading.Thread]::Sleep(20)
+            $browser.Refresh()
+        } while ($browser.MainWindowTitle -notlike '*PromptFinch virtual menu with selection*' -and [DateTime]::UtcNow -lt $chromeMenuDeadline)
+        if ($browser.MainWindowTitle -notlike '*PromptFinch virtual menu with selection*') { throw 'The synthetic browser right-click did not preserve the selected textarea content.' }
+        if (-not $capturedChrome) { throw 'The watcher did not capture the Chromium virtual text selection.' }
         $chrome = $chromeLine.Result | ConvertFrom-Json
         if (-not $chrome.ok -or $chrome.text -cne [PromptFinchSelectionFixture]::Expected) {
             throw 'The Chromium virtual text selection was not preserved exactly.'

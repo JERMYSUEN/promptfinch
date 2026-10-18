@@ -36,7 +36,7 @@ function errorText(error) {
   if (code === 'INPUT_TOO_LONG') return t('lengthError');
   if (/CLIPBOARD/.test(code)) return t('errorClipboard');
   if (/SELECT|CAPTURE|STALE|UNSUPPORTED/.test(code)) return t('errorSelection');
-  if (/CONFIG|SETTINGS/.test(code)) return t('errorConfig');
+  if (/CONFIG|SETTINGS|TEMPLATE/.test(code)) return t('errorConfig');
   if (/NO_RESULT/.test(code)) return t('errorNoResult');
   if (/MODEL|PROVIDER|UPSTREAM|NETWORK|AUTH|RATE_LIMIT/.test(code)) return t('errorModel');
   if (/TRANSPORT|IPC|CONNECTION|CLOSED|ACCESS_DENIED/.test(code)) return t('connectionError');

@@ -67,9 +67,6 @@ jobs:
       - run: npm test
       - name: Compile selection helper
         run: node scripts/build-desktop-helpers.cjs
-      - name: Check Windows UI Automation with synthetic selected text
-        if: runner.os == 'Windows'
-        run: powershell -NoProfile -File tests/windows-selection-smoke.ps1 -HelperPath desktop/bin/win32/SelectionReader.exe -ChromePath "C:\Program Files\Google\Chrome\Application\chrome.exe"
       - name: Check X11 right-click events and Wayland refusal
         if: runner.os == 'Linux'
         shell: bash
@@ -133,6 +130,9 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           xvfb-run --auto-servernum node scripts/desktop-smoke.cjs --packaged "desktop-dist/$version/${{ matrix.executable }}"
+      - name: Check Windows UI Automation with synthetic selected text
+        if: runner.os == 'Windows'
+        run: powershell -NoProfile -File tests/windows-selection-smoke.ps1 -HelperPath desktop/bin/win32/SelectionReader.exe -ChromePath "C:\Program Files\Google\Chrome\Application\chrome.exe"
       - name: Record public artifact hashes and build provenance
         shell: bash
         env:

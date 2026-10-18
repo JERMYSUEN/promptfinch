@@ -82,10 +82,12 @@ async function generate(input) {
 async function capture(source) {
   dropCandidate();
   let text;
-  if (source === 'clipboard') text = await clipboard.readText();
+  if (source === 'clipboard') {
+    try { text = await clipboard.readText(); } catch { fail('CLIPBOARD'); }
+  }
   else {
     const captured = await captureSelection({ platform: process.platform, clipboard, helperPath });
-    if (!captured.ok) fail(captured.code || 'SELECTION_UNAVAILABLE');
+    if (!captured.ok) fail('SELECTION_UNAVAILABLE');
     text = captured.text;
   }
   if (typeof text !== 'string' || !text.trim()) fail('EMPTY_SELECTION');
@@ -140,7 +142,11 @@ function registerIPC() {
     useDemo: async () => { await controller.useDemo(); result = null; return sendState(); },
     generate: input => generate(input), cancel: async () => { await controller.cancel(); return sendState(); },
     clear: async () => { dropCandidate(); result = null; await controller.cancel(); return sendState(); },
-    copyResult: async () => { if (!result?.prompt) fail('NO_RESULT'); await clipboard.writeText(result.prompt); return { copied: true }; },
+    copyResult: async () => {
+      if (!result?.prompt) fail('NO_RESULT');
+      try { await clipboard.writeText(result.prompt); } catch { fail('CLIPBOARD'); }
+      return { copied: true };
+    },
     importClipboard: () => capture('clipboard'), captureSelection: () => capture('selection'),
     hideCompanion: () => { dropCandidate(); return true; },
     runCompanion: async () => {
