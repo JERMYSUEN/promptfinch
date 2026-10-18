@@ -40,7 +40,7 @@ const files = [
   'docs/terminal.md',
   'docs/multilingual-parity-verification.md', 'docs/multilingual-parity-results.json',
   'docs/optimization-value-verification.md', 'docs/optimization-value-results.json',
-  'docs/README.md', 'docs/api.md', 'docs/troubleshooting.md', 'docs/documentation-audit.md', 'docs/improvement-verification.md', 'docs/improvement-live-results.json', 'docs/releases/v1.0.0.md', 'docs/releases/v1.1.0.md',
+  'docs/README.md', 'docs/api.md', 'docs/troubleshooting.md', 'docs/documentation-audit.md', 'docs/improvement-verification.md', 'docs/improvement-live-results.json', 'docs/releases/v1.0.0.md', 'docs/releases/v1.1.0.md', 'docs/releases/v1.2.0.md',
   ...readmeLocales.map((locale) => `docs/readme/README.${locale}.md`),
 ];
 // Audit before copying, not after a private file could enter a release.

@@ -2,7 +2,7 @@
 
 Start with the [English README](../README.md), or the complete [Simplified Chinese](readme/README.zh-CN.md) / [Traditional Chinese](readme/README.zh-TW.md) reference. The other 26 localized README editions translate the introduction and link to the English technical reference. Documentation languages are separate from the four native interface languages and from model language-quality coverage.
 
-The guides describe current `main`. The [v1.1.0 release notes](releases/v1.1.0.md) describe the new downloadable snapshot and its upgrade steps. The original [v1.0.0 release](releases/v1.0.0.md) and dated verification records retain their own scope; changing documentation does not rebuild an older download or rerun those tests.
+The guides describe current `main`. The [v1.2.0 release notes](releases/v1.2.0.md) describe the Windows/Linux desktop previews and current downloads. The [v1.1.0 notes](releases/v1.1.0.md) retain the preceding native-app snapshot and upgrade steps. The original [v1.0.0 release](releases/v1.0.0.md) and dated verification records retain their own scope; changing documentation does not rebuild an older download or rerun those tests.
 
 ## Using PromptFinch
 
@@ -15,7 +15,7 @@ The guides describe current `main`. The [v1.1.0 release notes](releases/v1.1.0.m
 | Diagnose configuration, model, selection and copy errors | [Troubleshooting](troubleshooting.md) | English |
 | Integrate the local service | [HTTP API reference](api.md) | English |
 | Understand data handling and report a security issue | [Security policy](../SECURITY.md) | English |
-| Download, upgrade or identify a release snapshot | [v1.1.0 notes](releases/v1.1.0.md), [changelog](../CHANGELOG.md), [original release](releases/v1.0.0.md) | English |
+| Download, upgrade or identify a release snapshot | [v1.2.0 notes](releases/v1.2.0.md), [changelog](../CHANGELOG.md), [original release](releases/v1.0.0.md) | English |
 
 PromptFinch uses your configured model API; it does not bundle a model or reuse a Codex/Claude login. Mock checks the local workflow without translating or optimizing. Selection support depends on the source app; recognized terminals receive copy-only results. Read the workflow's limits before relying on paste-back.
 

@@ -63,6 +63,8 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
+[v1.2.0 桌面預覽版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0) 提供內含執行環境的 Windows x64 與 Linux x64 安裝包；支援範圍、設定及驗證說明見[發行指引（英文）](../releases/v1.2.0.md)。
+
 [v1.1.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) 提供 `PromptFinch-1.1.0-macos-arm64.zip`、`PromptFinch-source-v1.1.0.zip` 及 `SHA256SUMS`。App 下載適用於 Apple Silicon，採 ad-hoc 簽章、未經公證；需另外安裝 Node.js 22+。解壓縮後將 App 移至應用程式資料夾。設定及驗證範圍見[發行說明](../releases/v1.1.0.md)，也可從此原始碼工作目錄自行建置。[變更紀錄](../../CHANGELOG.md)區分先前快照；目前沒有自動更新或 Intel／Universal Binary 下載。
 
 ### 瀏覽器示範（不需 API 金鑰）

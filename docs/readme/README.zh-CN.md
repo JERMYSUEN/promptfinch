@@ -63,6 +63,8 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
+[v1.2.0 桌面预览版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0) 提供内含运行时的 Windows x64 与 Linux x64 安装包；支持范围、配置及验证说明见[发行指南（英文）](../releases/v1.2.0.md)。
+
 [v1.1.0 发行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) 提供 `PromptFinch-1.1.0-macos-arm64.zip`、`PromptFinch-source-v1.1.0.zip` 及 `SHA256SUMS`。App 下载适用于 Apple Silicon，采用 ad-hoc 签名、未经过公证；需另外安装 Node.js 22+。解压后将 App 移至应用程序文件夹。设置及验证范围见[发行说明](../releases/v1.1.0.md)，也可从此源码工作目录自行构建。[变更记录](../../CHANGELOG.md)区分之前的快照；目前没有自动更新或 Intel／Universal Binary 下载。
 
 ### 浏览器演示（不需 API 密钥）

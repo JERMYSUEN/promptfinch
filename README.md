@@ -66,7 +66,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-The [v1.1.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) provides `PromptFinch-1.1.0-macos-arm64.zip`, `PromptFinch-source-v1.1.0.zip` and `SHA256SUMS`. The app download is for Apple Silicon, uses ad-hoc signing and is not notarized; install Node.js 22+ separately. Extract the ZIP and move the app to your Applications folder. See the [release notes](docs/releases/v1.1.0.md) for setup and verification scope, or build this source checkout. The [changelog](CHANGELOG.md) distinguishes earlier snapshots. There is no automatic updater or Intel/Universal binary download.
+The [v1.2.0 desktop previews](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0) provide Windows x64 and Linux x64 packages with their runtime included. See the [release guide](docs/releases/v1.2.0.md) for platform limits, configuration and verification. The preceding [v1.1.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) provides `PromptFinch-1.1.0-macos-arm64.zip`, `PromptFinch-source-v1.1.0.zip` and `SHA256SUMS`. The app download is for Apple Silicon, uses ad-hoc signing and is not notarized; install Node.js 22+ separately. Extract the ZIP and move the app to your Applications folder. See the [release notes](docs/releases/v1.1.0.md) for setup and verification scope, or build this source checkout. The [changelog](CHANGELOG.md) distinguishes earlier snapshots. There is no automatic updater or Intel/Universal binary download.
 
 #### Browser demo, no API key
 
