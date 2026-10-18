@@ -59,7 +59,7 @@ Run the following commands from the project root. The examples use a POSIX shell
 
 ### Quick start
 
-Get the source, then choose either the browser demo or the macOS app:
+Get the source for the browser demo or to build a desktop edition. For ready-to-run desktop packages, use the release downloads below:
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
