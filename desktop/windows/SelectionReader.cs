@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Automation;
+using System.Windows.Automation.Text;
 
 internal static class SelectionReader
 {
@@ -20,6 +21,7 @@ internal static class SelectionReader
     private const long MaxAge = 1500;
     private static readonly object OutputLock = new object();
     private static readonly object PendingLock = new object();
+    private static readonly object FocusLock = new object();
     private static readonly AutoResetEvent PendingReady = new AutoResetEvent(false);
     private static readonly HookCallback Hook = MouseHook;
     private static IntPtr hookHandle;
@@ -28,6 +30,7 @@ internal static class SelectionReader
     private static long sequence;
     private static volatile bool stopping;
     private static Pending pending;
+    private static FocusReference focusedReference;
     private static uint mainThread;
 
     private sealed class Pending
@@ -36,6 +39,13 @@ internal static class SelectionReader
         internal IntPtr Window, Focus;
         internal uint Pid, Thread;
         internal long At, Sequence;
+        internal AutomationElement Element;
+    }
+    private sealed class FocusReference
+    {
+        internal AutomationElement Element;
+        internal IntPtr Window, Focus;
+        internal uint Pid;
     }
     private sealed class Result
     {
@@ -179,6 +189,14 @@ internal static class SelectionReader
                 MouseData mouse = (MouseData)Marshal.PtrToStructure(data, typeof(MouseData));
                 Pending item = Source(GetForegroundWindow());
                 if (item == null) return CallNextHookEx(hookHandle, code, message, data);
+                // Copy only an already obtained reference. No UIA call or text
+                // access is permitted from this low-level mouse callback.
+                lock (FocusLock)
+                {
+                    if (focusedReference != null && focusedReference.Window == item.Window
+                        && focusedReference.Pid == item.Pid && focusedReference.Focus == item.Focus)
+                        item.Element = focusedReference.Element;
+                }
                 long current = Interlocked.Increment(ref sequence);
                 item.X = mouse.Point.X; item.Y = mouse.Point.Y; item.At = Now(); item.Sequence = current;
                 lock (PendingLock)
@@ -194,24 +212,87 @@ internal static class SelectionReader
 
     private static void Worker()
     {
-        while (!stopping)
+        AutomationFocusChangedEventHandler handler = FocusChanged;
+        bool subscribed = false;
+        try
         {
-            PendingReady.WaitOne();
-            if (stopping) break;
-            Pending item;
-            lock (PendingLock) { item = pending; pending = null; }
-            if (item == null) continue;
-            if (item.Sequence != Interlocked.Read(ref sequence) || Now() - item.At > MaxAge) continue;
-            Result result;
-            // A stuck external UIA provider must not leave a permanent hook.
-            using (Timer deadline = new Timer(delegate(object state) { Stop(); }, null, 2200, Timeout.Infinite))
+            // Focus events provide virtual controls that have no native HWND.
+            // Cache metadata and a full reference only; text is read solely in
+            // response to the user's explicit right-click action below.
+            CacheRequest cache = new CacheRequest();
+            cache.TreeScope = TreeScope.Element;
+            cache.AutomationElementMode = AutomationElementMode.Full;
+            cache.Add(AutomationElement.ProcessIdProperty);
+            cache.Add(AutomationElement.ControlTypeProperty);
+            cache.Add(AutomationElement.IsPasswordProperty);
+            cache.Add(AutomationElement.HasKeyboardFocusProperty);
+            cache.Add(AutomationElement.NativeWindowHandleProperty);
+            try
             {
-                result = Capture(item);
+                using (cache.Activate())
+                {
+                    Automation.AddAutomationFocusChangedEventHandler(handler);
+                    subscribed = true;
+                    FocusChanged(AutomationElement.FocusedElement, null);
+                }
             }
-            if (result.Text == null || item.Sequence != Interlocked.Read(ref sequence)
-                || Now() - item.At > MaxAge || stopping) continue;
-            Write(result, item);
+            catch { lock (FocusLock) { focusedReference = null; } }
+            while (!stopping)
+            {
+                PendingReady.WaitOne();
+                if (stopping) break;
+                Pending item;
+                lock (PendingLock) { item = pending; pending = null; }
+                if (item == null) continue;
+                if (item.Sequence != Interlocked.Read(ref sequence) || Now() - item.At > MaxAge) continue;
+                Result result;
+                // A stuck external UIA provider must not leave a permanent hook.
+                using (Timer deadline = new Timer(delegate(object state) { Stop(); }, null, 2200, Timeout.Infinite))
+                {
+                    result = Capture(item);
+                }
+                if (result.Text == null || item.Sequence != Interlocked.Read(ref sequence)
+                    || Now() - item.At > MaxAge || stopping) continue;
+                Write(result, item);
+            }
         }
+        finally
+        {
+            lock (FocusLock) { focusedReference = null; }
+            // Add and remove on the same long-lived MTA thread. Hook cleanup
+            // does not wait on an unresponsive external automation provider.
+            if (subscribed) { try { Automation.RemoveAutomationFocusChangedEventHandler(handler); } catch { } }
+        }
+    }
+
+    private static void FocusChanged(object sender, AutomationFocusChangedEventArgs args)
+    {
+        try
+        {
+            if (stopping) return;
+            AutomationElement element = sender as AutomationElement;
+            Pending source = Source(GetForegroundWindow());
+            if (element == null || source == null) { lock (FocusLock) { focusedReference = null; } return; }
+            AutomationElement.AutomationElementInformation info = element.Cached;
+            bool menu = info.ControlType == ControlType.Menu || info.ControlType == ControlType.MenuItem;
+            lock (FocusLock)
+            {
+                if (menu)
+                {
+                    // A menu may temporarily own UIA focus. Preserve only the
+                    // reference matching this exact native source identity.
+                    if (focusedReference != null && (focusedReference.Window != source.Window
+                        || focusedReference.Pid != source.Pid || focusedReference.Focus != source.Focus)) focusedReference = null;
+                    return;
+                }
+                focusedReference = null;
+                if (info.IsPassword || info.ProcessId != source.Pid || !info.HasKeyboardFocus
+                    || info.ControlType == ControlType.Window) return;
+                focusedReference = new FocusReference { Element = element, Window = source.Window,
+                    Focus = source.Focus, Pid = source.Pid };
+            }
+        }
+        catch { lock (FocusLock) { focusedReference = null; } }
     }
 
     private static Pending Source(IntPtr window)
@@ -251,16 +332,14 @@ internal static class SelectionReader
             AutomationElement native = AutomationElement.FromHandle(source.Focus);
             if (native == null) return Error("NO_SELECTION");
             if (native.Current.IsPassword) return Error("PASSWORD");
-            AutomationElement element = AutomationElement.FocusedElement;
+            AutomationElement focused = AutomationElement.FocusedElement;
+            bool focusedUsable = IsUsableFocus(focused, source);
+            AutomationElement element = source.Element;
+            if (element != null && focusedUsable && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
+            if (element != null && !focusedUsable && !IsSourceMenu(focused, source)) return Error("FOCUS_CHANGED");
             // Resolve only the captured native focus control when the native
             // context menu has taken UIA focus. Never enumerate a UIA subtree.
-            if (element == null || element.Current.ProcessId != source.Pid
-                || element.Current.ControlType == ControlType.Menu
-                || element.Current.ControlType == ControlType.MenuItem
-                || element.Current.ControlType == ControlType.Window
-                || !element.Current.HasKeyboardFocus
-                || element.Current.NativeWindowHandle != 0 && element.Current.NativeWindowHandle != source.Focus.ToInt64())
-                element = native;
+            if (element == null) element = focusedUsable ? focused : native;
             if (element == null) return Error("NO_SELECTION");
             AutomationElement.AutomationElementInformation info = element.Current;
             if (info.IsPassword) return Error("PASSWORD");
@@ -276,12 +355,36 @@ internal static class SelectionReader
             if (String.IsNullOrWhiteSpace(text) || text.IndexOf('\0') >= 0) return Error("NO_SELECTION");
             if (text.Length > Limit) return Error("TOO_LONG");
             if (!SameSource(source) || native.Current.IsPassword) return Error("FOCUS_CHANGED");
+            focused = AutomationElement.FocusedElement;
+            if (IsUsableFocus(focused, source) && !Automation.Compare(element, focused)) return Error("FOCUS_CHANGED");
+            if (source.Element != null && !IsUsableFocus(focused, source) && !IsSourceMenu(focused, source)) return Error("FOCUS_CHANGED");
             TextPatternRange[] finalRanges = pattern.GetSelection();
             if (finalRanges == null || finalRanges.Length != 1
                 || !String.Equals(text, finalRanges[0].GetText(Limit + 1), StringComparison.Ordinal)) return Error("FOCUS_CHANGED");
             return new Result { Text = text, Source = source.Pid.ToString() + ":" + source.Window.ToInt64().ToString() };
         }
         catch { return Error("HELPER_ERROR"); }
+    }
+
+    private static bool IsUsableFocus(AutomationElement element, Pending source)
+    {
+        if (element == null) return false;
+        AutomationElement.AutomationElementInformation info = element.Current;
+        return info.ProcessId == source.Pid && info.ControlType != ControlType.Menu
+            && info.ControlType != ControlType.MenuItem && info.ControlType != ControlType.Window
+            && info.HasKeyboardFocus && (info.NativeWindowHandle == 0 || info.NativeWindowHandle == source.Focus.ToInt64());
+    }
+
+    private static bool IsSourceMenu(AutomationElement element, Pending source)
+    {
+        if (element != null)
+        {
+            AutomationElement.AutomationElementInformation info = element.Current;
+            if (info.ProcessId == source.Pid && (info.ControlType == ControlType.Menu || info.ControlType == ControlType.MenuItem)) return true;
+        }
+        GuiInfo gui = new GuiInfo(); gui.Size = (uint)Marshal.SizeOf(typeof(GuiInfo));
+        return GetGUIThreadInfo(source.Thread, ref gui) && (gui.Flags & 0x14) != 0
+            && gui.MenuOwner != IntPtr.Zero && GetAncestor(gui.MenuOwner, 2) == source.Window;
     }
 
     private static Result Error(string code) { return new Result { Code = code }; }

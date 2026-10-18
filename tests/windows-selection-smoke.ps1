@@ -1,4 +1,4 @@
-param([Parameter(Mandatory = $true)][string]$HelperPath)
+param([Parameter(Mandatory = $true)][string]$HelperPath, [string]$ChromePath = '')
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT') { throw 'This synthetic UI Automation smoke check requires Windows.' }
 $HelperPath = (Resolve-Path $HelperPath).Path
@@ -21,6 +21,8 @@ public static class PromptFinchSelectionFixture {
     public const string Expected = "Synthetic ACME-42 request. Preserve Cafe\u0301 and answer in Japanese.";
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr window);
     [DllImport("user32.dll")] private static extern bool SetCursorPos(int x, int y);
+    [StructLayout(LayoutKind.Sequential)] private struct Rect { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr window, out Rect rect);
     [DllImport("user32.dll")] private static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extra);
     public static void Start() {
         thread = new Thread(delegate() {
@@ -54,6 +56,14 @@ public static class PromptFinchSelectionFixture {
             Point point = normal.PointToScreen(new Point(14, 14)); SetCursorPos(point.X, point.Y);
             mouse_event(0x0008, 0, 0, 0, UIntPtr.Zero); mouse_event(0x0010, 0, 0, 0, UIntPtr.Zero);
         });
+    }
+    public static void Hide() { OnUI(delegate { normal.ContextMenuStrip.Close(); form.Hide(); }); }
+    public static void RightClickWindow(IntPtr window) {
+        SetForegroundWindow(window);
+        Rect rect;
+        if (!GetWindowRect(window, out rect)) throw new Exception("The synthetic browser window is unavailable.");
+        SetCursorPos(rect.Left + 60, rect.Top + 80);
+        mouse_event(0x0008, 0, 0, 0, UIntPtr.Zero); mouse_event(0x0010, 0, 0, 0, UIntPtr.Zero);
     }
     public static void Stop() {
         if (form != null && !form.IsDisposed) OnUI(delegate { form.Close(); });
@@ -92,6 +102,8 @@ function Read-Once([string]$Arguments = '--read') {
 
 $watch = $null
 $dummyParent = $null
+$browser = $null
+$browserRoot = $null
 try {
     [PromptFinchSelectionFixture]::Start()
     [PromptFinchSelectionFixture]::SelectNormal()
@@ -134,11 +146,57 @@ try {
     $menuDeadline = [DateTime]::UtcNow.AddSeconds(1)
     while (-not [PromptFinchSelectionFixture]::MenuOpened -and [DateTime]::UtcNow -lt $menuDeadline) { Start-Sleep -Milliseconds 20 }
     if (-not [PromptFinchSelectionFixture]::MenuOpened) { throw 'The watcher prevented the host context menu from opening.' }
+
+    if ($ChromePath) {
+        $ChromePath = (Resolve-Path $ChromePath).Path
+        [PromptFinchSelectionFixture]::Hide()
+        $browserRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('promptfinch-uia-browser-' + [Guid]::NewGuid().ToString('N'))
+        New-Item -ItemType Directory -Path $browserRoot | Out-Null
+        $htmlPath = Join-Path $browserRoot 'selection.html'
+        $expectedJson = [PromptFinchSelectionFixture]::Expected | ConvertTo-Json -Compress
+        $html = @"
+<!doctype html><meta charset="utf-8"><title>PromptFinch synthetic virtual selection</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>body{margin:0}textarea{position:fixed;left:20px;top:20px;width:800px;height:400px;padding:12px;font:20px/1.5 sans-serif}</style>
+<textarea id="prompt" aria-label="Synthetic prompt fixture" autofocus></textarea>
+<script>const field=document.getElementById('prompt');field.value=$expectedJson;setTimeout(()=>{field.focus();field.select()},300)</script>
+"@
+        [System.IO.File]::WriteAllText($htmlPath, $html, (New-Object System.Text.UTF8Encoding($false)))
+        $browserInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $browserInfo.FileName = $ChromePath
+        $fileUrl = ([Uri]$htmlPath).AbsoluteUri
+        $profile = Join-Path $browserRoot 'profile'
+        $browserInfo.Arguments = "--app=`"$fileUrl`" --user-data-dir=`"$profile`" --window-position=100,100 --window-size=900,600 --force-renderer-accessibility --no-first-run --no-default-browser-check --disable-background-networking --disable-component-update --disable-sync"
+        $browserInfo.UseShellExecute = $false
+        $browser = [System.Diagnostics.Process]::Start($browserInfo)
+        $browserDeadline = [DateTime]::UtcNow.AddSeconds(12)
+        while (-not $browser.HasExited -and $browser.MainWindowHandle -eq [IntPtr]::Zero -and [DateTime]::UtcNow -lt $browserDeadline) {
+            Start-Sleep -Milliseconds 100
+            $browser.Refresh()
+        }
+        if ($browser.HasExited -or $browser.MainWindowHandle -eq [IntPtr]::Zero) { throw 'The isolated synthetic Chrome fixture did not open a native window.' }
+        Start-Sleep -Milliseconds 1500
+        $chromeLine = $watch.StandardOutput.ReadLineAsync()
+        [PromptFinchSelectionFixture]::RightClickWindow($browser.MainWindowHandle)
+        if (-not $chromeLine.Wait(5000)) { throw 'The watcher did not capture the Chromium virtual text selection.' }
+        $chrome = $chromeLine.Result | ConvertFrom-Json
+        if (-not $chrome.ok -or $chrome.text -cne [PromptFinchSelectionFixture]::Expected) {
+            throw 'The Chromium virtual text selection was not preserved exactly.'
+        }
+        Write-Output 'PASS: isolated headed Chrome virtual textarea selection through the right-click watcher (synthetic offline page only).'
+    }
     $dummyParent.Kill()
     $dummyParent.WaitForExit(2000) | Out-Null
     if (-not $watch.WaitForExit(3500)) { throw 'The watcher remained alive after its parent exited.' }
     Write-Output 'PASS: native selected text, exact Unicode, password rejection, source check, global right-click with host menu, and parent-exit cleanup.'
 } finally {
+    if ($browser) {
+        if (-not $browser.HasExited) {
+            $browser.CloseMainWindow() | Out-Null
+            if (-not $browser.WaitForExit(3000)) { $browser.Kill(); $browser.WaitForExit(2000) | Out-Null }
+        }
+        $browser.Dispose()
+    }
     if ($watch) {
         if (-not $watch.HasExited) { $watch.Kill(); $watch.WaitForExit(2000) | Out-Null }
         $watch.Dispose()
@@ -148,4 +206,5 @@ try {
         $dummyParent.Dispose()
     }
     [PromptFinchSelectionFixture]::Stop()
+    if ($browserRoot -and (Test-Path $browserRoot)) { Remove-Item -LiteralPath $browserRoot -Recurse -Force -ErrorAction SilentlyContinue }
 }
