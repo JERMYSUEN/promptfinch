@@ -3,6 +3,11 @@ name: Desktop builds
 on:
   workflow_dispatch:
     inputs:
+      windows_selection_only:
+        description: 'Run only the synthetic Windows selection checks, without packaging'
+        required: false
+        type: boolean
+        default: false
       draft_release_tag:
         description: 'Optional existing draft release tag to receive verified packages; never publishes a release'
         required: false
@@ -37,8 +42,22 @@ permissions:
   contents: read
 
 jobs:
+  windows-selection-check:
+    name: Windows selection diagnostics
+    if: github.event_name == 'workflow_dispatch' && inputs.windows_selection_only
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/build-desktop-helpers.cjs
+      - name: Verify synthetic native and Chromium selected text
+        run: powershell -NoProfile -File tests/windows-selection-smoke.ps1 -HelperPath desktop/bin/win32/SelectionReader.exe -ChromePath "C:\Program Files\Google\Chrome\Application\chrome.exe"
   desktop:
     name: ${{ matrix.label }} x64
+    if: github.event_name != 'workflow_dispatch' || !inputs.windows_selection_only
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 35
     strategy:
@@ -176,6 +195,7 @@ jobs:
           retention-days: 14
   macos-development:
     name: macOS development workspace (native release unchanged)
+    if: github.event_name != 'workflow_dispatch' || !inputs.windows_selection_only
     runs-on: macos-14
     timeout-minutes: 20
     steps:
@@ -190,7 +210,7 @@ jobs:
   upload-draft:
     name: Upload verified packages to an existing draft
     needs: [desktop, macos-development]
-    if: github.event_name == 'workflow_dispatch' && inputs.draft_release_tag != ''
+    if: github.event_name == 'workflow_dispatch' && inputs.draft_release_tag != '' && !inputs.windows_selection_only
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
