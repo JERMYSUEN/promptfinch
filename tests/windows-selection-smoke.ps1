@@ -121,9 +121,16 @@ public static class PromptFinchSelectionFixture {
             // synthetic browser window for its fixed aria-label. Product code
             // never performs a descendant search or reads another page.
             Console.Error.WriteLine("Synthetic browser fixture stage: find-owned-textarea");
-            browserField = root.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.NameProperty, "Synthetic prompt fixture"));
-            if (browserField == null) throw new Exception("Fixture textarea not found.");
+            Condition expected = new OrCondition(new PropertyCondition(AutomationElement.NameProperty, "Synthetic prompt fixture"),
+                new PropertyCondition(AutomationElement.AutomationIdProperty, "prompt"));
+            for (int attempt = 0; attempt < 2 && browserField == null; attempt++) {
+                browserField = root.FindFirst(TreeScope.Descendants, expected);
+                if (browserField == null) Thread.Sleep(100);
+            }
+            if (browserField == null) {
+                DescribeOwnedBrowserTree(root, expectedPid);
+                throw new Exception("Fixture textarea not found in the isolated native UIA tree.");
+            }
             Console.Error.WriteLine("Synthetic browser fixture stage: textarea-metadata");
             if (browserField.Current.ProcessId != expectedPid || browserField.Current.IsPassword
                 || browserField.Current.ControlType != ControlType.Edit) throw new Exception("Unexpected fixture textarea metadata.");
@@ -174,6 +181,35 @@ public static class PromptFinchSelectionFixture {
         // browser. Product code never injects keys or uses clipboard fallback.
         keybd_event(0x11, 0, 0, UIntPtr.Zero); keybd_event(0x41, 0, 0, UIntPtr.Zero);
         keybd_event(0x41, 0, 2, UIntPtr.Zero); keybd_event(0x11, 0, 2, UIntPtr.Zero);
+    }
+    private static void DescribeOwnedBrowserTree(AutomationElement root, int expectedPid) {
+        // DIAGNOSTIC FIXTURE ONLY. No global/root-desktop search, names, values
+        // or selected text are logged. The scope is the isolated window we
+        // launched and just verified, with fixed depth/node/child limits.
+        Queue<KeyValuePair<AutomationElement, int>> nodes = new Queue<KeyValuePair<AutomationElement, int>>();
+        nodes.Enqueue(new KeyValuePair<AutomationElement, int>(root, 0));
+        TreeWalker walker = TreeWalker.RawViewWalker;
+        int visited = 0;
+        while (nodes.Count > 0 && visited < 64) {
+            KeyValuePair<AutomationElement, int> item = nodes.Dequeue();
+            try {
+                AutomationElement.AutomationElementInformation info = item.Key.Current;
+                Console.Error.WriteLine("Synthetic browser UIA node: depth=" + item.Value
+                    + " role=" + info.ControlType.Id
+                    + " framework=" + (info.FrameworkId == "Chrome" ? "Chrome" : info.FrameworkId == "Win32" ? "Win32" : "other")
+                    + " owner=" + (info.ProcessId == expectedPid ? "expected" : "different")
+                    + " knownLabel=" + (info.Name == "Synthetic prompt fixture")
+                    + " knownId=" + (info.AutomationId == "prompt"));
+                visited++;
+                if (item.Value >= 10) continue;
+                AutomationElement child = walker.GetFirstChild(item.Key);
+                for (int index = 0; child != null && index < 8 && nodes.Count + visited < 64; index++) {
+                    nodes.Enqueue(new KeyValuePair<AutomationElement, int>(child, item.Value + 1));
+                    child = walker.GetNextSibling(child);
+                }
+            } catch { Console.Error.WriteLine("Synthetic browser UIA diagnostic: element unavailable."); }
+        }
+        Console.Error.WriteLine("Synthetic browser UIA diagnostic: bounded nodes=" + visited);
     }
     public static void Stop() {
         if (form != null && !form.IsDisposed) OnUI(delegate { form.Close(); });
@@ -287,7 +323,22 @@ try {
     while (-not [PromptFinchSelectionFixture]::MenuOpened -and [DateTime]::UtcNow -lt $menuDeadline) { Start-Sleep -Milliseconds 20 }
     if (-not [PromptFinchSelectionFixture]::MenuOpened) { throw 'The watcher prevented the host context menu from opening.' }
 
+    # Prove the standard-control lifecycle before the independent Chromium
+    # compatibility probe, so a browser failure cannot hide cleanup coverage.
+    if ($watch.HasExited) { throw 'The native watcher exited before the parent-lifetime check.' }
+    $dummyParent.Kill()
+    Wait-ProcessWithMessages $dummyParent 2000 | Out-Null
+    if (-not (Wait-ProcessWithMessages $watch 3500)) { throw 'The native watcher remained alive after its parent exited.' }
+    Show-HelperDiagnostics $watch
+    $watch.Dispose()
+    $watch = $null
+    $dummyParent.Dispose()
+    $dummyParent = $null
+    Write-Output 'PASS: native standard-control selected text, exact Unicode, password rejection, source check, global right-click with host menu, and parent-exit cleanup.'
+
     if ($ChromePath) {
+        $dummyParent = [System.Diagnostics.Process]::Start($parentInfo)
+        $watch = Start-Helper "--watch --exclude-pid $($dummyParent.Id)"
         $ChromePath = (Resolve-Path $ChromePath).Path
         $chromeVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($ChromePath).FileVersion
         [Console]::Error.WriteLine("Synthetic Chromium fixture version: $chromeVersion; native UIA provider explicitly enabled.")
@@ -317,7 +368,7 @@ document.title='PromptFinch virtual fixture loaded';</script>
         # A new offline profile does not inherit a user's feature-trial seed.
         # Exercise Chromium's documented native UIA provider deliberately; a
         # legacy MSAA-to-UIA proxy may expose ValuePattern without TextPattern.
-        $browserInfo.Arguments = "--app=`"$fileUrl`" --user-data-dir=`"$profile`" --window-position=100,100 --window-size=900,600 --force-renderer-accessibility --enable-features=UiaProvider --no-first-run --no-default-browser-check --disable-background-networking --disable-component-update --disable-sync"
+        $browserInfo.Arguments = "--app=`"$fileUrl`" --user-data-dir=`"$profile`" --window-position=100,100 --window-size=900,600 --force-renderer-accessibility=complete --enable-features=UiaProvider --no-first-run --no-default-browser-check --disable-background-networking --disable-component-update --disable-sync"
         $browserInfo.UseShellExecute = $false
         $browser = [System.Diagnostics.Process]::Start($browserInfo)
         $browserDeadline = [DateTime]::UtcNow.AddSeconds(12)
@@ -367,10 +418,11 @@ document.title='PromptFinch virtual fixture loaded';</script>
         }
         Write-Output 'PASS: isolated headed Chrome native-UIA virtual textarea selection through the right-click watcher (synthetic offline page only; UiaProvider explicitly enabled).'
     }
-    $dummyParent.Kill()
-    Wait-ProcessWithMessages $dummyParent 2000 | Out-Null
-    if (-not (Wait-ProcessWithMessages $watch 3500)) { throw 'The watcher remained alive after its parent exited.' }
-    Write-Output 'PASS: native selected text, exact Unicode, password rejection, source check, global right-click with host menu, and parent-exit cleanup.'
+    if ($dummyParent) {
+        $dummyParent.Kill()
+        Wait-ProcessWithMessages $dummyParent 2000 | Out-Null
+        if (-not (Wait-ProcessWithMessages $watch 3500)) { throw 'The Chromium probe watcher remained alive after its parent exited.' }
+    }
 } finally {
     if ($browser) {
         if (-not $browser.HasExited) {
