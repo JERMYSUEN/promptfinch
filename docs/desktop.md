@@ -15,7 +15,7 @@ Download only the package that matches your operating system and processor from 
 
 The external companion is separate from the source app's native context menu. It does not modify Codex, Claude Code, browsers, terminals, or their menu definitions. Right-clicking alone does not generate a prompt or send text to a model. Select the companion's conversion action to start a request. Closing or cancelling the companion does not submit the captured text.
 
-Windows compatibility depends on the source app exposing its selected range through UI Automation. Legacy Chromium accessibility modes can lack the required TextPattern; the isolated Chromium check explicitly enables its native UIA provider and does not certify every default Chrome/Electron configuration. Some custom editors, protected fields, elevated apps, remote desktops and terminal renderers do not expose that range. The assistant does not send synthetic Copy keystrokes or use old clipboard text as a substitute. Use the manual workspace if selection capture is unavailable.
+Windows compatibility depends on the source app exposing its selected range through UI Automation. Chromium/Electron right-click capture is not validated in this preview. The isolated Chrome 155 compatibility probe could not find its synthetic textarea through UI Automation on the Windows CI host, even with native UIA and complete accessibility explicitly enabled. Standard native text controls passed; use copy and clipboard import when capture is unavailable. Some custom editors, protected fields, elevated apps, remote desktops and terminal renderers do not expose that range. The assistant does not send synthetic Copy keystrokes or use old clipboard text as a substitute. Use the manual workspace if selection capture is unavailable.
 
 On X11, the PRIMARY selection is separate from the ordinary Copy/Paste clipboard. It can outlive visible highlighting in some applications, and a right-click is not proof that the pointer is inside the highlighted range. Read the source shown in the workspace before using the generated prompt. The assistant does not promise that every right-click corresponds to a fresh selection. Empty selections are ignored. A missing X11 RECORD extension disables the companion without preventing manual use.
 
@@ -124,3 +124,15 @@ On a headless Linux host, run the desktop check through `xvfb-run --auto-servern
 The [desktop build workflow](../.github/workflows/desktop.yml) compiles and packages each edition on its native x64 runner, checks both development and packaged workspaces in demo mode, and records per-platform SHA-256 hashes and build provenance. Its Windows check reads a synthetic selection from a standard text control through UI Automation. Its X11 test exercises the observer on a virtual display and confirms that left clicks are ignored and Wayland is rejected. A separate macOS job checks only the Electron development workspace; macOS downloads still use Swift. A successful workflow does not establish physical right-click compatibility with every external app, live model quality, ARM support, code signing, or installation on every Linux distribution. Treat the Windows/Linux selection action as experimental until the intended host app and desktop session have been tested.
 
 Implementation references: [X11 RECORD library](https://www.x.org/releases/current/doc/libXtst/recordlib.pdf), [Electron security](https://www.electronjs.org/docs/latest/tutorial/security), [Electron clipboard](https://www.electronjs.org/docs/latest/api/clipboard), and [electron-builder](https://www.electron.build/).
+
+### Windows Chromium compatibility probe
+
+The release gate checks standard-control selection, exact Unicode preservation, password rejection, source verification, right-click coexistence with the host menu, and observer exit after its parent closes. The separate `windows_selection_only` workflow input additionally runs the Chromium compatibility probe. That probe currently fails to locate its isolated synthetic textarea and is not included in the release's passing checks. See the [recorded diagnostic run](https://github.com/JERMYSUEN/promptfinch/actions/runs/39150599459). Its assertions remain strict; it does not turn an unreadable selection into a passing capture.
+
+To repeat the native checks on Windows after building the helper, run:
+
+```powershell
+powershell -NoProfile -File tests/windows-selection-smoke.ps1 -HelperPath desktop/bin/win32/SelectionReader.exe
+```
+
+Append `-ChromePath "C:\Program Files\Google\Chrome\Application\chrome.exe"` to repeat the unverified Chromium probe. Both modes create synthetic controls only. They do not use your normal browser profile or clipboard. This probe does not certify Codex, Claude, terminal or remote-desktop support.

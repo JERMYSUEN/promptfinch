@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       windows_selection_only:
-        description: 'Run only the synthetic Windows selection checks, without packaging'
+        description: 'Run native checks and the unverified Chromium compatibility probe, without packaging'
         required: false
         type: boolean
         default: false
@@ -149,9 +149,9 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           xvfb-run --auto-servernum node scripts/desktop-smoke.cjs --packaged "desktop-dist/$version/${{ matrix.executable }}"
-      - name: Check Windows UI Automation with synthetic selected text
+      - name: Check Windows standard-control selection and observer cleanup
         if: runner.os == 'Windows'
-        run: powershell -NoProfile -File tests/windows-selection-smoke.ps1 -HelperPath desktop/bin/win32/SelectionReader.exe -ChromePath "C:\Program Files\Google\Chrome\Application\chrome.exe"
+        run: powershell -NoProfile -File tests/windows-selection-smoke.ps1 -HelperPath desktop/bin/win32/SelectionReader.exe
       - name: Record public artifact hashes and build provenance
         shell: bash
         env:
@@ -174,9 +174,10 @@ jobs:
             commit: process.env.GITHUB_SHA, workflowRun: process.env.GITHUB_RUN_ID,
             node: process.version, electron: pkg.devDependencies.electron,
             checks: ['syntax', 'unit tests', 'development workspace mock smoke', 'packaged workspace mock smoke',
-              ...(platform === 'linux' ? ['X11 helper right-click event', 'Wayland refusal'] : ['Windows UI Automation synthetic selection'])],
+              ...(platform === 'linux' ? ['X11 helper right-click event', 'Wayland refusal'] : ['Windows UI Automation standard-control selection and observer cleanup'])],
             limitations: ['Unsigned packages', 'External application selection compatibility needs physical host testing',
-              'No live model quality evaluation in this workflow', 'No ARM64 package in this workflow'], artifacts,
+              'No live model quality evaluation in this workflow', 'No ARM64 package in this workflow',
+              ...(platform === 'windows' ? ['Chromium/Electron selection unverified; isolated CI textarea probe failed'] : [])], artifacts,
           }, null, 2) + '\n');
           JS
       - uses: actions/upload-artifact@v4

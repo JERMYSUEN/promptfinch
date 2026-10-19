@@ -118,7 +118,7 @@ npm run desktop
 
 Windows x64 上可建置安裝程式及 ZIP；Linux x64 上可建置 AppImage 及 tar.gz。執行 `npm run build:desktop`，結果在 `desktop-dist/<version>/`。已封裝的桌面版不需另裝 Node。Linux 建置依賴與啟動方式見[桌面版指引（英文）](../desktop.md)。
 
-在相容軟體選取文字後按右鍵，再點附加選單的「轉為英文 Prompt」才會生成。擷取文字十秒後失效，不自動貼回或送出。Windows 支援取決於來源軟體的 UI Automation；Linux X11 讀取選取緩衝區，無法證明點擊位於反白範圍。Wayland 沒有此全域監聽功能。
+在相容軟體選取文字後按右鍵，再點附加選單的「轉為英文 Prompt」才會生成。擷取文字十秒後失效，不自動貼回或送出。Windows 支援取決於來源軟體的 UI Automation。原生標準文字控制項已通過驗證；Windows 上的 Chromium／Electron 選區，包括 Codex 與 Claude，仍未驗證，無法擷取時請複製後匯入剪貼簿；Linux X11 讀取選取緩衝區，無法證明點擊位於反白範圍。Wayland 沒有此全域監聽功能。
 
 取字不可用時，可自行複製後按「讀取剪貼簿」。`Ctrl+Alt+P` 匯入選取文字，`Ctrl+Alt+Shift+P` 匯入剪貼簿；快捷鍵不會生成。設定內會顯示右鍵監聽與快捷鍵狀態。介面提供繁體中文、英文、日文與韓文；建立模型設定範本、填入自己的金鑰，再選取檔案載入。新安裝預設示範模式；偏好設定只記錄語言及設定檔路徑。
 
