@@ -18,6 +18,7 @@ No changes recorded yet.
 ### Fixed
 
 - Preserve unambiguous quoted Unicode literals around contractions, repeated copies, escapes and code fences; avoid replacements inside unrelated identifiers, paths and words. Both instruction languages use the same bounded repair and revalidation.
+- Localize optional review failures in the native app’s Traditional Chinese, English, Japanese and Korean interfaces.
 - Stop evaluation batches after repeated request failures and preserve unattempted case IDs, source hashes and pending semantic-review status. Provider error bodies are not saved.
 
 ### Verification scope

@@ -13,7 +13,7 @@ This record covers the v1.3.0 changes. Controlled tests, provider approval, lite
 
 ## Controlled checks
 
-The final local source passed 131 Node tests, 12 Chrome browser workflow tests, 318 native Swift checks, syntax checks and validation of 28 README editions. These verify program contracts and mock interactions; they do not prove that a real model follows every editing instruction. The Unicode helper conservatively restores normalized copies of unambiguous quoted non-NFC source literals; it is not a general detector or repair system for all possible literal changes. Native package/archive validation and platform CI are separate release checks.
+The final local source passed 131 Node tests, 12 Chrome browser workflow tests, 324 native Swift checks, syntax checks and validation of 28 README editions. These verify program contracts and mock interactions; they do not prove that a real model follows every editing instruction. The Unicode helper conservatively restores normalized copies of unambiguous quoted non-NFC source literals; it is not a general detector or repair system for all possible literal changes. Native package/archive validation and platform CI are separate release checks.
 
 ## Live experiment design
 

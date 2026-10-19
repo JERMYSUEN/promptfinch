@@ -108,6 +108,15 @@ struct CoreTests {
                   "switching language translates nested status messages")
             check(L10n.errorDescription(ToolError.message(L10n.text(.providerAuth, language: .traditionalChinese)))
                   == L10n.text(.providerAuth), "provider errors use the selected UI language")
+            if language != .traditionalChinese {
+                for backendMessage in [
+                    "模型品質覆核未完成或格式不符；沒有提供未經覆核的結果。請重新優化。",
+                    "優化結果未通過模型保真覆核；沒有提供可能改變原意的結果。請重新優化。",
+                ] {
+                    check(L10n.errorDescription(ToolError.message(backendMessage)) != backendMessage,
+                          "new review errors use the selected non-Chinese UI language")
+                }
+            }
             let untouched = "Do not translate this note: 你好 안녕하세요 日本語 %@"
             check(L10n.relocalize(untouched, from: .traditionalChinese) == untouched,
                   "unrecognized text is not rewritten by UI localization")

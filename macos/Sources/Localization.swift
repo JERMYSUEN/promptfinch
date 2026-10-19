@@ -202,6 +202,8 @@ enum L10n {
         case providerJSON
         case providerSetup
         case providerTruncated
+        case providerReviewIncomplete
+        case providerReviewRejected
         case serviceBusy
     }
 
@@ -383,6 +385,8 @@ enum L10n {
         .providerJSON: ["模型服務回應不是有效 JSON，請檢查服務網址。", "The model service returned invalid JSON. Check the service URL.", "モデルサービスの応答が有効な JSON ではありません。サービス URL を確認してください。", "모델 서비스 응답이 유효한 JSON이 아닙니다. 서비스 URL을 확인하세요."],
         .providerSetup: ["模型模式尚未設定完成。請在伺服器 .env 設定 LLM_API_KEY 與 LLM_MODEL，或將 OPTIMIZER_MODE 改為 mock 後重新啟動。", "Model setup is incomplete. Set LLM_API_KEY and LLM_MODEL in the server .env, or use OPTIMIZER_MODE=mock and restart.", "モデル設定が未完了です。サーバーの .env に LLM_API_KEY と LLM_MODEL を設定するか、OPTIMIZER_MODE=mock にして再起動してください。", "모델 설정이 완료되지 않았습니다. 서버 .env에 LLM_API_KEY와 LLM_MODEL을 설정하거나 OPTIMIZER_MODE=mock으로 바꾸고 다시 시작하세요."],
         .providerTruncated: ["模型回應被截斷，沒有使用部分結果。請縮短 Prompt 或調整模型服務的輸出上限後再試。", "The model response was truncated; no partial result was used. Shorten the prompt or adjust the output limit, then retry.", "モデル応答が途中で切れたため、部分的な結果は使いませんでした。プロンプトを短くするか出力上限を調整し、再試行してください。", "모델 응답이 잘려 부분 결과는 사용하지 않았습니다. 프롬프트를 줄이거나 출력 제한을 조정한 뒤 다시 시도하세요."],
+        .providerReviewIncomplete: ["模型品質覆核未完成或格式不符；沒有提供未經覆核的結果。請重新優化。", "The model review was incomplete or invalid. No unreviewed result was returned. Try refining again.", "モデルによる確認が未完了、または形式が不正です。未確認の結果は返していません。再度改善を実行してください。", "모델 검토가 완료되지 않았거나 형식이 올바르지 않습니다. 검토하지 않은 결과는 반환하지 않았습니다. 다시 최적화하세요."],
+        .providerReviewRejected: ["優化結果未通過模型保真覆核；沒有提供可能改變原意的結果。請重新優化。", "The prompt did not pass the model's fidelity review. No rejected result was returned. Try refining again.", "プロンプトがモデルによる原意保持の確認を通過しませんでした。不承認の結果は返していません。再度改善を実行してください。", "프롬프트가 모델의 원문 충실도 검토를 통과하지 못했습니다. 거절된 결과는 반환하지 않았습니다. 다시 최적화하세요."],
         .serviceBusy: ["目前正在處理其他優化，請稍後再試。", "Other requests are being processed. Try again shortly.", "他の依頼を処理中です。少し待って再試行してください。", "다른 요청을 처리 중입니다. 잠시 후 다시 시도하세요."],
     ]
 
