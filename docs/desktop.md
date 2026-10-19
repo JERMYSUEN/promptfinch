@@ -62,14 +62,19 @@ LLM_MODEL=deepseek-flash
 LLM_API_KEY=your-own-provider-key
 LLM_JSON_MODE=true
 LLM_THINKING_MODE=disabled
+LLM_QUALITY_REVIEW=false
 LLM_TIMEOUT_MS=45000
 ```
 
 The model adapter uses an OpenAI-compatible Chat Completions API. The example model name is a configuration value, not a bundled or free model. Provider access, naming, availability and fees depend on your account. A Codex or Claude subscription/login is not an API key for this app. See the [main settings reference](../README.md#model-configuration) for the shared provider options.
 
+Live mode uses editing only by default (`LLM_QUALITY_REVIEW` unset or `false`), usually one provider call and at most two with a format retry. Model review is optional and requires explicitly setting `LLM_QUALITY_REVIEW=true`. When enabled, the configured provider/model edits the prompt, then reviews its fidelity to the original in a separate request context. A usual successful reviewed operation makes two provider calls. A rejected candidate can be repaired once and reviewed again; all calls, including format retries, share a four-call cap and the original `LLM_TIMEOUT_MS` deadline. An enabled review that fails returns an error rather than a rejected prompt or demo fallback. This adds paid token usage and latency; current evidence does not justify automatic activation. Set `false`, or remove the setting, to use the default editing-only flow. Demo mode still uses zero model calls. Model approval is not a guarantee of correctness; see the [current quality-verification evidence](prompt-quality-verification.md).
+
 An invalid or incomplete live configuration stops generation and displays an error. It does not silently replace a failed model call with a demo result. Switching explicitly back to demo mode is available in Settings.
 
 The interface and explanation language can be Traditional Chinese, English, Japanese, or Korean. Generated instructions stay in English while preserving an explicitly requested answer language and exact literals from the source. Review generated prompts before using them: model output can still omit or alter requirements.
+
+Editing preserves conditional requirements and question limits. When questions are prohibited, an unresolved conflict, missing essential source, insufficient decision criteria, inaccessible tool, or indeterminate answer language must use the user's usable fallback or a brief limitation notice rather than inventing inputs or asking a question. Already clear requests may need no additional edit: the workspace shows a separate notice for an empty editing-notes list, without adding it to the copyable prompt. Exact-literal repair is narrow and does not recover omitted or translated content. The API also returns complete Traditional Chinese prompts without the previous original-source wrapper; custom clients should follow the [API migration notes](api.md#optimize-a-prompt).
 
 ## Selection workflow
 

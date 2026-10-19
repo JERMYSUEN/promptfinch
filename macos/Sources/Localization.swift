@@ -68,6 +68,7 @@ enum L10n {
         case modelService
         case resultPlaceholder
         case improvements
+        case noImprovement
         case compareChanges
         case comparisonHelp
         case sourceForResult
@@ -259,6 +260,7 @@ enum L10n {
         .modelService: ["模型服務", "Model service", "モデルサービス", "모델 서비스"],
         .resultPlaceholder: ["英文 Prompt 會顯示在這裡。\n\n只會整理指令，不會代你執行原始任務。", "Your English prompt will appear here.\n\nThis refines instructions; it does not perform the original task.", "英語のプロンプトがここに表示されます。\n\n指示を改善するツールです。元のタスクは実行しません。", "영어 프롬프트가 여기에 표시됩니다.\n\n지시문을 다듬을 뿐, 원래 작업을 수행하지는 않습니다."],
         .improvements: ["優化重點與假設", "Improvements and assumptions", "改善点と仮定", "개선 사항 및 가정"],
+        .noImprovement: ["未提供額外改善說明。", "No additional editing notes were provided.", "追加の編集説明はありません。", "추가 편집 설명이 없습니다."],
         .assumptions: ["非關鍵假設（獨立說明，不另附於 Prompt）", "Non-critical assumptions (separate from the prompt)", "重要度の低い仮定（プロンプトとは別に表示）", "비핵심 가정(프롬프트와 별도로 표시)"],
         .cancel: ["取消", "Cancel", "キャンセル", "취소"],
         .originalChanged: ["原始需求已變更，請重新生成；右側仍是上次結果。", "The request has changed. Generate again; the previous result is still shown.", "依頼が変更されました。再生成してください。前の結果が表示されています。", "요청이 변경되었습니다. 다시 생성하세요. 이전 결과가 표시되어 있습니다."],

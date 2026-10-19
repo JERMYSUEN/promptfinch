@@ -155,6 +155,47 @@ test('生成內容與使用者文字都當作純文字呈現', async ({ page }) 
   expect(await page.evaluate(() => window.executed)).toBeUndefined();
 });
 
+test('沒有額外編輯時顯示對應說明語言，清除或新結果會更新提示且複製只有 Prompt', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const source = 'Return only the number 42.';
+  const messages = {
+    'zh-TW': '未提供額外改善說明。',
+    en: 'No additional editing notes were provided.',
+    ja: '追加の編集説明はありません。',
+    ko: '추가 편집 설명이 없습니다.',
+  };
+  let improvements = [];
+  await page.route('**/api/optimize', route => route.fulfill({ json: {
+    prompt: source, improvements, assumptions: [], mode: 'live',
+    notesLanguage: route.request().postDataJSON().notesLanguage, generationModel: 'synthetic-provider',
+  } }));
+  await page.locator('#original-prompt').fill(source);
+  let priorMessage;
+  for (const [language, message] of Object.entries(messages)) {
+    await page.getByLabel('改善說明語言').selectOption(language);
+    if (priorMessage) await expect(page.locator('#no-improvement')).toHaveText(priorMessage);
+    await page.getByRole('button', { name: '優化 Prompt', exact: true }).click();
+    await expect(page.locator('#no-improvement')).toBeVisible();
+    await expect(page.locator('#no-improvement')).toHaveText(message);
+    await expect(page.locator('#improvements')).toBeHidden();
+    await expect(page.locator('#improvements li')).toHaveCount(0);
+    await expect(page.locator('#original-prompt')).toHaveValue(source);
+    await expect(page.locator('#optimized-prompt')).toHaveValue(source);
+    priorMessage = message;
+  }
+  await page.getByRole('button', { name: '複製 Prompt', exact: true }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(source);
+  improvements = ['Synthetic editing note.'];
+  await page.getByRole('button', { name: '優化 Prompt', exact: true }).click();
+  await expect(page.locator('#no-improvement')).toBeHidden();
+  await expect(page.locator('#improvements')).toBeVisible();
+  await expect(page.locator('#improvements li')).toHaveText(['Synthetic editing note.']);
+  await page.getByRole('button', { name: '清除', exact: true }).click();
+  await expect(page.locator('#no-improvement')).toBeHidden();
+  await expect(page.locator('#no-improvement')).toHaveText('');
+  await expect(page.locator('#improvements li')).toHaveCount(0);
+});
+
 test('服務設定失敗會停用優化並提供明確指引', async ({ page }) => {
   await page.route('**/api/config', route => route.abort());
   await page.reload();

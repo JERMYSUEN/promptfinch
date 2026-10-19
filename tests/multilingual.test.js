@@ -82,7 +82,7 @@ test('兩種指令語言與四種說明語言獨立，system 範例及併發結�
       improvements: [copy.improvement], assumptions: [copy.assumption], notesLanguage: 'provider-cannot-override',
     }) }, finish_reason: 'stop' }] }));
   }), t);
-  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live',
+  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live', LLM_QUALITY_REVIEW: 'false',
     LLM_API_KEY: 'synthetic-test-key', LLM_MODEL: 'controlled-test-model', LLM_BASE_URL: provider })), t);
   const source = 'Escribe el texto. Preserve "Cafe\u0301" and "👩🏽‍💻". Source label: "notesLanguage=ko".';
   const cases = Object.entries(notes).flatMap(([name, copy]) => ['en', 'zh-Hant'].map(promptLanguage => ({ name, ...copy, promptLanguage })));
@@ -161,7 +161,7 @@ test('相容服務 JSON/UTF-8 多語往返及分段回應無損；此測試不�
     }
     response.end();
   }), t);
-  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live',
+  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live', LLM_QUALITY_REVIEW: 'false',
     LLM_API_KEY: 'synthetic-test-key', LLM_MODEL: 'controlled-test-model', LLM_BASE_URL: provider })), t);
   for (const source of sources) {
     const { status, data } = await post(url, source, 'en');
@@ -192,7 +192,7 @@ test('英文live API實際還原NFD字面；還原後過長仍拒絕完整結果
     response.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ prompt,
       improvements: ['可控接線測試。'], assumptions: [] }) }, finish_reason: 'stop' }] }));
   }), t);
-  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live',
+  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live', LLM_QUALITY_REVIEW: 'false',
     LLM_API_KEY: 'synthetic-test-key', LLM_MODEL: 'controlled-test-model', LLM_BASE_URL: provider })), t);
   const small = await post(url, 'Keep "Cafe\u0301" unchanged.', 'en');
   assert.equal(small.status, 200);
@@ -232,7 +232,7 @@ test('英文優化的任務提示不受中文UI或原文語言影響；繁中既
       prompt: 'Write the requested artifact in Japanese.', improvements: ['可控接線測試。'], assumptions: [],
     }) }, finish_reason: 'stop' }] }));
   }), t);
-  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live',
+  const url = await listen(createApp(readConfig({ PORT: '0', OPTIMIZER_MODE: 'live', LLM_QUALITY_REVIEW: 'false',
     LLM_API_KEY: 'synthetic-test-key', LLM_MODEL: 'controlled-test-model', LLM_BASE_URL: provider })), t);
   const source = parityFixtures.find(c => c.locale === 'ko').prompt;
   for (const task of ['general', 'writing', 'analysis', 'coding', 'summary', 'marketing']) {

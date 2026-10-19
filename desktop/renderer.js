@@ -84,6 +84,8 @@ function renderResultLabels() {
   if (!result) return;
   $('result-tag').textContent = t(resultIsStale() ? 'staleTag' : result.mode === 'mock' ? 'mockTag' : 'liveTag');
   $('result-source').textContent = t(result.mode === 'mock' ? 'mockSource' : 'liveSource', { model: result.generationModel || state.model || '' });
+  const notesLanguage = LANGUAGES.includes(result.notesLanguage) ? result.notesLanguage : state.language;
+  $('no-improvement').textContent = translate(notesLanguage, 'noImprovement');
 }
 
 function renderBusy() {
@@ -187,6 +189,9 @@ function showResult(data) {
   resultInput = JSON.stringify(inputValue());
   $('optimized-prompt').value = data.prompt;
   fillList('improvements', data.improvements);
+  const noImprovement = Array.isArray(data.improvements) && data.improvements.length === 0;
+  $('improvements').hidden = noImprovement;
+  $('no-improvement').hidden = !noImprovement;
   fillList('assumptions-list', data.assumptions);
   $('no-assumptions').hidden = Array.isArray(data.assumptions) && data.assumptions.length > 0;
   renderComparison(source, data.prompt);
@@ -201,6 +206,9 @@ function forgetResult() {
   $('comparison-source').replaceChildren();
   $('comparison-result').replaceChildren();
   $('improvements').replaceChildren();
+  $('improvements').hidden = true;
+  $('no-improvement').hidden = true;
+  $('no-improvement').textContent = '';
   $('assumptions-list').replaceChildren();
   $('comparison').open = false;
 }

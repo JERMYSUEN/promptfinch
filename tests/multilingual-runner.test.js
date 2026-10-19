@@ -6,6 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const runner = fileURLToPath(new URL('../scripts/verify-multilingual.js', import.meta.url));
 const sourceMarker = 'synthetic-source-content-that-must-not-reach-console';
@@ -34,8 +35,11 @@ async function setup(t, fixtures, respond = () => ({
     response.setHeader('Content-Type', 'application/json');
     if (request.url === '/api/config') {
       response.end(JSON.stringify({ service: 'prompt-studio', mode: 'live', ready: true,
-        generationModel: 'controlled-runner-test-model' }));
-    } else response.end(JSON.stringify(await respond(body, { output, response, requests })));
+        generationModel: 'controlled-runner-test-model', backendID: 'controlled-server-backend-id' }));
+    } else {
+      const data = await respond(body, { output, response, requests });
+      if (!response.writableEnded && !response.destroyed) response.end(JSON.stringify(data));
+    }
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
@@ -68,10 +72,10 @@ test('live runner 精確篩選 ID，逐筆保存並只傳公開 API 欄位', asy
   const context = await setup(t, [fixture('case-a', { privateMetadata: keyMarker }), fixture('case-ab'), fixture('case-c')],
     async (body, { output }) => {
       assert.equal(++active, 1, 'model requests must be sequential');
-      if (calls++) {
-        const saved = JSON.parse(await readFile(output, 'utf8'));
-        assert.deepEqual(saved.results.map(entry => entry.id), ['case-a']);
-      }
+      const saved = JSON.parse(await readFile(output, 'utf8'));
+      assert.deepEqual(saved.results.map(entry => entry.id), calls++ ? ['case-a'] : []);
+      assert.equal(saved.status, 'running');
+      assert.equal(saved.semanticStatus, 'pending');
       await new Promise(resolve => setTimeout(resolve, 10));
       active--;
       return { mode: 'live', promptLanguage: 'en', prompt: `${resultMarker} ACME-42` };
@@ -89,6 +93,17 @@ test('live runner 精確篩選 ID，逐筆保存並只傳公開 API 欄位', asy
   const saved = JSON.parse(await readFile(context.output, 'utf8'));
   assert.deepEqual(saved.results.map(entry => entry.id), ['case-a', 'case-c']);
   assert.ok(saved.results.every(entry => entry.semanticReview === 'pending'));
+  assert.equal(saved.semanticStatus, 'pending');
+  assert.ok(saved.results.every(entry => entry.semanticStatus === 'pending'));
+  assert.deepEqual(saved.totals, { attempted: 2, succeeded: 2, failed: 0, unattempted: 0 });
+  assert.deepEqual(saved.unattemptedIDs, []);
+  assert.equal(saved.status, 'completed');
+  assert.equal(saved.stopReason, null);
+  const localSource = await readFile(new URL('../lib/optimizer.js', import.meta.url));
+  assert.equal(saved.localOptimizerSourceSHA256, createHash('sha256').update(localSource).digest('hex'));
+  assert.equal(saved.backendID, 'controlled-server-backend-id');
+  assert.match(saved.sourceEvidence, /local.*does not prove.*deployed/);
+  assert.match(saved.evidence, /not semantic quality/);
   assert.ok(saved.results.every(entry => entry.literalChecks[0].preserved));
   assert.ok(!result.stdout.includes('case-ab:'));
 });
@@ -184,4 +199,71 @@ test('HTTP 錯誤與非 live 回應均失敗，console 不含服務回傳內容'
   const saved = JSON.parse(await readFile(context.output, 'utf8'));
   assert.ok(saved.results.every(entry => entry.error));
   assert.ok(saved.results.every(entry => entry.semanticReview === 'pending'));
+  assert.ok(!JSON.stringify(saved).includes(keyMarker), 'raw provider error messages are not saved');
+});
+
+test('runner 預設在兩次連續請求失敗後停止，保存總數、未嘗試 ID 與原因', async t => {
+  const context = await setup(t, ['first', 'second', 'third', 'fourth'].map(id => fixture(id)), (_body, { response }) => {
+    response.statusCode = 502;
+    return { error: `${keyMarker} ${sourceMarker}` };
+  });
+  const result = await run(context);
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /已停止/);
+  assert.equal(context.requests.filter(request => request.path === '/api/optimize').length, 2);
+  const saved = JSON.parse(await readFile(context.output, 'utf8'));
+  assert.deepEqual(saved.totals, { attempted: 2, succeeded: 0, failed: 2, unattempted: 2 });
+  assert.deepEqual(saved.unattemptedIDs, ['third', 'fourth']);
+  assert.deepEqual(saved.stopReason, { code: 'consecutive_request_failures', count: 2, limit: 2 });
+  assert.equal(saved.status, 'stopped');
+  assert.equal(saved.semanticStatus, 'pending');
+  assert.ok(saved.results.every(entry => entry.failureKind === 'http' && entry.semanticStatus === 'pending'));
+  assert.ok(!JSON.stringify(saved).includes(keyMarker));
+});
+
+test('有效回應即使遺漏字面內容也會重置連續請求失敗，不會提早跳過案例', async t => {
+  const context = await setup(t, ['http-a', 'literal-a', 'http-b', 'literal-b', 'ok', 'http-c', 'http-d', 'unattempted'].map(id => fixture(id)),
+    (body, { response }) => {
+      if (body.prompt.includes(' http-')) { response.statusCode = 503; return { error: keyMarker }; }
+      return { mode: 'live', promptLanguage: 'en', prompt: body.prompt.endsWith('ok') ? `${resultMarker} ACME-42` : resultMarker };
+    });
+  const result = await run(context);
+  assert.equal(result.code, 1);
+  const saved = JSON.parse(await readFile(context.output, 'utf8'));
+  assert.deepEqual(saved.results.map(entry => entry.id), ['http-a', 'literal-a', 'http-b', 'literal-b', 'ok', 'http-c', 'http-d']);
+  assert.deepEqual(saved.totals, { attempted: 7, succeeded: 1, failed: 6, unattempted: 1 });
+  assert.deepEqual(saved.unattemptedIDs, ['unattempted']);
+  assert.equal(saved.results[1].failureKind, undefined, 'literal mismatch is not a request failure');
+  assert.equal(saved.results[1].literalChecks[0].preserved, false);
+});
+
+test('runner 的明確連續失敗上限可設為 1 或 10', async t => {
+  for (const limit of [1, 10]) {
+    const context = await setup(t, Array.from({ length: 11 }, (_, index) => fixture(`case-${index}`)), () => ({
+      mode: 'mock', promptLanguage: 'en', prompt: resultMarker,
+    }));
+    const result = await run(context, ['--max-consecutive-failures', String(limit)]);
+    assert.equal(result.code, 1);
+    const saved = JSON.parse(await readFile(context.output, 'utf8'));
+    assert.equal(saved.maxConsecutiveFailures, limit);
+    assert.equal(saved.totals.attempted, limit);
+    assert.equal(saved.totals.unattempted, 11 - limit);
+    assert.ok(saved.results.every(entry => entry.failureKind === 'response'));
+  }
+});
+
+test('連線中斷與無效 JSON 也會觸發上限，原始錯誤內容不進入紀錄', async t => {
+  for (const failureKind of ['connection', 'response']) {
+    const context = await setup(t, ['first', 'second', 'unattempted'].map(id => fixture(id)), (_body, { response }) => {
+      if (failureKind === 'connection') response.destroy();
+      else response.end(`invalid-json ${keyMarker}`);
+    });
+    const result = await run(context);
+    assert.equal(result.code, 1);
+    const saved = JSON.parse(await readFile(context.output, 'utf8'));
+    assert.deepEqual(saved.totals, { attempted: 2, succeeded: 0, failed: 2, unattempted: 1 });
+    assert.deepEqual(saved.unattemptedIDs, ['unattempted']);
+    assert.ok(saved.results.every(entry => entry.failureKind === failureKind));
+    assert.ok(!JSON.stringify(saved).includes(keyMarker));
+  }
 });

@@ -6,6 +6,25 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 
 No changes recorded yet.
 
+## [1.3.0] - 2026-10-19
+
+### Changed
+
+- English and Traditional Chinese live output now use one editing policy and return complete task instructions without appending a second original-instruction wrapper. Actual source material and required literals remain part of the rewritten task; inspect the result for semantic fidelity.
+- Already clear requests can return an empty improvements array. All workspaces display a neutral no-notes message without inventing an editing benefit.
+- Live generation offers an optional separate-context fidelity review by the same configured model, disabled by default. A rejected candidate gets at most one repair; review-format failures or a second rejection return an error instead of a partial prompt. When enabled, normal requests use two provider calls, with a maximum of four under the original shared timeout. `LLM_QUALITY_REVIEW=true` explicitly enables it. Approval is a model judgment, not certification.
+- Shared rules address absent versus insufficient input, no-question limits across all blockers, source/tool access, editor versus executor roles, compatible fallback formatting, and explicit/inferred/not-applicable answer language.
+
+### Fixed
+
+- Preserve unambiguous quoted Unicode literals around contractions, repeated copies, escapes and code fences; avoid replacements inside unrelated identifiers, paths and words. Both instruction languages use the same bounded repair and revalidation.
+- Stop evaluation batches after repeated request failures and preserve unattempted case IDs, source hashes and pending semantic-review status. Provider error bodies are not saved.
+
+### Verification scope
+
+- The [quality rubric](docs/prompt-quality-rubric.md) and [comparison record](docs/prompt-quality-verification.md) separate controlled program checks, live requests, provider review and independent semantic review. Known remaining model errors are reported rather than counted as passes. Downstream task performance is not measured.
+- Windows/Linux selection support retains the experimental scope of v1.2.0; Chromium/Electron and physical-host acceptance remain unverified. Existing release tags and assets remain unchanged.
+
 ## [1.2.0] - 2026-10-19
 
 ### Added

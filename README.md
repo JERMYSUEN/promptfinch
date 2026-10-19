@@ -66,7 +66,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-The [v1.2.0 desktop previews](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0) provide Windows x64 and Linux x64 packages with their runtime included. See the [release guide](docs/releases/v1.2.0.md) for platform limits, configuration and verification. The preceding [v1.1.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) provides `PromptFinch-1.1.0-macos-arm64.zip`, `PromptFinch-source-v1.1.0.zip` and `SHA256SUMS`. The app download is for Apple Silicon, uses ad-hoc signing and is not notarized; install Node.js 22+ separately. Extract the ZIP and move the app to your Applications folder. See the [release notes](docs/releases/v1.1.0.md) for setup and verification scope, or build this source checkout. The [changelog](CHANGELOG.md) distinguishes earlier snapshots. There is no automatic updater or Intel/Universal binary download.
+The [v1.3.0 desktop previews](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) provide Windows x64 and Linux x64 packages with their runtime included. See the [release guide](docs/releases/v1.3.0.md) for platform limits, configuration and verification. The preceding [v1.1.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) provides `PromptFinch-1.1.0-macos-arm64.zip`, `PromptFinch-source-v1.1.0.zip` and `SHA256SUMS`. The app download is for Apple Silicon, uses ad-hoc signing and is not notarized; install Node.js 22+ separately. Extract the ZIP and move the app to your Applications folder. See the [release notes](docs/releases/v1.1.0.md) for setup and verification scope, or build this source checkout. The [changelog](CHANGELOG.md) distinguishes earlier snapshots. There is no automatic updater or Intel/Universal binary download.
 
 #### Browser demo, no API key
 
@@ -142,6 +142,7 @@ LLM_BASE_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-flash
 LLM_JSON_MODE=true
 LLM_THINKING_MODE=disabled
+LLM_QUALITY_REVIEW=false
 LLM_TIMEOUT_MS=90000
 HOST=127.0.0.1
 PORT=3000
@@ -161,7 +162,8 @@ A local compatible service that does not require authentication can use `LLM_API
 | `LLM_MODEL` | Empty | Provider model identifier; required in live configuration. |
 | `LLM_JSON_MODE` | `true` | Send `response_format: {type: "json_object"}`. |
 | `LLM_THINKING_MODE` | Empty | Omitted when blank; accepts `enabled` or `disabled`. |
-| `LLM_TIMEOUT_MS` | `45000` | Total upstream timeout across any format retry; integer from 10 to 180000 milliseconds. |
+| `LLM_QUALITY_REVIEW` | `false` | Optional same-provider, same-model fidelity review in a separate request context. Explicitly set `true` to enable; unset or `false` uses editing only. |
+| `LLM_TIMEOUT_MS` | `45000` | Shared upstream deadline for editing, review, repair, and format retries; integer from 10 to 180000 milliseconds. |
 | `HOST` | `127.0.0.1` | Bind address for the standalone server. |
 | `PORT` | `3000` | Standalone server port. |
 | `ALLOWED_HOSTS` | Empty | Optional comma-separated exact host authorities for a reverse proxy, e.g. `prompts.example.com,prompts.example.com:8443`. No wildcards or URLs. |
@@ -169,6 +171,8 @@ A local compatible service that does not require authentication can use `LLM_API
 The Mac app overrides `HOST` and `PORT` to `127.0.0.1:3210` and clears `ALLOWED_HOSTS`, regardless of their values in the selected configuration. The standalone browser server and native backend can run on their separate ports. The standalone server trusts loopback names and its non-wildcard bind hostname on the actual listening port by default. Binding to `0.0.0.0` or `::` does not trust arbitrary Host headers; remote domains and proxy ports must be listed explicitly. Forwarded host headers are not trusted.
 
 Live configuration or provider failures are reported as errors; they are not silently replaced with mock results. A `ready` value from `/api/config` means configuration is present, not that the upstream model has been successfully contacted.
+
+Live mode uses editing only by default: one provider call, or at most two when a format retry is needed. Model review is optional and off when `LLM_QUALITY_REVIEW` is unset or `false`. Explicitly set `LLM_QUALITY_REVIEW=true` to have the configured model compare the candidate with the original requirements in an independent request context. With review enabled, a successful request normally uses two provider calls; a rejected candidate can receive one repair and another review. Editing, review, repair, and format retries share the same timeout and a limit of four calls. An enabled review that fails returns an error rather than the rejected candidate or a mock replacement. This adds paid token usage and waiting time; current evidence does not justify enabling it automatically. Mock mode still makes zero model calls. A model approving its output does not guarantee correctness or better downstream results; compare important requirements yourself.
 
 ### Example: prompt language and answer language
 
@@ -188,7 +192,7 @@ The instructions are English, while the invitation requested from the downstream
 
 - Input, JSON transport, and native selection use Unicode. The 12,000 input limit counts UTF-16 code units consistently with JavaScript and Swift's UTF-16 view, rather than visible letters or grapheme clusters. Oversized requests are rejected rather than truncated. Selected UTF-16 ranges cannot split surrogate pairs. See [JavaScript length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) and [Swift UTF16View](https://developer.apple.com/documentation/swift/string/utf16view).
 - Korean Hangul, Russian Cyrillic, RTL scripts, combining marks, joiners, emoji, and mixed text are accepted without normalization or alphabet-based filtering. The browser input uses automatic text direction. Documentation language coverage is separate from the four macOS interface languages.
-- English mode separates instruction language from the downstream answer language. The model must preserve explicit answer-language requirements, negation scope, exact literals, variables, code and URLs. A narrow backend repair restores an unambiguous quoted/code literal altered only by canonical NFC normalization. It cannot reconstruct omitted or translated literals or resolve ambiguous equivalent spellings; review important strings.
+- Both instruction languages preserve the separately requested downstream answer language. The model must preserve explicit requirements, conditional and negation scope, exact literals, variables, code and URLs. A narrow backend repair restores an unambiguous quoted/code literal altered only by canonical NFC normalization in either mode. It cannot reconstruct omitted or translated literals or resolve ambiguous equivalent spellings; review important strings.
 - The [multilingual verification record](docs/multilingual-verification.md) documents transport checks and 24 synthetic live-model cases across 18 languages using `deepseek-flash`, including short, medium and long Korean/Russian cases. It also records an imprecise Japanese improvement note and untested languages and hosts. These samples do not guarantee translation quality for new inputs or other models.
 - The [paired multilingual evaluation](docs/multilingual-parity-verification.md) uses the same requirements across 29 locales (28 languages, with separate Chinese scripts), plus language-inference, mixed-language, quoted-source and conditional-scope cases. It separates automated checks from model-output review and records remaining limitations.
 
@@ -213,9 +217,11 @@ curl --fail --silent --show-error http://127.0.0.1:3000/api/optimize \
 
 A successful optimization returns `prompt`, `improvements`, `assumptions`, `mode`, `generationModel`, `promptLanguage`, and `notesLanguage`. Copy only `prompt` when reusing the result; improvements and assumptions are separate review notes. `notesLanguage` accepts `zh-TW` (API default), `en`, `ja`, or `ko`, independently of the prompt instructions and downstream answer language.
 
+Both English and Traditional Chinese modes now return a complete, directly usable `prompt`; Traditional Chinese output no longer adds an original-source wrapper. Clients that parsed that wrapper must keep their submitted source separately and use the returned prompt as a whole. `improvements` may contain 0–4 notes; an already clear request can have no additional edits, and the workspace displays a separate notice. Successful live responses add `modelReview: {status: "approved" | "disabled", revisionCount: 0 | 1}`. This reports the review path taken, not a quality certificate. Existing API version 2 clients should allow additional response fields and empty note arrays.
+
 The API validates input and model response structure, limits concurrent optimization requests, and reports configuration, provider, malformed-output, and timeout errors. Cancellation closes the upstream request; provider-side processing and billing behavior remain under the provider's control.
 
-See the [complete API reference](docs/api.md) for response examples, configuration readiness, limits, status codes and cancellation behavior. `LLM_TIMEOUT_MS` applies to each provider attempt; malformed model output can trigger one additional attempt, so it is not a total-operation time limit.
+See the [complete API reference](docs/api.md) for response examples, configuration readiness, limits, status codes and cancellation behavior. `LLM_TIMEOUT_MS` is the total upstream time budget shared by editing, review, repair, and any format retries; another call does not restart the timer.
 
 ### macOS workflow
 
@@ -285,7 +291,7 @@ Main source files:
 
 - API keys are read by the Node.js backend from local configuration, not exposed in frontend code or bundled with the app. Keys currently live in a plain-text environment file; API-key storage is not integrated with Keychain.
 - Input, results, and explanations are processed in memory without a database or prompt-history feature. Native preferences, including task type and the target-model hint, and configuration paths are stored locally. Native diagnostics record status metadata and lengths, not prompt content; review app/process metadata before sharing a log.
-- Live mode sends the request and editing context to the configured model provider. The provider's data retention policy applies. Mock does not make a model request.
+- Live mode sends the request and editing context to the configured model provider, plus the original requirements and candidate when model review is enabled. The same provider's data retention policy applies to those calls. Mock does not make a model request.
 - The browser interface uses no cookies, browser storage, analytics, or remote fonts. Reloading clears its workspace. The native workspace is cleared using its clear action or by ending its in-memory session.
 - Enabled selection actions observe mouse events and read accessible text selection. Where a safe editable field exposes a nonempty selected range but no selected-text attribute, the assistant may temporarily read the field value. Values over 65,536 UTF-16 code units are rejected; only the selected range is returned, and field contents are not logged.
 - Copy, paste-back, and fallback copying use the system clipboard. Restoration is guarded so a newer user copy is not overwritten. Clearing the workspace does not delete text already copied to the system clipboard.
@@ -294,13 +300,15 @@ This is a local personal tool without account authentication or multi-user isola
 
 ### Validation and limitations
 
+The [current prompt-quality verification](docs/prompt-quality-verification.md) describes the updated editing/review logic, controlled checks, and remaining live-evaluation gaps. Earlier records below retain their historical scope; they do not certify the current version or all semantic cases.
+
 [The optimization-value verification record](docs/optimization-value-verification.md) defines eight synthetic cases for task guidance beyond translation and restraint on already-clear requests. The original checks encountered provider timeouts and service errors. A later [improvement verification](docs/improvement-verification.md) records successful live samples, mechanical checks and separate semantic findings. The illustrated result is not evidence of better model or downstream task performance.
 
 [The previous reliability verification](docs/reliability-verification.md), on 2026-10-09, passed JavaScript syntax checks, 55 Node tests, 190 native checks, 10 Chrome flow tests and the macOS build/signature checks. For the Terminal change on 2026-10-11, syntax checks, 55 Node tests, 233 native checks, README/link checks and the macOS build/signature checks passed; the updated app was installed. Browser flow tests were not rerun for this native change. Automated tests use mock or controlled providers; they do not establish real-model output quality.
 
 The user previously confirmed that the companion menu appeared without automatic generation and that one explicit click produced an English result. Physical mouse and complete copy/paste-back/cancellation behavior in Codex/Claude still need verification for this build. See the [selection verification](docs/context-menu-verification.md) and [multilingual sample review](docs/multilingual-verification.md) for their separate scopes.
 
-Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Live semantic quality depends on the provider and still requires review. See the [improvement verification](docs/improvement-verification.md) for the latest checks and remaining limits.
+Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Live semantic quality depends on the provider and still requires review. See the [current prompt-quality verification](docs/prompt-quality-verification.md) for checks and remaining limits.
 
 ### Development
 

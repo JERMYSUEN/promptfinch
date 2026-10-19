@@ -35,6 +35,10 @@ LLM_MODEL=deepseek-flash
 LLM_API_KEY=
 LLM_JSON_MODE=true
 LLM_THINKING_MODE=disabled
+# Optional review is off by default; unset/false uses editing only (1 call, up to 2 with format retry).
+# Set true for same-model independent review: usually 2 calls, up to 4 with repair/retries; adds paid usage and latency.
+LLM_QUALITY_REVIEW=false
+# Shared deadline for all editing, review, repair, and format retry calls.
 LLM_TIMEOUT_MS=45000
 `;
 const CONFIG_LIMIT = 64 * 1024;

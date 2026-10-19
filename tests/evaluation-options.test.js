@@ -42,8 +42,12 @@ test('語意評估器支援獨立指令與說明語言，錯誤選項不會送�
   assert.equal(saved.results[0].semanticReview, 'pending', 'mechanical success must not claim semantic quality');
   assert.equal(saved.results[0].literalChecks[0].preserved, true);
   const priorRequests = requests;
-  for (const extra of [['--prompt-language', 'fr'], ['--notes-language', 'fr']]) {
+  for (const extra of [
+    ['--prompt-language', 'fr'], ['--notes-language', 'fr'],
+    ...['0', '11', '-1', '1.5', '1.0', '02', 'NaN', ''].map(value => ['--max-consecutive-failures', value]),
+    ['--max-consecutive-failures'], ['--max-consecutive-failures', '2', '--max-consecutive-failures', '3'],
+  ]) {
     await assert.rejects(execute(process.execPath, [...args, ...extra], { env: {}, timeout: 15000 }), error => error.code === 1);
   }
-  assert.equal(requests, priorRequests, 'invalid language options fail before connecting');
+  assert.equal(requests, priorRequests, 'invalid options fail before connecting');
 });

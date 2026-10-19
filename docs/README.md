@@ -15,7 +15,7 @@ The guides describe current `main`. The [v1.2.0 release notes](releases/v1.2.0.m
 | Diagnose configuration, model, selection and copy errors | [Troubleshooting](troubleshooting.md) | English |
 | Integrate the local service | [HTTP API reference](api.md) | English |
 | Understand data handling and report a security issue | [Security policy](../SECURITY.md) | English |
-| Download, upgrade or identify a release snapshot | [v1.2.0 notes](releases/v1.2.0.md), [changelog](../CHANGELOG.md), [original release](releases/v1.0.0.md) | English |
+| Download, upgrade or identify a release snapshot | [v1.3.0 notes](releases/v1.3.0.md), [changelog](../CHANGELOG.md), [original release](releases/v1.0.0.md) | English |
 
 PromptFinch uses your configured model API; it does not bundle a model or reuse a Codex/Claude login. Mock checks the local workflow without translating or optimizing. Selection support depends on the source app; recognized terminals receive copy-only results. Read the workflow's limits before relying on paste-back.
 
@@ -38,3 +38,5 @@ The [Codex demo GIF](media/demo-selection.gif) is a synthetic, hand-authored ill
 Internal handoff notes, local artifacts, private configurations and original recordings are not public documentation or release inputs. Do not copy them into an issue or source archive.
 
 The [2026-10-17 improvement verification](improvement-verification.md) records current reliability checks, archive verification and synthetic live-model findings, including remaining semantic errors.
+
+The [prompt-quality comparison](prompt-quality-verification.md) records the current editing/review changes and their limits. The [rubric](prompt-quality-rubric.md) defines semantic acceptance separately from HTTP, format and literal checks.

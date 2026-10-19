@@ -144,6 +144,7 @@ export function createApp(config = readConfig()) {
           backendInstanceID: config.backendInstanceID || null,
           mode: config.mode, ready: config.mode === 'mock' || Boolean(config.apiKey && config.model),
           generationModel: config.mode === 'live' ? config.model || null : null,
+          qualityReviewEnabled: config.mode === 'live' && config.qualityReview === true,
           maxPromptLength: MAX_PROMPT_LENGTH, tasks: TASKS, promptLanguages: ['zh-Hant', 'en'], notesLanguages: NOTES_LANGUAGES,
         });
         return;

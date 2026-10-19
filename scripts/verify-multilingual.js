@@ -2,6 +2,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -10,7 +11,7 @@ class EvaluationError extends Error {}
 async function main() {
   if (!args.includes('--live')) throw new EvaluationError('真實模型測試可能產生 API 費用；請明確傳入 --live。');
   const options = new Map();
-  const valueOptions = new Set(['--url', '--cases', '--output', '--ids', '--prompt-language', '--notes-language']);
+  const valueOptions = new Set(['--url', '--cases', '--output', '--ids', '--prompt-language', '--notes-language', '--max-consecutive-failures']);
   for (let index = 0; index < args.length; index++) {
     const name = args[index];
     if (name !== '--live' && !valueOptions.has(name)) throw new EvaluationError('包含不支援的測試選項。');
@@ -21,6 +22,9 @@ async function main() {
     options.set(name, value);
   }
   const option = (name, fallback) => options.get(name) ?? fallback;
+  const failureLimit = option('--max-consecutive-failures', '2');
+  if (!/^(?:[1-9]|10)$/.test(failureLimit)) throw new EvaluationError('--max-consecutive-failures 必須是 1 到 10 的整數。');
+  const maxConsecutiveFailures = Number(failureLimit);
   let base;
   try { base = new URL(option('--url', 'http://127.0.0.1:3210')); }
   catch { throw new EvaluationError('測試網址格式無效。'); }
@@ -56,6 +60,7 @@ async function main() {
   if (!['en', 'zh-Hant'].includes(promptLanguage)) throw new EvaluationError('--prompt-language 必須是 en 或 zh-Hant。');
   if (notesLanguage !== undefined && !['zh-TW', 'en', 'ja', 'ko'].includes(notesLanguage)) throw new EvaluationError('--notes-language 不受支援。');
   const destination = resolve(option('--output', resolve(root, 'artifacts/multilingual-live-results.json')));
+  const localOptimizerSourceSHA256 = createHash('sha256').update(await readFile(resolve(root, 'lib/optimizer.js'))).digest('hex');
   const response = await fetch(new URL('/api/config', base), { signal: AbortSignal.timeout(5000) });
   const config = await response.json();
   if (!response.ok || config.service !== 'prompt-studio' || config.mode !== 'live' || !config.ready) {
@@ -63,37 +68,64 @@ async function main() {
   }
   await mkdir(dirname(destination), { recursive: true });
   const run = { date: new Date().toISOString(), generationModel: config.generationModel, backendID: config.backendID || null,
+    localOptimizerSourceSHA256,
+    sourceEvidence: 'Hash of the local optimizer source only; the server backend ID does not prove that this source is deployed.',
     promptLanguage, ...(notesLanguage ? { notesLanguage } : {}),
-    evidence: 'live model samples; literal checks are mechanical, semantic review is separate', results: [] };
-  for (const fixture of fixtures) {
+    evidence: 'Live model samples; succeeded/failed totals cover request validity and literal checks only, not semantic quality.',
+    semanticStatus: 'pending', maxConsecutiveFailures, status: 'running', stopReason: null,
+    totals: { attempted: 0, succeeded: 0, failed: 0, unattempted: fixtures.length },
+    unattemptedIDs: fixtures.map(fixture => fixture.id), results: [] };
+  const save = () => writeFile(destination, JSON.stringify(run, null, 2) + '\n');
+  await save();
+  let consecutiveRequestFailures = 0;
+  for (const [index, fixture] of fixtures.entries()) {
     const start = Date.now();
-    const entry = { ...fixture, sourceUTF16Length: fixture.prompt.length, semanticReview: 'pending' };
+    const entry = { ...fixture, sourceUTF16Length: fixture.prompt.length, semanticReview: 'pending', semanticStatus: 'pending' };
     try {
       const response = await fetch(new URL('/api/optimize', base), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: fixture.prompt, task: fixture.task || 'general', targetModel: '', promptLanguage, ...(notesLanguage ? { notesLanguage } : {}) }),
         signal: AbortSignal.timeout(195000),
       });
-      const data = await response.json();
       entry.status = response.status;
-      if (!response.ok) entry.error = data.error || '模型請求失敗';
-      else if (data.mode !== 'live' || data.promptLanguage !== promptLanguage || (notesLanguage && data.notesLanguage !== notesLanguage) || typeof data.prompt !== 'string') entry.error = '回應的 live 模式或語言設定不符';
+      const data = await response.json();
+      if (!response.ok) { entry.error = '模型請求失敗'; entry.failureKind = 'http'; }
+      else if (!data || data.mode !== 'live' || data.promptLanguage !== promptLanguage
+          || (notesLanguage && data.notesLanguage !== notesLanguage) || typeof data.prompt !== 'string' || !data.prompt.trim()) {
+        entry.error = '回應的 live 模式、語言設定或指令內容不符';
+        entry.failureKind = 'response';
+      }
       else {
         entry.result = data;
         entry.resultUTF16Length = data.prompt.length;
         entry.literalChecks = (fixture.expected?.literals || []).map(text => ({ text, preserved: data.prompt.includes(text) }));
       }
     } catch (error) {
-      entry.error = error.name === 'TimeoutError' ? '測試逾時' : '連線失敗';
+      const timedOut = error.name === 'TimeoutError';
+      entry.error = timedOut ? '測試逾時' : entry.status ? '回應格式無效或讀取失敗' : '連線失敗';
+      entry.failureKind = timedOut ? 'timeout' : entry.status ? 'response' : 'connection';
     }
     entry.elapsedMs = Date.now() - start;
+    const literalFailed = entry.literalChecks?.some(check => !check.preserved) || false;
+    entry.outcome = entry.error || literalFailed ? 'failed' : 'succeeded';
+    consecutiveRequestFailures = entry.error ? consecutiveRequestFailures + 1 : 0;
     run.results.push(entry);
+    run.totals.attempted++;
+    run.totals[entry.outcome]++;
+    run.unattemptedIDs = fixtures.slice(index + 1).map(fixture => fixture.id);
+    run.totals.unattempted = run.unattemptedIDs.length;
+    if (consecutiveRequestFailures >= maxConsecutiveFailures) {
+      run.status = 'stopped';
+      run.stopReason = { code: 'consecutive_request_failures', count: consecutiveRequestFailures, limit: maxConsecutiveFailures };
+    } else if (!run.totals.unattempted) run.status = 'completed';
     // No credentials, provider bodies, source text, or prompt output in the console.
     console.log(`${fixture.id}: HTTP ${entry.status || 'error'}; source=${entry.sourceUTF16Length}; result=${entry.resultUTF16Length || 0}; literalFailures=${entry.literalChecks?.filter(c => !c.preserved).length || 0}`);
-    await writeFile(destination, JSON.stringify(run, null, 2) + '\n');
+    await save();
+    if (run.stopReason) break;
   }
-  console.log(`已記錄 ${run.results.length} 個合成案例；請另作語意覆核。`);
-  if (run.results.some(r => r.error || r.literalChecks?.some(check => !check.preserved))) process.exitCode = 1;
+  console.log(`已嘗試 ${run.totals.attempted} 個合成案例；未嘗試 ${run.totals.unattempted} 個；全部仍須語意覆核。`);
+  if (run.stopReason) console.error('連續模型或服務請求失敗，已停止後續案例；詳見結果檔案。');
+  if (run.totals.failed || run.totals.unattempted) process.exitCode = 1;
 }
 
 main().catch(error => {

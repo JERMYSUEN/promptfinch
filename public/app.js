@@ -20,6 +20,13 @@ const EXAMPLES = {
   coding: '請用原生 JavaScript 寫一個驗證台灣手機號碼的函式，接受字串、回傳布林值。格式必須是 09 開頭的 10 位數字，不接受空白或符號。不要使用外部套件，請提供函式與成功、失敗、空字串的測試範例。',
 };
 
+const NO_IMPROVEMENT = {
+  'zh-TW': '未提供額外改善說明。',
+  en: 'No additional editing notes were provided.',
+  ja: '追加の編集説明はありません。',
+  ko: '추가 편집 설명이 없습니다.',
+};
+
 function inputValue() {
   return { prompt: original.value, task: form.querySelector('input[name="task"]:checked').value, targetModel: target.value, promptLanguage: promptLanguage.value, notesLanguage: notesLanguage.value };
 }
@@ -112,6 +119,10 @@ function renderResult(data, source) {
   renderComparison(source, data.prompt);
   $('optimized-prompt').value = data.prompt;
   fillList('improvements', data.improvements);
+  $('improvements').hidden = data.improvements.length === 0;
+  const notesLocale = Object.hasOwn(NO_IMPROVEMENT, data.notesLanguage) ? data.notesLanguage : 'zh-TW';
+  $('no-improvement').textContent = NO_IMPROVEMENT[notesLocale];
+  $('no-improvement').hidden = data.improvements.length > 0;
   fillList('assumptions-list', data.assumptions);
   $('no-assumptions').hidden = data.assumptions.length > 0;
   $('result-tag').hidden = false;
@@ -192,6 +203,9 @@ $('clear-button').addEventListener('click', () => {
   $('comparison-result').replaceChildren();
   $('comparison').open = false;
   fillList('improvements', []);
+  $('improvements').hidden = true;
+  $('no-improvement').hidden = true;
+  $('no-improvement').textContent = '';
   fillList('assumptions-list', []);
   updatedInput();
   setBusy(false);

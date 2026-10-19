@@ -63,7 +63,7 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-[v1.2.0 桌面預覽版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0) 提供內含執行環境的 Windows x64 與 Linux x64 安裝包；支援範圍、設定及驗證說明見[發行指引（英文）](../releases/v1.2.0.md)。
+[v1.3.0 桌面預覽版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) 提供內含執行環境的 Windows x64 與 Linux x64 安裝包；支援範圍、設定及驗證說明見[發行指引（英文）](../releases/v1.3.0.md)。
 
 [v1.1.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) 提供 `PromptFinch-1.1.0-macos-arm64.zip`、`PromptFinch-source-v1.1.0.zip` 及 `SHA256SUMS`。App 下載適用於 Apple Silicon，採 ad-hoc 簽章、未經公證；需另外安裝 Node.js 22+。解壓縮後將 App 移至應用程式資料夾。設定及驗證範圍見[發行說明](../releases/v1.1.0.md)，也可從此原始碼工作目錄自行建置。[變更紀錄](../../CHANGELOG.md)區分先前快照；目前沒有自動更新或 Intel／Universal Binary 下載。
 
@@ -137,6 +137,7 @@ LLM_BASE_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-flash
 LLM_JSON_MODE=true
 LLM_THINKING_MODE=disabled
+LLM_QUALITY_REVIEW=false
 LLM_TIMEOUT_MS=90000
 HOST=127.0.0.1
 PORT=3000
@@ -156,7 +157,8 @@ PORT=3000
 | `LLM_MODEL` | 空白 | 供應商模型識別碼；即時模式必填。 |
 | `LLM_JSON_MODE` | `true` | 傳送 `response_format: {type: "json_object"}`。 |
 | `LLM_THINKING_MODE` | 空白 | 留空時不傳送；可用 `enabled` 或 `disabled`。 |
-| `LLM_TIMEOUT_MS` | `45000` | 請求／回應逾時；整數範圍 10 至 180000 毫秒。 |
+| `LLM_QUALITY_REVIEW` | `false` | 可選的同供應商、同模型獨立覆核；須明確設為 `true` 才啟用，未設定或 `false` 僅執行編輯。 |
+| `LLM_TIMEOUT_MS` | `45000` | 編輯、覆核、修訂與格式重試共用的上游總時間預算；整數範圍 10 至 180000 毫秒。 |
 | `HOST` | `127.0.0.1` | 獨立伺服器的監聽位址。 |
 | `PORT` | `3000` | 獨立伺服器連接埠。 |
 | `ALLOWED_HOSTS` | 空白 | 反向代理的可選主機白名單，以逗號分隔，例如 `prompts.example.com,prompts.example.com:8443`。不接受萬用字元或完整 URL。 |
@@ -164,6 +166,8 @@ PORT=3000
 Mac App 無論所選設定檔中的值為何，都會將 `HOST` 與 `PORT` 設為 `127.0.0.1:3210`，並清空 `ALLOWED_HOSTS`。獨立瀏覽器伺服器可使用另一個連接埠。伺服器預設只接受本機名稱與非萬用監聽主機在實際連接埠上的請求；監聽 `0.0.0.0` 或 `::` 不會放行任意 Host。遠端網域與代理埠須明確列入白名單，不自動信任轉送主機標頭。
 
 即時設定或供應商呼叫失敗時會回報錯誤，不會默默改用 mock 結果。`/api/config` 的 `ready` 表示設定已填妥，不代表已成功連上上游模型。
+
+即時模式預設只執行編輯，一般呼叫供應商一次，需要格式重試時最多兩次。模型覆核為可選功能，`LLM_QUALITY_REVIEW` 未設定或為 `false` 時不啟用；明確設為 `true` 後，才使用設定的同一模型，在另一個請求脈絡中比對候選 Prompt 與原始要求。啟用覆核後，成功流程通常呼叫兩次；候選內容被否決時，最多修訂一次後再覆核。編輯、覆核、修訂與格式重試合計最多四次呼叫，並共用同一逾時預算。已啟用的覆核失敗會回報錯誤，不會交付被否決的內容或改用 mock。這會增加付費 token 用量與等待時間；目前證據尚不足以支持預設啟用。Mock 仍不呼叫模型。模型核准不代表正確性或下游效果已獲保證，重要要求仍須自行比對。
 
 ## 範例：Prompt 語言與答案語言
 
@@ -183,7 +187,7 @@ Write a brief invitation in Spanish. Preserve the exact text "ACME-42" wherever 
 
 - 輸入、JSON 傳輸及原生選取均支援 Unicode。12,000 字元上限以 UTF-16 code unit 計算，與 JavaScript 及 Swift 的 UTF-16 視圖一致，並非可見字母或字素叢集數。超過上限會拒絕請求，不會截斷。選取範圍不能切開 surrogate pair。參閱 [JavaScript length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) 與 [Swift UTF16View](https://developer.apple.com/documentation/swift/string/utf16view)。
 - 韓語諺文、俄語西里爾字母、由右至左文字、組合附加符號、連接符、表情符號及混合文字皆可輸入，不會正規化文字或按字母系統過濾。瀏覽器輸入欄會自動調整文字方向。文件涵蓋的語言與四種 macOS 介面語言是不同的範圍。
-- 英文模式會分開處理指令語言與下游答案語言。模型必須保留明確答案語言要求、否定範圍、固定字串、變數、程式碼與 URL。若引號或程式碼中的固定字串僅因 NFC 正規化而被更動，後端會以有限規則修復明確可判定的情況。若字串被省略、翻譯或改為語意相近但拼法不同，後端無法重建；重要字串請自行檢查。
+- 兩種指令語言都會保留原文另外要求的下游答案語言。模型必須保留明確要求、條件與否定的適用範圍、固定字串、變數、程式碼與 URL。兩種模式都會以有限規則修復引號或程式碼中僅因 NFC 正規化而被更動、且可明確判定的固定字串。若字串被省略、翻譯或改為語意相近但拼法不同，後端無法重建；重要字串請自行檢查。
 - [多語驗證紀錄](../multilingual-verification.md)記錄了傳輸檢查，以及使用 `deepseek-flash` 進行的 18 種語言、24 個即時模型合成案例，包含韓語／俄語的短、中、長案例。其中也記錄了一項不夠精確的日文優化說明，以及尚未測試的語言與宿主 App。這些樣本不保證新輸入或其他模型的翻譯品質。
 - [跨語言對照驗證](../multilingual-parity-verification.md) 對 29 個 locale（28 種語言，中文分繁簡）使用同一組需求，另測答案語言推定、混語、長引文與條件範圍，分開記錄自動檢查、模型輸出覆核與剩餘限制。
 
@@ -208,9 +212,11 @@ curl --fail --silent --show-error http://127.0.0.1:3000/api/optimize \
 
 成功時回傳 `prompt`、`improvements`、`assumptions`、`mode`、`generationModel` 與 `promptLanguage`。原文與結果對照會保留生成當時的原文，逐行標示文字改動；這不等於語意正確性驗證。重用結果時只複製 `prompt`；優化說明與假設是獨立的審閱備註。`notesLanguage` 支援 `zh-TW`（API 預設）、`en`、`ja`、`ko`，與 Prompt 指令及原文指定的答案語言分開。
 
+英文與繁體中文模式現在都直接回傳完整、可使用的 `prompt`；繁體中文結果不再加上原始需求包裝。曾解析該包裝的客戶端，應改為另外保留送出的原文，並完整使用回傳 Prompt。`improvements` 可有 0–4 項，需求已清楚時可以沒有額外編輯，工作台會另行顯示提示。成功的即時回應另有 `modelReview: {status: "approved" | "disabled", revisionCount: 0 | 1}`，只表示實際走過的覆核流程，不是品質認證。API 版本仍為 2，客戶端應接受新增回應欄位與空白說明陣列。
+
 API 會驗證輸入與模型回應結構、限制同時進行的優化請求，並回報設定、供應商、格式錯誤及逾時問題。取消操作會關閉上游請求；供應商端的處理及計費仍由供應商控制。
 
-[完整 API 參考](../api.md)提供回應範例、設定就緒狀態、限制、狀態碼與取消行為。`LLM_TIMEOUT_MS` 是上游請求與格式重試共用的總時間預算；重試不會重新計時。
+[完整 API 參考](../api.md)提供回應範例、設定就緒狀態、限制、狀態碼與取消行為。`LLM_TIMEOUT_MS` 是編輯、覆核、修訂與格式重試共用的上游總時間預算；下一次呼叫不會重新計時。
 
 ## macOS 操作流程
 
@@ -280,7 +286,7 @@ Either backend
 
 - API 金鑰由 Node.js 後端從本機設定讀取，不會暴露在前端程式碼或封裝進 App。目前金鑰以純文字環境檔保存；尚未整合 Keychain 金鑰儲存。
 - 輸入、結果與說明在記憶體中處理，不使用資料庫或 Prompt 歷史紀錄。原生偏好設定（包括任務類型與目標模型提示）及設定路徑會儲存在本機。原生診斷記錄狀態中繼資料與長度，不記錄 Prompt 內容；分享日誌前仍須檢視 App／程序中繼資料。
-- 即時模式會將請求與編輯指示傳送至已設定的模型供應商，並受該供應商的資料保留政策約束。Mock 不會呼叫模型。
+- 即時模式會將請求與編輯指示傳送至已設定的模型供應商；啟用模型覆核時，也會傳送原始要求與候選內容。這些呼叫都受同一供應商的資料保留政策約束。Mock 不會呼叫模型。
 - 瀏覽器介面不使用 Cookie、瀏覽器儲存、分析工具或遠端字型；重新載入會清空工作區。原生工作區可透過清除操作或結束記憶體工作階段清空。
 - 啟用選取操作後，App 會監聽滑鼠事件並讀取可存取的文字選取內容。若安全的可編輯欄位提供非空選取範圍但沒有選取文字屬性，助手可能暫時讀取欄位值。超過 65,536 個 UTF-16 code unit 的值會被拒絕；只會回傳選取範圍，也不會記錄欄位內容。
 - 複製、貼回及備援複製會使用系統剪貼簿。復原操作會先確認使用者沒有複製新內容。清空工作區不會刪除已複製到系統剪貼簿的文字。
@@ -289,13 +295,15 @@ Either backend
 
 ## 驗證結果與限制
 
-[優化效果驗證紀錄](../optimization-value-verification.md)定義了 8 個合成案例，檢查翻譯之外的任務指引，以及清楚需求是否保持精簡。即時模型測試遇到供應商逾時與服務錯誤，尚未取得品質比較；示範結果不代表已證明模型或下游任務表現改善。
+[目前的 Prompt 品質驗證紀錄](../prompt-quality-verification.md)說明這次編輯與覆核邏輯、受控檢查及尚未完成的即時模型評估。以下先前紀錄保留各自的歷史範圍，不代表目前版本或所有語意案例均已通過。
+
+[優化效果驗證紀錄](../optimization-value-verification.md)定義了 8 個合成案例，檢查翻譯之外的任務指引，以及清楚需求是否保持精簡。最初檢查遇到供應商逾時與服務錯誤；後來的[改善驗證紀錄](../improvement-verification.md)記錄已取得的即時樣本、機械檢查與分開覆核的語意問題。示意結果不代表已證明模型或下游任務表現改善。
 
 [先前的可靠性驗證](../reliability-verification.md)於 2026-10-09 通過 JavaScript 語法檢查、55 項 Node 測試、190 項原生檢查、10 項 Chrome 流程測試，以及 macOS 建置／簽章檢查。2026-10-11 的 Terminal 變更通過語法檢查、55 項 Node 測試、233 項原生檢查、README／文件連結檢查，以及 macOS 建置／簽章檢查，並完成新版安裝；這次原生變更未重跑瀏覽器流程測試。自動化測試使用 mock 或受控供應商，不代表真實模型的輸出品質。
 
 使用者先前確認輔助選單出現時不會自動生成，且明確點擊一次即可取得英文結果。此版本在 Codex／Claude 中以實體滑鼠操作，以及完整的複製／貼回／取消行為仍需驗收。[選取驗證](../context-menu-verification.md)與[多語樣本審閱](../multilingual-verification.md)各自記錄不同的驗證範圍。
 
-目前限制包括宿主 App 的選取支援、沒有 OCR、不能自訂全域快捷鍵、未內含 Node、沒有自動更新，以及沒有現成且經公證的安裝程式或 Universal Binary 發行版。Intel／最低 macOS 版本硬體、實體行動裝置、Docker 與遠端部署仍未驗證。實際語意品質仍需人工覆核；最新檢查與限制見[改善驗證紀錄](../improvement-verification.md)。
+目前限制包括宿主 App 的選取支援、沒有 OCR、不能自訂全域快捷鍵、未內含 Node、沒有自動更新，以及沒有現成且經公證的安裝程式或 Universal Binary 發行版。Intel／最低 macOS 版本硬體、實體行動裝置、Docker 與遠端部署仍未驗證。實際語意品質仍需人工覆核；檢查與剩餘限制見[目前的 Prompt 品質驗證](../prompt-quality-verification.md)。
 
 ## 開發
 

@@ -50,7 +50,7 @@ async function withAuthority(url, { host, origin, path = '/api/config', method =
 
 async function providerApp(t, handler, env = {}) {
   const provider = await listen(createServer(handler), t);
-  return app(t, { OPTIMIZER_MODE: 'live', LLM_API_KEY: 'test-secret-key', LLM_MODEL: 'test-model', LLM_BASE_URL: `${provider}/v1`, ...env });
+  return app(t, { OPTIMIZER_MODE: 'live', LLM_QUALITY_REVIEW: 'false', LLM_API_KEY: 'test-secret-key', LLM_MODEL: 'test-model', LLM_BASE_URL: `${provider}/v1`, ...env });
 }
 
 function sendCompletion(response, result, finishReason = 'stop') {
@@ -269,6 +269,26 @@ test('英文 mock 明示原文尚未翻譯，與既有繁體中文模式分離',
   assert.deepEqual(config.promptLanguages, ['zh-Hant', 'en']);
 });
 
+test('已清楚的任務允許零改善；兩種語言都直接回傳完整指令，不另加原文外框', async t => {
+  const outputs = {
+    en: 'Write two friendly welcome sentences in English.',
+    'zh-Hant': '用繁體中文寫兩句親切的歡迎詞。',
+  };
+  const url = await providerApp(t, async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    const input = JSON.parse(JSON.parse(Buffer.concat(chunks)).messages[1].content);
+    sendCompletion(response, { prompt: input.promptInstructionLanguage === 'English' ? outputs.en : outputs['zh-Hant'], improvements: [], assumptions: [] });
+  });
+  for (const [promptLanguage, prompt] of Object.entries(outputs)) {
+    const { status, data } = await post(url, { prompt, promptLanguage });
+    assert.equal(status, 200);
+    assert.equal(data.prompt, prompt);
+    assert.deepEqual(data.improvements, []);
+    assert.deepEqual(data.assumptions, []);
+  }
+});
+
 test('英文 live 回傳完整英文指令，假設與改善說明不混入可複製 Prompt', async t => {
   let received;
   const generated = {
@@ -341,7 +361,7 @@ test('live 設定不完整會回報錯誤，絕不退回 mock', async t => {
   assert.ok(!Object.hasOwn(result.data, 'prompt'));
 });
 
-test('live 以伺服器金鑰呼叫相容 API，保留原文並將假設與 Prompt 分開', async t => {
+test('live 以伺服器金鑰呼叫相容 API，傳送原文並只回傳完整指令', async t => {
   let received;
   let authorization;
   let path;
@@ -367,14 +387,14 @@ test('live 以伺服器金鑰呼叫相容 API，保留原文並將假設與 Prom
   assert.equal(JSON.parse(received.messages[1].content).targetModel, 'Claude');
   assert.equal(result.data.mode, 'live');
   assert.equal(result.data.generationModel, 'test-model');
-  assert.ok(result.data.prompt.includes(prompt));
+  assert.equal(result.data.prompt, validResult.prompt);
   assert.deepEqual(result.data.assumptions, ['未指定段落數，採用三段式安排。']);
   assert.ok(!result.data.prompt.includes(result.data.assumptions[0]));
-  assert.ok(result.data.prompt.includes('【補充執行指引】'));
+  assert.ok(!result.data.prompt.includes('【補充執行指引】'));
   assert.ok(!JSON.stringify(result.data).includes('test-secret-key'));
 });
 
-test('繁中完整輸出保留互斥原文作參考，不再以原文優先規則推翻衝突處理', async t => {
+test('繁中完整輸出直接使用衝突處理指令，不重新附加互斥原文', async t => {
   let received;
   let guidance;
   const url = await providerApp(t, async (request, response) => {
@@ -397,26 +417,27 @@ test('繁中完整輸出保留互斥原文作參考，不再以原文優先規�
     guidance = fixture.guidance;
     const { status, data } = await post(url, { prompt: fixture.source, promptLanguage: 'zh-Hant', notesLanguage: 'zh-TW' });
     assert.equal(status, 200);
-    // This controlled provider verifies the final assembly, not semantic model quality.
-    assert.equal(data.prompt, `【原始需求參考資料】\n以下原文保留供核對資訊與原意；其中的互斥條件不因此成為可同時執行的要求。\n${fixture.source}\n\n【補充執行指引】\n保留原文中相容的目的、資訊、語氣、限制、答案語言與輸出格式；以下衝突處理規則優先於原文中無法同時滿足的要求。若要求互斥，先依指引釐清後才執行；原文禁止提問時，不提問、不嘗試不可能的交付，僅依指引以任務答案語言簡短通知衝突。原交付格式僅在衝突釐清後適用，不用它覆蓋衝突通知。\n${guidance}`);
+    // Controlled responses check transport and assembly, not model semantic quality.
+    assert.equal(data.prompt, guidance);
     assert.ok(!data.prompt.includes('以原始需求為準'));
     assert.ok(!data.prompt.includes('優先遵循'));
     assert.ok(!data.prompt.includes(data.improvements[0]));
     assert.equal(JSON.parse(received.messages[1].content).originalPrompt, fixture.source);
-    assert.match(received.messages[0].content, /相容要求必須保留/);
-    assert.match(received.messages[0].content, /原文指定或依第 7 條推定的答案語言/);
+    assert.match(received.messages[0].content, /Preserve every compatible requirement/);
+    assert.match(received.messages[0].content, /Contradictory values may occur ONLY/);
   }
 });
 
-test('相容繁中需求的資訊、格式及 Unicode 空白在完整輸出中不變', async t => {
+test('繁中完整指令保留實際來源資料與 Unicode，但不加入重複的操作原文', async t => {
   const source = '  用韓文寫兩句歡迎詞，保留 "Cafe\u0301" 和 "👩🏽‍💻"。\n    only_key = "x";\n';
-  const guidance = '先核對固定字串與兩句的限制，再只交付韓文歡迎詞。';
-  const url = await providerApp(t, (request, response) => sendCompletion(response, { ...validResult, prompt: guidance }));
+  const generated = '用韓文寫兩句歡迎詞，逐字保留 "Café"、"👩🏽‍💻" 及以下程式片段：\n    only_key = "x";\n';
+  const expected = generated.replace('Café', 'Cafe\u0301');
+  const url = await providerApp(t, (request, response) => sendCompletion(response, { ...validResult, prompt: generated }));
   const { status, data } = await post(url, { prompt: source });
   assert.equal(status, 200);
-  const reference = data.prompt.split('【補充執行指引】')[0];
-  assert.ok(reference.endsWith(`${source}\n\n`));
-  assert.equal(data.prompt.slice(-guidance.length), guidance);
+  assert.equal(data.prompt, expected);
+  assert.ok(!data.prompt.includes('【原始需求參考資料】'));
+  assert.ok(data.prompt.includes('\n    only_key = "x";\n'));
   assert.equal(data.notesLanguage, 'zh-TW');
 });
 
@@ -559,7 +580,7 @@ test('格式錯誤後的重試共用原始總逾時，不為第二次請求重�
 });
 
 for (const brokenResult of [
-  'not json', {}, { ...validResult, prompt: '' }, { ...validResult, improvements: [] },
+  'not json', {}, { ...validResult, prompt: '' }, { ...validResult, improvements: null },
 ]) {
   test(`模型結果驗證：拒絕 ${JSON.stringify(brokenResult).slice(0, 65)}`, async t => {
     const url = await providerApp(t, (request, response) => sendCompletion(response, brokenResult));

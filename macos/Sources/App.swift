@@ -467,7 +467,12 @@ struct WorkspaceView: View {
                         DisclosureGroup(L10n.text(.improvements)) {
                             ScrollView {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    ForEach(Array(result.improvements.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
+                                    if result.improvements.isEmpty {
+                                        Text(L10n.text(.noImprovement, language: UILanguage(rawValue: result.notesLanguage ?? "") ?? model.language))
+                                            .accessibilityIdentifier("noImprovement")
+                                    } else {
+                                        ForEach(Array(result.improvements.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
+                                    }
                                     if !result.assumptions.isEmpty {
                                         Text(L10n.text(.assumptions)).fontWeight(.semibold).padding(.top, 6)
                                         ForEach(Array(result.assumptions.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
