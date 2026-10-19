@@ -164,10 +164,13 @@ jobs:
           const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
           const output = join('desktop-dist', pkg.version);
           const files = readdirSync(output).filter(name => /\.(exe|zip|AppImage|tar\.gz)$/.test(name) && statSync(join(output, name)).isFile()).sort();
-          if (files.length !== 2) throw new Error('Expected exactly two public desktop packages.');
+          const platform = process.env.DESKTOP_BUILD_PLATFORM;
+          const expected = (platform === 'windows'
+            ? [`PromptFinch-${pkg.version}-windows-x64-setup.exe`, `PromptFinch-${pkg.version}-windows-x64.zip`]
+            : [`PromptFinch-${pkg.version}-linux-x64.AppImage`, `PromptFinch-${pkg.version}-linux-x64.tar.gz`]).sort();
+          if (JSON.stringify(files) !== JSON.stringify(expected)) throw new Error(`Unexpected public package names: ${JSON.stringify(files)}`);
           const artifacts = files.map(name => ({ name, bytes: statSync(join(output, name)).size,
             sha256: createHash('sha256').update(readFileSync(join(output, name))).digest('hex') }));
-          const platform = process.env.DESKTOP_BUILD_PLATFORM;
           writeFileSync(join(output, `SHA256SUMS-${platform}-x64.txt`), artifacts.map(item => `${item.sha256}  ${item.name}\n`).join(''));
           writeFileSync(join(output, `PromptFinch-${pkg.version}-${platform}-x64.build.json`), JSON.stringify({
             project: 'PromptFinch', version: pkg.version, platform, architecture: 'x64',

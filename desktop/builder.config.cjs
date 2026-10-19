@@ -44,6 +44,9 @@ module.exports = {
     artifactName: 'PromptFinch-${version}-windows-x64-setup.${ext}',
   },
   linux: {
+    // AppImage maps the arch placeholder to x86_64; keep public names aligned
+    // with the x64 download contract and build manifest for both targets.
+    artifactName: 'PromptFinch-${version}-linux-x64.${ext}',
     target: [{ target: 'AppImage', arch: ['x64'] }, { target: 'tar.gz', arch: ['x64'] }],
     executableName: 'promptfinch',
     syncDesktopName: true,
