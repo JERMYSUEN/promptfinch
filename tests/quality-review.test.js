@@ -15,7 +15,7 @@ async function provider(t, handler, env = {}) {
     for await (const chunk of request) chunks.push(chunk);
     const call = { body: JSON.parse(Buffer.concat(chunks)), authorization: request.headers.authorization, path: request.url };
     calls.push(call);
-    const result = await handler(call, calls.length);
+    const result = await handler(call, calls.length, response);
     if (result === undefined) return;
     const send = () => response.end(JSON.stringify({ choices: [{ message: { content: typeof result.content === 'string'
       ? result.content : JSON.stringify(result.content) }, finish_reason: result.finishReason || 'stop' }] }));
@@ -100,20 +100,44 @@ for (const malformed of [
   });
 }
 
-test('review shares the original total deadline rather than receiving a new budget', async t => {
-  const { calls, config } = await provider(t, (_, count) => ({ content: count === 1 ? candidate : approval, delay: 100 }), { LLM_TIMEOUT_MS: '170' });
+test('review shares the original total deadline and aborts its provider connection', { timeout: 5000 }, async t => {
+  const deadlines = [];
+  // Expire the original deadline only once the review is in flight. This avoids
+  // relying on a short elapsed-time margin between two local HTTP requests.
+  t.mock.method(AbortSignal, 'timeout', timeoutMs => {
+    const controller = new AbortController();
+    deadlines.push({ controller, timeoutMs });
+    return controller.signal;
+  });
+  let markReviewClosed;
+  const reviewClosed = new Promise(resolve => { markReviewClosed = resolve; });
+  const { calls, config } = await provider(t, (_, count, response) => {
+    if (count === 1) return { content: candidate };
+    response.once('close', () => markReviewClosed(response.writableEnded));
+    setImmediate(() => deadlines[0].controller.abort(new DOMException('Synthetic deadline expired', 'TimeoutError')));
+    return { content: approval, delay: 1000 };
+  }, { LLM_TIMEOUT_MS: '1000' });
   await assert.rejects(optimize(input, config), error => error.status === 504);
   assert.equal(calls.length, 2);
+  assert.equal(deadlines[0].timeoutMs, 1000);
+  assert.equal(await reviewClosed, false, 'the deadline must abort the connection before the review response finishes');
 });
 
-test('cancellation while reviewing stops without repair or a returned candidate', async t => {
+test('cancellation while reviewing aborts its provider connection without repair or a returned candidate', { timeout: 5000 }, async t => {
   const cancellation = new AbortController();
-  const { calls, config } = await provider(t, (_, count) => {
-    if (count === 2) { setTimeout(() => cancellation.abort(), 10); return undefined; }
+  let markReviewClosed;
+  const reviewClosed = new Promise(resolve => { markReviewClosed = resolve; });
+  const { calls, config } = await provider(t, (_, count, response) => {
+    if (count === 2) {
+      response.once('close', () => markReviewClosed(response.writableEnded));
+      setImmediate(() => cancellation.abort());
+      return { content: approval, delay: 1000 };
+    }
     return { content: candidate };
-  });
+  }, { LLM_TIMEOUT_MS: '2000' });
   await assert.rejects(optimize(input, config, cancellation.signal), error => error.status === 504);
   assert.equal(calls.length, 2);
+  assert.equal(await reviewClosed, false, 'cancellation must abort the connection before the review response finishes');
 });
 
 test('review can be explicitly disabled and mock always makes zero model calls', async t => {
@@ -156,4 +180,24 @@ test('Unicode repair runs before review and a rejected second edit cannot trigge
   });
   await assert.rejects(optimize(source, config), error => error.status === 502);
   assert.equal(calls.length, 3);
+});
+
+test('Unicode expansion beyond the output limit consumes only two editor attempts and is never reviewed or returned', async t => {
+  const source = validateInput({ prompt: 'Keep "Cafe\u0301" exactly.', promptLanguage: 'en', notesLanguage: 'en' });
+  const normalized = 'Café '.repeat(4800);
+  assert.equal(normalized.length, 24000);
+  assert.equal(normalized.replaceAll('Café', 'Cafe\u0301').length, 28800);
+  let reviewCalls = 0;
+  const { calls, config } = await provider(t, call => {
+    if (Object.hasOwn(JSON.parse(call.body.messages[1].content), 'candidate')) {
+      reviewCalls++;
+      return { content: approval };
+    }
+    return { content: { ...candidate, prompt: normalized } };
+  });
+  await assert.rejects(optimize(source, config), error => error instanceof AppError && error.status === 502
+    && !Object.hasOwn(error, 'prompt') && !error.message.includes('Café') && !error.message.includes('Cafe\u0301'));
+  assert.equal(calls.length, 2);
+  assert.equal(reviewCalls, 0);
+  for (const call of calls) assert.equal(Object.hasOwn(JSON.parse(call.body.messages[1].content), 'candidate'), false);
 });

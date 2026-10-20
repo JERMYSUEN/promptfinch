@@ -82,21 +82,74 @@ test('複製遭瀏覽器拒絕時，選取文字並提供手動操作提示', as
 });
 
 test('載入狀態、取消與過期回應不會重新填入已清除的結果', async ({ page }) => {
-  let release;
-  const waiting = new Promise(resolve => { release = resolve; });
-  await page.route('**/api/optimize', async route => {
-    await waiting;
-    await route.fulfill({ json: { prompt: '過期結果', improvements: ['測試'], assumptions: [], mode: 'mock' } });
+  await page.evaluate(() => {
+    const realFetch = window.fetch;
+    const requests = [];
+    // Ignore abort deliberately: a queued callback or non-abortable transport
+    // must still be rejected by the application's obsolete-request guard.
+    window.fetch = (resource, options) => {
+      const url = new URL(typeof resource === 'string' ? resource : resource.url, location.href);
+      if (url.pathname !== '/api/optimize') return realFetch(resource, options);
+      return new Promise((resolve, reject) => {
+        const entry = { signal: options.signal, consumed: false, processed: false };
+        const afterContinuation = () => {
+          // A task boundary runs after the application's promise continuation;
+          // assertions cannot pass merely because Clear already emptied the UI.
+          const channel = new MessageChannel();
+          channel.port1.onmessage = () => {
+            entry.processed = true;
+            channel.port1.close();
+            channel.port2.close();
+          };
+          channel.port2.postMessage(null);
+        };
+        entry.release = outcome => {
+          if (outcome === 'network-error') {
+            entry.consumed = true;
+            reject(new TypeError('Delayed synthetic network error'));
+            afterContinuation();
+            return;
+          }
+          resolve({
+            ok: outcome === 'success',
+            json: async () => {
+              entry.consumed = true;
+              afterContinuation();
+              return outcome === 'success'
+                ? { prompt: '過期結果', improvements: ['過期改善說明'], assumptions: [], mode: 'mock' }
+                : { error: '過期伺服器錯誤' };
+            },
+          });
+        };
+        requests.push(entry);
+      });
+    };
+    window.lateOptimizationFixture = requests;
   });
-  await page.locator('#original-prompt').fill('請幫我整理需求');
-  await page.getByRole('button', { name: '優化 Prompt', exact: true }).click();
-  await expect(page.locator('#loading-state')).toBeVisible();
-  await expect(page.getByRole('button', { name: '正在優化…' })).toBeDisabled();
-  await page.getByRole('button', { name: '取消並清除' }).click();
-  release();
-  await expect(page.locator('#empty-state')).toBeVisible();
-  await expect(page.locator('#optimized-prompt')).toHaveValue('');
-  await expect(page.locator('#action-status')).toContainText('已清除');
+  for (const [index, outcome] of ['success', 'http-error', 'network-error'].entries()) {
+    await page.locator('#original-prompt').fill('請幫我整理需求');
+    await page.getByRole('button', { name: '優化 Prompt', exact: true }).click();
+    await expect(page.locator('#loading-state')).toBeVisible();
+    await expect(page.getByRole('button', { name: '正在優化…' })).toBeDisabled();
+    await page.getByRole('button', { name: '取消並清除' }).click();
+    expect(await page.evaluate(i => window.lateOptimizationFixture[i].signal.aborted, index)).toBe(true);
+    await page.evaluate(({ index, outcome }) => window.lateOptimizationFixture[index].release(outcome), { index, outcome });
+    await expect.poll(() => page.evaluate(i => {
+      const request = window.lateOptimizationFixture[i];
+      return request.consumed && request.processed;
+    }, index)).toBe(true);
+    await expect(page.locator('#empty-state')).toBeVisible();
+    await expect(page.locator('#loading-state')).toBeHidden();
+    await expect(page.locator('#original-prompt')).toHaveValue('');
+    await expect(page.locator('#optimized-prompt')).toHaveValue('');
+    await expect(page.locator('#result-state')).toBeHidden();
+    await expect(page.locator('#explanation')).toBeHidden();
+    await expect(page.locator('#comparison')).toBeHidden();
+    await expect(page.locator('#input-error')).toBeHidden();
+    await expect(page.getByRole('button', { name: '複製 Prompt', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '優化 Prompt', exact: true })).toBeEnabled();
+    await expect(page.locator('#action-status')).toContainText('已清除');
+  }
 });
 
 test('伺服器錯誤保留輸入及上次結果，下一次可重試', async ({ page }) => {
