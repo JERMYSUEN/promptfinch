@@ -6,6 +6,8 @@
 
 **Select. Refine. Paste.**
 
+[Install PromptFinch or try the browser demo](#quick-start)
+
 A prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer, actionable instructions for the model you plan to use. The optimizer is instructed to clarify the objective, inputs and constraints, arrange useful steps, address critical information gaps and derive checks from your requirements. Already-clear requests should receive minimal edits; added structure should help the task, without inventing new requirements.
 
 Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. The **Windows and Linux desktop preview** adds the same workspace and an experimental companion menu on Windows UI Automation and Linux X11. Linux Wayland supports manual input and clipboard import, without a global right-click menu. An optional **browser workspace and HTTP API** use the same backend. See the [desktop support guide](docs/desktop.md).
@@ -59,72 +61,53 @@ Run the following commands from the project root. The examples use a POSIX shell
 
 ### Quick start
 
-Get the source for the browser demo or to build a desktop edition. For ready-to-run desktop packages, use the release downloads below:
+<!-- current-release-downloads:start -->
+**Install the app:** pick a package from [v1.3.0 Releases](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) and check its published checksum.
+
+| Platform | What to do |
+| --- | --- |
+| macOS (Apple Silicon) | Install Node.js 22+, unzip `PromptFinch-1.3.0-macos-arm64.zip`, move PromptFinch to Applications, and open it. |
+| Windows x64 (preview) | Run `PromptFinch-1.3.0-windows-x64-setup.exe`, or extract `PromptFinch-1.3.0-windows-x64.zip` and open `PromptFinch.exe`. |
+| Linux x64 (preview) | Make `PromptFinch-1.3.0-linux-x64.AppImage` executable and run it, or extract `PromptFinch-1.3.0-linux-x64.tar.gz` and run `promptfinch`. |
+
+Windows and Linux packages include Node. See the [release guide](docs/releases/v1.3.0.md) for checksums, signing and platform requirements, and the [Linux launch commands](docs/desktop.md#linux) for AppImage setup. On macOS, allow Accessibility in System Settings to enable cross-app selection. When upgrading, choose **Settings → Use this app’s bundled backend** to adopt the packaged optimizer while keeping your model configuration.
+<!-- current-release-downloads:end -->
+
+The desktop apps start in demo mode without a key. To optimize real prompts, create or select a private configuration file in Settings, add your [model settings](#model-configuration), then reload it.
+
+**Use the browser or build from source:** clone the repository or extract `PromptFinch-source-v1.3.0.zip` from the same release. Run the commands below from the project directory.
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-<!-- current-release-downloads:start -->
-The current [v1.3.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) provides these downloads:
-
-| System | Package | Runtime |
-| --- | --- | --- |
-| macOS Apple Silicon | `PromptFinch-1.3.0-macos-arm64.zip` | Install Node.js 22+ separately |
-| Windows x64 preview | `PromptFinch-1.3.0-windows-x64-setup.exe` or `PromptFinch-1.3.0-windows-x64.zip` | Included |
-| Linux x64 preview | `PromptFinch-1.3.0-linux-x64.AppImage` or `PromptFinch-1.3.0-linux-x64.tar.gz` | Included; compatible host libraries still required |
-| Source | `PromptFinch-source-v1.3.0.zip` | See the requirements above |
-
-Use the matching checksum and verification files from that release. See the [release guide](docs/releases/v1.3.0.md) for setup, platform limits and verification. On macOS, extract the ZIP and move the app to your Applications folder. The app uses ad-hoc signing and is not notarized; there is no Intel/Universal binary download. Windows/Linux remain experimental previews with unsigned packages.
-
-When upgrading macOS, replacing the app retains an existing external backend. In the new app, choose **Settings → Use this app’s bundled backend** to adopt its included optimizer; the action retains private model settings and attempts rollback if startup fails. There is no automatic updater. The [changelog](CHANGELOG.md) identifies older snapshots; changing `main` does not rebuild a published download.
-<!-- current-release-downloads:end -->
-
 #### Browser demo, no API key
 
+With Node.js 22+ installed:
+
 ```sh
-# Create a local configuration only if one does not already exist.
 cp -n .env.example .env
 npm start
 ```
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000). If `.env` already exists, review it and set `OPTIMIZER_MODE=mock` for a local demonstration instead of overwriting it. Running the service does not require `npm install`.
-
-**Mock output is not translated and not semantically optimized.** It is a labeled template for checking input, loading, result display, and copy flows. It does not call a model or send prompt content to a provider.
-
-The browser's prompt-language selector controls the instructions' language. An explicit answer language in your original request is retained.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). For an existing `.env`, set `OPTIMIZER_MODE=mock` to run the demo. No `npm install` is needed. Mock mode makes no model calls and does not translate or optimize text.
 
 #### Build and install the macOS app
 
+Install Node.js 22+ and run `xcode-select --install` if Command Line Tools are missing. Once they finish installing:
+
 ```sh
-xcode-select --install  # Skip if Command Line Tools are already installed.
 npm run setup:signing:mac
 npm run build:mac
 npm run install:mac
 ```
 
-The build produces `build/PromptFinch.app`. The installer places it in the user's `~/Applications` directory and opens it. No separate browser server is needed: the app starts its own backend at `http://127.0.0.1:3210`.
-
-The installer also handles migration from the earlier app name; see the [rename notes](docs/branding.md).
-
-`setup:signing:mac` is a per-machine setup for a stable local signing identity. It stores the private signing key in the login Keychain; macOS may ask you to confirm access. This helps maintain the Accessibility identity across local rebuilds. It is not Developer ID signing or notarization, and signing keys must not be published. If an existing signing configuration is invalid, the build stops instead of silently replacing that identity.
-
-Without a selected model configuration, the app uses mock mode. In Settings, create or select a model configuration file, fill in your provider settings, and reload the configuration. You can also select the interface language there. If the app cannot locate Node, select its executable in Settings.
-
-An existing configuration can also be selected at installation:
-
-```sh
-npm run install:mac -- --config .env
-```
-
-For more macOS setup details, see the [macOS guide](docs/macos.md), currently written in Traditional Chinese.
+The first command sets up a local signing identity so Accessibility permission can carry over across rebuilds. The installer opens the app from `~/Applications`; the app starts its own backend. To select an existing model configuration at install time, use `npm run install:mac -- --config .env` in place of the last command. See the [macOS guide](docs/macos.md) for permissions, signing and troubleshooting.
 
 ### Windows and Linux desktop preview
 
-The desktop preview contains its own runtime and uses the shared optimizer inside its main process. It does not start a local HTTP server. The macOS Swift app remains the macOS edition.
-
-From a source checkout, install Node.js 22.12+ and run:
+The packaged apps above are the quickest option. To run from source, install Node.js 22.12+ and follow the [platform build prerequisites](docs/desktop.md#development-and-packaging), then run:
 
 ```sh
 npm ci
@@ -132,13 +115,7 @@ node scripts/build-desktop-helpers.cjs
 npm run desktop
 ```
 
-Build Windows packages on Windows x64; build Linux packages on Linux x64. Run `npm run build:desktop` to produce a Windows installer/ZIP or Linux AppImage/tarball in `desktop-dist/<version>/`. End users of packaged apps do not need Node. Linux build prerequisites and portable-package launch steps are in the [desktop guide](docs/desktop.md).
-
-Select text in a compatible external app, right-click, then choose **Convert to English prompt** in PromptFinch's nearby companion menu. The original menu is not replaced. This action uses the text captured at that right-click, expires after ten seconds, and does not automatically paste or submit a result. UI Automation support varies by Windows app. Native standard controls were verified; Windows Chromium/Electron selection, including Codex and Claude, remains unverified in this preview. Use copy and clipboard import when capture is unavailable. Linux X11 uses its selection buffer and cannot prove that the click occurred inside the highlight. Wayland does not provide this global hook.
-
-If selection is unavailable, copy text yourself and choose **Import clipboard**. **Ctrl+Alt+P** imports the current selection where supported; **Ctrl+Alt+Shift+P** imports the clipboard. Shortcuts do not generate. Settings shows watcher and shortcut availability; Linux desktop shortcut registration can require desktop approval.
-
-Settings supports Traditional Chinese, English, Japanese and Korean. Create a private model template, edit it with your own API settings, then select it to load. New installs start in clearly labeled mock mode. Configured keys stay in the main process; only the language and configuration-file path are stored in preferences. Review the [support and verification limits](docs/desktop.md) before relying on a particular host app.
+To create packages on the matching x64 host, run `npm run build:desktop`. Selection capture is experimental on Windows and Linux X11. On Wayland, or if capture is unavailable, copy the text and choose **Import clipboard**. See the [desktop guide](docs/desktop.md) for launch commands, shortcuts and compatibility.
 
 ### Model configuration
 
