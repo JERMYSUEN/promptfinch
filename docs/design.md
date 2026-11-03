@@ -2,18 +2,19 @@
 
 本頁前半描述目前 `main` 的結構；後半是 2026-10-05 的初始設計與參考網站觀察，保留當時的可觀察範圍，不代表今天重新驗證該站。安裝與操作請從[文件索引](README.md)、[主 README](../README.md)及 [macOS 指南](macos.md)開始。
 
-## 目前架構（2026-10-15 文件核對）
+## 目前架構（2026-10-25 文件核對）
 
 ```text
-原生 macOS 工作台／選取助手 ─→ App 管理的 Node 後端（127.0.0.1:3210）
-可選瀏覽器工作台／HTTP 用戶端 ─→ 獨立 Node 後端（預設 127.0.0.1:3000）
-                                      ↓
-                            輸入與來源驗證 → optimizer
-                                      ├─ mock：明示固定範例，無模型呼叫
-                                      └─ live：伺服器呼叫自備的相容模型
+原生 macOS 工作台／選取助手 ─→ App 管理的 Node HTTP 後端（127.0.0.1:3210）──┐
+可選瀏覽器工作台／HTTP 用戶端 ─→ 獨立 Node HTTP 後端（預設 127.0.0.1:3000）─┤
+Windows／Linux Electron 畫面 ─→ 受限 IPC ─→ Electron 主程序（無 HTTP 監聽）──┤
+                                                                       ↓
+                                                      共用 lib/optimizer.js
+                                                       ├─ mock：明示固定範例，無模型呼叫
+                                                       └─ live：由後端／主程序呼叫自備相容模型
 ```
 
-兩個入口共用同一套後端程式；獨立執行的服務有各自的設定與生命週期。原生 App 會啟動、驗證及停止自己的後端，不會把埠上任意既有服務當成可信任子程序。
+三種工作台共用優化器，不共用執行中的設定或生命週期。macOS 原生 App 會啟動、驗證及停止自己的 Node 後端，不會把埠上任意既有服務當成可信任子程序。Windows／Linux 預覽版在 Electron 主程序直接呼叫優化器，沒有本機 HTTP 服務；已封裝版本包含執行環境，macOS App 仍需另裝 Node。
 
 | 元件 | 責任與邊界 |
 | --- | --- |
@@ -23,18 +24,21 @@
 | [macos/Sources/App.swift](../macos/Sources/App.swift)、[Localization.swift](../macos/Sources/Localization.swift) | SwiftUI／AppKit 手動工作台、設定、狀態與生成協調；繁中、英文、日文、韓文介面。新生成的說明依介面語言送出 `notesLanguage`；不重寫原文或既有模型結果。對照功能使用生成時原文快照，只標示文字差異。 |
 | [Selection.swift](../macos/Sources/Selection.swift)、[Watcher.swift](../macos/Sources/Watcher.swift) | Accessibility 選取、全域快捷鍵、獨立右鍵附加選單與結果浮窗；明確操作後再次核對來源。已辨識終端只複製，其他可靠可編輯來源才允許要求貼回。 |
 | [Backend.swift](../macos/Sources/Backend.swift)、[Core.swift](../macos/Sources/Core.swift) | App 管理的本機服務與 API 契約；讀取設定檔路徑，核對後端內容 ID 與本次程序識別，原生請求固定英文指令。App 包含後端來源，另需本機 Node 執行環境。 |
+| [desktop/main.cjs](../desktop/main.cjs)、[controller.mjs](../desktop/controller.mjs)、[preload.cjs](../desktop/preload.cjs)、[security.cjs](../desktop/security.cjs) | Windows／Linux 預覽版；具沙箱與 context isolation 的畫面只可透過受限 IPC 操作。主程序讀取私有模型設定並使用共用優化器，畫面拿不到 API 金鑰。原生取字由 [capture.cjs](../desktop/capture.cjs) 及對應平台 helper 執行；Windows UIA／Linux X11 為實驗支援，Wayland 使用手動輸入或剪貼簿。結果只供複製，不自動貼回。 |
 | [scripts/](../scripts/) | 建置／安裝、個人本機簽章、公開來源封裝、乾淨副本的 ad-hoc App 封裝、內容定址的本機後端更新及明示 live 測例工具；沒有自動下載 GitHub release 的更新器。 |
-| [tests/](../tests/)、[macos/Tests/](../macos/Tests/)、[CI](../.github/workflows/check.yml) | 受控 API／錯誤測試、可選瀏覽器流程、合成原生狀態檢查。CI 執行語法、Node、原生測試與 macOS 建置；瀏覽器／付費模型與真人宿主驗收需另外執行。 |
+| [tests/](../tests/)、[macos/Tests/](../macos/Tests/)、[Checks CI](../.github/workflows/check.yml)、[桌面 CI](../.github/workflows/desktop.yml) | 受控 API／錯誤測試、Chromium 瀏覽器流程及合成原生狀態檢查。Checks 在推送／Pull Request 執行語法、文件、Node、瀏覽器、原生測試與 macOS 公開封裝驗證；桌面 CI 針對相關變更建置及檢查 Windows／Linux。實體滑鼠／宿主相容性、安裝器與付費模型品質仍需分別驗收。 |
 
 用途 ID 為 `general`、`writing`、`analysis`、`coding`、`summary`、`marketing`。目標模型欄位是編輯提示；真正呼叫的模型來自伺服器 `LLM_MODEL`，不會因選取該欄就切換供應商。輸入上限為 12,000 個 UTF-16 code units，不等於可見字元數。
 
-模型回應固定分成 `prompt`、`improvements`、`assumptions`，複製僅使用 `prompt`。英文模式直接回傳整理過的英文任務指令，繁中 live 模式會保留完整原文並加上生成的補充指引；這兩種組裝方式不同。模型必須改善同一任務的可執行性，不能執行原任務、捏造事實或強制套用固定章節；這是模型規則及人工覆核目標，程式格式驗證本身不能證明語意正確。
+模型回應固定分成 `prompt`、`improvements`、`assumptions`，複製僅使用 `prompt`。英文與繁中 live 模式使用同一編輯策略，均直接回傳完整、可執行的任務指令，不再把原文另附成指令外框。任務需要的來源材料、資料與固定字串應保留在重寫指令中；原始輸入另留作介面比對。`improvements` 可以是空陣列，說明與假設不加入複製內容。Mock 仍是明示示範外框，不會翻譯或語意優化。API 整合須讀取完整 `prompt` 欄位，見 [API 遷移說明](api.md#optimize-a-prompt)。模型必須改善同一任務的可執行性，不能執行原任務、捏造事實或強制套用固定章節；這是模型規則及人工覆核目標，程式格式驗證本身不能證明語意正確。
+
+Live 預設僅編輯，格式重試在內最多兩次呼叫。`LLM_QUALITY_REVIEW=true` 才啟用同供應商／同模型的獨立請求覆核；最多一次修訂，含格式重試合計最多四次呼叫，共用原本逾時及取消訊號。覆核失敗回報錯誤，不交付被否決的候選；`modelReview.status` 只記錄模型判斷，不是語意正確性認證。Prompt 指令語言、下游答案語言與說明語言是不同的設定與需求。
 
 首次啟動會由 App 隨附來源建立外部後端；存在 `current` 後，單純替換 App 仍保留先前的選擇。設定中的「使用此 App 隨附後端」是明確採用目前 App 種子的入口：先暫存與驗證，切換自身服務，失敗時嘗試回復，不修改模型檔案或 Node／介面偏好。原始碼更新指令則可部署可信任工作目錄的後端，兩者都不是網路自動更新。
 
 一般內容只留在記憶體，live 明確生成後送往所設定的模型服務。App 另保存介面／操作偏好及設定路徑，私有環境檔存金鑰；使用者選擇複製後，結果也會存在系統剪貼簿。明示測試工具會把測例與結果寫到指定輸出檔，與一般工作台不同。Host／Origin 保護不是公開服務的登入或授權機制，部署前請閱讀 [SECURITY.md](../SECURITY.md)。
 
-相容性與品質以具體版本證據為準：[終端](terminal.md)、[跨語言對照](multilingual-parity-verification.md)、[任務優化](optimization-value-verification.md)。附加選單不會修改 Codex、Claude Code 或宿主的原生選單，GIF 是合成示意。[v1.1.0](releases/v1.1.0.md)另提供對應的新下載；既有 `v1.0.0` tag 與資產保持原樣，不會自動包含新版變更。
+相容性與品質以具體版本證據為準：[桌面支援](desktop.md)、[終端](terminal.md)、[目前 Prompt 品質紀錄](prompt-quality-verification.md)。[跨語言對照](multilingual-parity-verification.md)與[任務優化](optimization-value-verification.md)保留較早樣本，不代表目前版本每種語意案例均已通過。附加選單不會修改 Codex、Claude Code 或宿主的原生選單，GIF 是合成示意。[v1.3.0](releases/v1.3.0.md)提供目前各平台下載；較舊 tag 與資產保持原樣，不會自動包含新版變更。
 
 ## 初始設計紀錄（2026-10-05）
 

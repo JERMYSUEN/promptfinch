@@ -211,6 +211,10 @@ enum ProcessLifecycle {
 @MainActor
 final class LocalBackend {
     let client: PromptClient
+    // Only a completed health check for the currently owned lifecycle can
+    // populate this value. The workspace may use it after a verified rollback;
+    // a previously displayed configuration is not evidence of current health.
+    private(set) var verifiedConfiguration: ServiceConfig?
     private var process: Process?
     private var backendInstanceID: String?
     private var starting: Task<ServiceConfig, Error>?
@@ -318,12 +322,15 @@ final class LocalBackend {
 
     private func launchOrConnect(lifecycle: UUID) async throws -> ServiceConfig {
         try Task.checkCancellation()
+        guard lifecycleID == lifecycle else { throw CancellationError() }
+        verifiedConfiguration = nil
         if process?.isRunning == true {
             let active = try store.prepare()
             guard let backendInstanceID else { throw ToolError.message(L10n.text(.unknownBackend)) }
             let config = try await loadConfig(active.id, backendInstanceID)
             try Task.checkCancellation()
             guard lifecycleID == lifecycle else { throw CancellationError() }
+            verifiedConfiguration = config
             return config
         }
         process = nil
@@ -342,6 +349,7 @@ final class LocalBackend {
                 let config = try await loadConfig(active.id, instanceID)
                 try Task.checkCancellation()
                 guard backendInstanceID == instanceID, lifecycleID == lifecycle else { throw CancellationError() }
+                verifiedConfiguration = config
                 return config
             } catch let error as ToolError { throw error }
             catch {
@@ -401,6 +409,7 @@ final class LocalBackend {
     }
 
     func stop() async throws {
+        verifiedConfiguration = nil
         lifecycleID = UUID()
         switching?.cancel()
         switching = nil
@@ -424,6 +433,7 @@ final class LocalBackend {
     }
 
     private func stopProcess() async throws {
+        verifiedConfiguration = nil
         starting?.cancel()
         starting = nil
         startingID = nil

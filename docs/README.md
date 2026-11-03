@@ -2,13 +2,13 @@
 
 Start with the [English README](../README.md), or the complete [Simplified Chinese](readme/README.zh-CN.md) / [Traditional Chinese](readme/README.zh-TW.md) reference. The other 26 localized README editions translate the introduction and link to the English technical reference. Documentation languages are separate from the four native interface languages and from model language-quality coverage.
 
-The guides describe current `main`. The [v1.2.0 release notes](releases/v1.2.0.md) describe the Windows/Linux desktop previews and current downloads. The [v1.1.0 notes](releases/v1.1.0.md) retain the preceding native-app snapshot and upgrade steps. The original [v1.0.0 release](releases/v1.0.0.md) and dated verification records retain their own scope; changing documentation does not rebuild an older download or rerun those tests.
+The guides describe current `main`. The [v1.3.0 release notes](releases/v1.3.0.md) describe the current macOS, Windows and Linux downloads and the shared prompt-editing policy. The [v1.2.0 notes](releases/v1.2.0.md) retain the initial Windows/Linux desktop preview snapshot; the [v1.1.0 notes](releases/v1.1.0.md) retain the preceding native-app snapshot and upgrade steps. The original [v1.0.0 release](releases/v1.0.0.md) and dated verification records retain their own scope; changing documentation does not rebuild an older download or rerun those tests.
 
 ## Using PromptFinch
 
 | Goal | Guide | Language |
 | --- | --- | --- |
-| Choose browser/API or macOS, install and configure a model | [Quick start and settings](../README.md#quick-start) | English; full Chinese editions above |
+| Choose browser/API, macOS or the Windows/Linux preview, install and configure a model | [Quick start and settings](../README.md#quick-start) | English; full Chinese editions above |
 | Install or build the Windows / Linux desktop preview; check X11 / Wayland limits | [Desktop guide](desktop.md) | English |
 | Set up the native app, permissions, signing and updates | [macOS guide](macos.md) | Traditional Chinese |
 | Use selected text in Apple Terminal with Claude Code/Codex CLI | [Terminal workflow](terminal.md) | English |
@@ -37,6 +37,6 @@ The [Codex demo GIF](media/demo-selection.gif) is a synthetic, hand-authored ill
 
 Internal handoff notes, local artifacts, private configurations and original recordings are not public documentation or release inputs. Do not copy them into an issue or source archive.
 
-The [2026-10-17 improvement verification](improvement-verification.md) records current reliability checks, archive verification and synthetic live-model findings, including remaining semantic errors.
+The [2026-10-17 improvement verification](improvement-verification.md) records that revision's reliability checks, archive verification and synthetic live-model findings, including remaining semantic errors.
 
-The [prompt-quality comparison](prompt-quality-verification.md) records the current editing/review changes and their limits. The [rubric](prompt-quality-rubric.md) defines semantic acceptance separately from HTTP, format and literal checks.
+The [prompt-quality comparison](prompt-quality-verification.md) records the earlier editing/review evaluation. The [execution-branch regression supplement](prompt-quality-branch-regressions.md) documents later experiments, the original and final optimizer source hashes, and their limits. Read each result against its tested source and configuration. The [rubric](prompt-quality-rubric.md) defines semantic acceptance separately from HTTP, format and literal checks; these records do not certify the current version or all semantic cases.

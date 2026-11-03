@@ -20,8 +20,8 @@ struct SystemPasteOperations: PasteOperations {
 @MainActor
 final class WorkspaceModel: ObservableObject {
     @Published var original = ""
-    @Published var task = UserDefaults.standard.string(forKey: "task") ?? "general"
-    @Published var targetModel = UserDefaults.standard.string(forKey: "targetModel") ?? ""
+    @Published var task: String
+    @Published var targetModel: String
     @Published var result: PromptResult?
     @Published private(set) var resultOriginal = ""
     @Published var busy = false
@@ -41,7 +41,7 @@ final class WorkspaceModel: ObservableObject {
         }
     }
     var onLanguageChange: (() -> Void)?
-    let backend = LocalBackend()
+    let backend: LocalBackend
     let watcher = SelectionWatcher()
     let resultPanel = ResultPanel()
     @Published var pasteBackEnabled: Bool = SelectionWatcher.pasteBack {
@@ -55,10 +55,16 @@ final class WorkspaceModel: ObservableObject {
     private var configurationID = UUID()
     private var pasteFeedbackID = UUID()
     private let pasteOperations: PasteOperations
+    private let preferences: UserDefaults
     var showWindow: (() -> Void)?
 
-    init(pasteOperations: PasteOperations? = nil) {
+    init(pasteOperations: PasteOperations? = nil, backend: LocalBackend? = nil,
+         preferences: UserDefaults = .standard) {
         self.pasteOperations = pasteOperations ?? SystemPasteOperations()
+        self.backend = backend ?? LocalBackend()
+        self.preferences = preferences
+        task = preferences.string(forKey: "task") ?? "general"
+        targetModel = preferences.string(forKey: "targetModel") ?? ""
         resultPanel.onPasteBack = { [weak self] in self?.pasteBackFromPanel() }
         resultPanel.onCopy = { [weak self] in self?.copyFromPanel() }
         resultPanel.onClose = { [weak self] in self?.closeResultPanel() }
@@ -72,16 +78,21 @@ final class WorkspaceModel: ObservableObject {
     }
 
     func refresh() {
-        guard !backendSwitching else { return }
+        guard !unavailable else { return }
         let token = UUID()
         configurationID = token
+        config = nil
+        let status = L10n.text(.connecting)
+        notify(status)
         Task {
             do {
                 let loaded = try await backend.ensureRunning()
                 guard configurationID == token, !backendSwitching else { return }
                 config = loaded
+                if message == status, !isError { notify("") }
             } catch {
                 guard configurationID == token, !backendSwitching else { return }
+                config = backend.verifiedConfiguration
                 notify(L10n.errorDescription(error), error: true)
             }
         }
@@ -157,15 +168,23 @@ final class WorkspaceModel: ObservableObject {
         cancel()
         let token = UUID()
         generationID = token
+        let configToken = UUID()
+        configurationID = configToken
+        config = nil
         result = nil; resultOriginal = ""; busy = true; notify(L10n.text(.refining))
         DebugLog.write("generate seq=\(eventID) started background=\(background) selectedUTF16=\(input.prompt.utf16.count)")
         if background { resultPanel.present(anchor: anchor ?? mouseAnchor, eventSequence: activeEventSequence) }
-        UserDefaults.standard.set(task, forKey: "task")
-        UserDefaults.standard.set(targetModel, forKey: "targetModel")
+        preferences.set(task, forKey: "task")
+        preferences.set(targetModel, forKey: "targetModel")
         operation = Task {
             do {
-                config = try await backend.ensureRunning()
+                _ = try await backend.ensureRunning()
+                // Backend health belongs to the configuration, even if the
+                // content generation was cancelled while checking it. Read the
+                // current lifecycle's snapshot rather than an old await result.
+                if configurationID == configToken { config = backend.verifiedConfiguration }
                 try Task.checkCancellation()
+                guard generationID == token else { return }
                 DebugLog.write("generate seq=\(eventID) backend=ready request=sent")
                 let output = try await backend.client.optimize(input)
                 DebugLog.write("generate seq=\(eventID) done mode=\(output.mode) generatedUTF16=\(output.prompt.utf16.count)")
@@ -185,6 +204,7 @@ final class WorkspaceModel: ObservableObject {
                 }
             } catch {
                 DebugLog.write("generate seq=\(eventID) errorType=\(String(describing: type(of: error)))")
+                if configurationID == configToken { config = backend.verifiedConfiguration }
                 guard generationID == token, !Task.isCancelled else { return }
                 if let networkError = error as? URLError, networkError.code == .cannotConnectToHost {
                     notify(L10n.text(.cannotConnect), error: true)
@@ -313,6 +333,8 @@ final class WorkspaceModel: ObservableObject {
     func invalidatePendingPasteFeedback() { pasteFeedbackID = UUID() }
 
     #if PROMPTFINCH_TESTS
+    var generationOperationForTesting: Task<Void, Never>? { operation }
+
     func setSelectionSourceForTesting(_ capture: SelectionCapture?) {
         sourceCapture = capture
         sourcePID = capture?.pid
@@ -337,6 +359,7 @@ final class WorkspaceModel: ObservableObject {
         backendSwitching = true
         let token = UUID()
         configurationID = token
+        config = nil
         watcher.invalidatePendingActions()
         notify(L10n.text(progress))
         Task {
@@ -348,6 +371,7 @@ final class WorkspaceModel: ObservableObject {
                 notify(L10n.text(success))
             } catch {
                 guard configurationID == token else { return }
+                config = backend.verifiedConfiguration
                 notify(L10n.errorDescription(error), error: true)
             }
         }

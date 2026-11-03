@@ -66,7 +66,20 @@ git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-The [v1.3.0 desktop previews](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) provide Windows x64 and Linux x64 packages with their runtime included. See the [release guide](docs/releases/v1.3.0.md) for platform limits, configuration and verification. The preceding [v1.1.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) provides `PromptFinch-1.1.0-macos-arm64.zip`, `PromptFinch-source-v1.1.0.zip` and `SHA256SUMS`. The app download is for Apple Silicon, uses ad-hoc signing and is not notarized; install Node.js 22+ separately. Extract the ZIP and move the app to your Applications folder. See the [release notes](docs/releases/v1.1.0.md) for setup and verification scope, or build this source checkout. The [changelog](CHANGELOG.md) distinguishes earlier snapshots. There is no automatic updater or Intel/Universal binary download.
+<!-- current-release-downloads:start -->
+The current [v1.3.0 release](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) provides these downloads:
+
+| System | Package | Runtime |
+| --- | --- | --- |
+| macOS Apple Silicon | `PromptFinch-1.3.0-macos-arm64.zip` | Install Node.js 22+ separately |
+| Windows x64 preview | `PromptFinch-1.3.0-windows-x64-setup.exe` or `PromptFinch-1.3.0-windows-x64.zip` | Included |
+| Linux x64 preview | `PromptFinch-1.3.0-linux-x64.AppImage` or `PromptFinch-1.3.0-linux-x64.tar.gz` | Included; compatible host libraries still required |
+| Source | `PromptFinch-source-v1.3.0.zip` | See the requirements above |
+
+Use the matching checksum and verification files from that release. See the [release guide](docs/releases/v1.3.0.md) for setup, platform limits and verification. On macOS, extract the ZIP and move the app to your Applications folder. The app uses ad-hoc signing and is not notarized; there is no Intel/Universal binary download. Windows/Linux remain experimental previews with unsigned packages.
+
+When upgrading macOS, replacing the app retains an existing external backend. In the new app, choose **Settings → Use this app’s bundled backend** to adopt its included optimizer; the action retains private model settings and attempts rollback if startup fails. There is no automatic updater. The [changelog](CHANGELOG.md) identifies older snapshots; changing `main` does not rebuild a published download.
+<!-- current-release-downloads:end -->
 
 #### Browser demo, no API key
 
@@ -274,7 +287,12 @@ Native macOS workspace / selection result panel
 Optional browser workspace / HTTP API client
   -> standalone Node.js backend on 127.0.0.1:3000
 
-Either backend
+Windows / Linux desktop preview
+  -> Electron renderer / preload IPC
+  -> main-process optimizer, without an HTTP listener
+
+All three paths
+  -> shared lib/optimizer.js
   -> labeled mock template, or configured model provider
   -> prompt + separate improvements / assumptions
 ```
@@ -285,6 +303,7 @@ Main source files:
 - [lib/optimizer.js](lib/optimizer.js): configuration, mock/live adapter, editing instructions, and response validation.
 - [public/](public/): Traditional Chinese browser workspace with responsive layout.
 - [macos/Sources/](macos/Sources/): native workspace, backend lifecycle, selection, result panel, and paste-back.
+- [desktop/](desktop/): Windows/Linux Electron workspace, IPC, main-process model calls, and platform selection helpers.
 - [scripts/](scripts/): native build, local signing, installation, backend update, and development checks.
 
 ### Privacy and data handling
@@ -300,7 +319,7 @@ This is a local personal tool without account authentication or multi-user isola
 
 ### Validation and limitations
 
-The [current prompt-quality verification](docs/prompt-quality-verification.md) describes the updated editing/review logic, controlled checks, and remaining live-evaluation gaps. Earlier records below retain their historical scope; they do not certify the current version or all semantic cases.
+The [prompt-quality comparison](docs/prompt-quality-verification.md) records the earlier editing/review evaluation. The [execution-branch regression supplement](docs/prompt-quality-branch-regressions.md) documents later experiments, the original and final optimizer source hashes, and their limits. Read results against their tested source and configuration; these records do not certify the current version or all semantic cases.
 
 [The optimization-value verification record](docs/optimization-value-verification.md) defines eight synthetic cases for task guidance beyond translation and restraint on already-clear requests. The original checks encountered provider timeouts and service errors. A later [improvement verification](docs/improvement-verification.md) records successful live samples, mechanical checks and separate semantic findings. The illustrated result is not evidence of better model or downstream task performance.
 
@@ -308,7 +327,7 @@ The [current prompt-quality verification](docs/prompt-quality-verification.md) d
 
 The user previously confirmed that the companion menu appeared without automatic generation and that one explicit click produced an English result. Physical mouse and complete copy/paste-back/cancellation behavior in Codex/Claude still need verification for this build. See the [selection verification](docs/context-menu-verification.md) and [multilingual sample review](docs/multilingual-verification.md) for their separate scopes.
 
-Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Live semantic quality depends on the provider and still requires review. See the [current prompt-quality verification](docs/prompt-quality-verification.md) for checks and remaining limits.
+Current limits include host-app selection support, no OCR, no customizable global shortcut, no bundled Node in the macOS app, no automatic updates, and no ready-made notarized or Universal Binary release. Intel/minimum-macOS hardware, physical mobile devices, Docker and remote deployment remain unverified. Live semantic quality depends on the provider and still requires review. See the [quality comparison](docs/prompt-quality-verification.md) and [branch regression supplement](docs/prompt-quality-branch-regressions.md) for their checks and remaining limits.
 
 ### Development
 
@@ -332,7 +351,7 @@ npm run build:mac
 
 To produce a public Apple Silicon app ZIP and source ZIP on macOS with Node.js 22+ and Xcode Command Line Tools, run `npm run package:mac`. It builds an ad-hoc-signed app from a clean copy of explicitly selected public files, without reading your real `.env` or personal signing configuration. The release manifest records relative input paths and SHA-256 hashes; `SHA256SUMS` covers the generated downloads. This packaging does not notarize the app or publish to GitHub. To create only the source archive, run `npm run package:source`.
 
-`npm run dev` runs the standalone server with Node's watch mode. `npm run check:docs` checks README navigation, translation structure and changelog ordering; it does not certify translation accuracy or model quality. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [GitHub workflow](.github/workflows/check.yml) runs JavaScript/documentation checks, Node tests and native macOS checks/builds. It does not publish release artifacts. Browser tests currently run locally; check [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for the result on a particular commit.
+`npm run dev` runs the standalone server with Node's watch mode. `npm run check:docs` checks README navigation, translation structure, current release-download blocks and changelog references; it does not certify translation accuracy or model quality. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [Checks workflow](.github/workflows/check.yml) runs JavaScript/documentation checks, Node tests, Chromium browser flows, native macOS checks, public packaging and unpacked-artifact verification on pushes and pull requests; it does not publish release assets. The separate [desktop workflow](.github/workflows/desktop.yml) builds and checks Windows/Linux packages for matching changes. Browser flows use synthetic data and controlled providers; physical mouse/host-app acceptance and live-model quality require separate verification. See [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for a specific commit's results.
 
 ### Contributing and license
 

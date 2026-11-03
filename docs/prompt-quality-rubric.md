@@ -2,6 +2,8 @@
 
 This guide defines a synthetic semantic review for the prompt editor. It evaluates the instructions the editor produces, not the downstream model's completed answer. The [16-case corpus](../tests/fixtures/prompt-quality.json) is compatible with the existing [live evaluation runner](../scripts/verify-multilingual.js).
 
+The [eight-case execution-branch supplement](prompt-quality-branch-regressions.md) repeats two historical failures without changing their source requests and adds six controls against overblocking, fallback loss and language drift. Evaluate it separately and retain historical results unchanged.
+
 **Evidence status: live synthetic samples have been collected and manually reviewed, with known issues remaining.** See the [current verification report](prompt-quality-verification.md) for tested configurations, recorded source versions, results and limits. Adding these fixtures, checking JSON, or passing unit tests does not establish semantic acceptance. No downstream task execution or performance gain is established by this rubric. Historical model outputs remain in [the earlier improvement record](improvement-live-results.json); do not relabel those outputs as results of this corpus or a revised policy.
 
 ## What a useful improvement means

@@ -4,25 +4,36 @@ Use this guide with the [quick start](../README.md#quick-start). For detailed na
 
 ## Choose the correct workflow
 
-The browser/API can run with Node.js 22+; cross-app selection requires the native macOS app. A browser tab alone cannot add a system-wide context-menu action. Terminal support is the macOS selection assistant alongside a CLI, not a `promptfinch` shell command, CLI plugin, or use of Claude Code/Codex credentials.
+The browser/API can run with Node.js 22+; a browser tab alone cannot add a system-wide context-menu action. For cross-app selection, use the native macOS app or the experimental Windows UI Automation / Linux X11 desktop preview. Wayland supports manual input and clipboard import, without a global right-click menu. Read the [desktop support table](desktop.md#support-and-limits) for the intended operating system and host app. Terminal support described in the [Terminal guide](terminal.md) is the macOS selection assistant alongside a CLI, not a `promptfinch` shell command, CLI plugin, or use of Claude Code/Codex credentials.
 
-The macOS interface has four languages. The browser interface is Traditional Chinese. New native explanation notes follow the interface language; existing results are kept as generated. The browser has a separate notes-language selector. These settings do not change the generation model or the task’s requested answer language. See [language coverage](../README.md#documentation-languages).
+The macOS and Windows/Linux desktop interfaces offer Traditional Chinese, English, Japanese and Korean. The browser interface is Traditional Chinese. New desktop explanation notes follow the interface language; existing results are kept as generated. The browser has a separate notes-language selector. These settings do not change the generation model or the task’s requested answer language. See [language coverage](../README.md#documentation-languages).
 
 ## Startup, installation and updates
 
 | Symptom | What to check |
 | --- | --- |
-| `node` is missing or the app cannot find it | Install Node.js 22+ separately. The app does not bundle Node. Select its executable in native Settings, particularly for nvm or another version manager. |
+| `node` is missing or the macOS app cannot find it | Install Node.js 22+ separately for macOS or the browser/API. Select its executable in native Settings, particularly for nvm or another version manager. Packaged Windows/Linux editions include their runtime; source development needs Node.js 22.12+. |
 | `install:mac` says the app is missing | Run `npm run build:mac` first; installation does not compile the app. Build prerequisites include Apple's Command Line Tools. |
-| A downloaded ZIP behaves differently from this README | Check the release tag and [changelog](../CHANGELOG.md). The [v1.1.0 download](releases/v1.1.0.md) includes newer features; the original v1.0.0 asset remains unchanged. No release is a notarized installer. |
-| The app's version label says 0.1.0 | That is the original v1.0.0 download's internal version (build 11). The v1.1.0 app uses version 1.1.0 / build 12. App version alone does not identify a separately updated backend; include the source commit and `/api/config` backend ID when reporting a problem. |
+| A downloaded ZIP behaves differently from this README | Check the release tag and [changelog](../CHANGELOG.md). Use the current [v1.3.0 packages](releases/v1.3.0.md) for macOS Apple Silicon or Windows/Linux x64. Earlier assets retain their original code; updating `main` does not rebuild them. No macOS download is notarized. |
+| The app's version label says 0.1.0 | That is the original v1.0.0 download's internal version (build 11). The v1.3.0 macOS app uses version 1.3.0 / build 14. App version alone does not identify a separately updated backend; include the source commit and `/api/config` backend ID when reporting a macOS/API problem. |
 | A replaced app still uses old prompt rules | Existing external backend files are retained when the app is replaced. In the new app's Settings, choose **Use this app’s bundled backend** to adopt its included rules. Private model configuration, Node path and preferences are retained, with rollback attempted if startup fails. Source users can instead run `npm run update:mac-backend` from a trusted updated checkout; for native changes, build and install first. |
 | Stable signing fails after moving machines | The private signing identity belongs to that machine's Keychain. Follow the macOS signing setup on the new machine; a same-name certificate is not the same identity. |
 | Port 3000 is busy | Stop the standalone server you own or change its `PORT` and open that matching URL. Do not terminate an unidentified process. |
-| Port 3210 is busy | The native backend uses this fixed port. Quit an older PromptFinch instance normally. If another program owns the port, resolve that conflict before restarting; the updater will not kill it. |
-| Closing the window does not stop selection actions | The menu-bar assistant keeps running. Use Quit to stop the app and its owned backend. |
+| Port 3210 is busy | The macOS native backend uses this fixed port. Quit an older PromptFinch instance normally. If another program owns the port, resolve that conflict before restarting; the updater will not kill it. Windows/Linux desktop editions have no HTTP listener. |
+| Closing the macOS window does not stop selection actions | The macOS menu-bar assistant keeps running. Use Quit to stop the app, its observer and its owned backend. Closing the Windows/Linux workspace quits that desktop app and its observer. |
 
-The browser server normally uses port 3000; the app owns port 3210. A model configuration selected in the app is not automatically the standalone server's `.env`. Reload the selected app configuration after saving it; restart the standalone server after changing its environment file.
+The browser server normally uses port 3000; the macOS app owns port 3210. Windows/Linux call the optimizer directly in the desktop main process. A model configuration selected in an app is not automatically the standalone server's `.env`. Reload the selected app configuration after saving it; restart the standalone server after changing its environment file.
+
+### SwiftUI macro errors during a source build
+
+If compilation reports a missing `SwiftUIMacros` plugin, check that the selected Swift toolchain and macOS SDK are compatible. This can occur before project tests run. Update or reselect matching Command Line Tools/Xcode components; if a compatible SDK is already installed, set `SDKROOT` explicitly for the command. For example, this checkout's local Swift 6.4 environment needed the installed 26.5 SDK instead of the default 27.0 SDK:
+
+```sh
+SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk npm run test:mac
+SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk npm run build:mac
+```
+
+Use an installed compatible SDK path for your machine; that example is not a universal requirement or a reason to create a fake SDK directory. Report compiler/SDK versions and whether compilation completed, rather than counting unexecuted tests as passes.
 
 ## Model and configuration errors
 
@@ -37,13 +48,15 @@ The browser server normally uses port 3000; the app owns port 3210. A model conf
 | Local API returns 403 | Check the service URL and Host/Origin policy. This is different from provider-key rejection. See the [API status reference](api.md#errors-and-limits). |
 | Provider rejects the request format | Use an OpenAI-compatible Chat Completions endpoint. The backend appends `/chat/completions`; do not append it twice. Use `LLM_JSON_MODE=false` if unsupported and leave `LLM_THINKING_MODE` blank outside compatible DeepSeek configurations. The output must still follow the JSON contract. |
 | API returns 429 | The local concurrency limit or provider usage limit was reached. Stop automatic retry loops and check account limits. |
-| API returns 502/504 or takes too long | Check provider availability and configuration. The initial call and format retry share one `LLM_TIMEOUT_MS` deadline. Increasing a timeout cannot repair an unavailable service. A failure is not replaced with a fake successful result. |
+| API returns 502/504 or takes too long | Check provider availability and configuration. Editing, format retries and optional model review/revision share one `LLM_TIMEOUT_MS` deadline. Review is disabled by default; enabling `LLM_QUALITY_REVIEW=true` adds provider calls and cost, without guaranteeing fidelity. Increasing a timeout cannot repair an unavailable service. A failure is not replaced with a fake successful result. |
 
 Use the model identifier your provider currently accepts. `.env.deepseek.example` is a configurable example, not a bundled model or guarantee of account access. There is no automatic paid fallback provider.
 
 ## Selection, copy and paste-back
 
-For the first run with native selections, allow PromptFinch under **System Settings → Privacy & Security → Accessibility**, then recheck permission in Settings. The manual workspace and an explicit clipboard action are available without cross-app selection access.
+### macOS
+
+For the first run with macOS selections, allow PromptFinch under **System Settings → Privacy & Security → Accessibility**, then recheck permission in Settings. The manual workspace and an explicit clipboard action are available without cross-app selection access.
 
 The optional selection button, right-click menu and automatic paste-back are enabled by default for a new native preference profile. To review a result before it can replace editable source text, disable automatic paste-back in Settings. Recognized terminal sources always use copy-only delivery regardless of that setting.
 
@@ -58,12 +71,24 @@ The optional selection button, right-click menu and automatic paste-back are ena
 | Status says a paste was requested but the source is unchanged | A sent simulated paste is not proof that the host accepted it. Inspect the source and result, then copy manually if needed. The tool never submits the chat message. |
 | Copy or clipboard restoration failed | Keep the result visible and read the status. Do not assume an earlier clipboard value was restored. The app protects a newer user copy; failure paths do not silently overwrite it as a fallback. |
 
+### Windows and Linux preview
+
+These editions only show results for review and copy; they do not replace selected text or simulate paste/Return in another app. The companion action expires after ten seconds. `Ctrl+Alt+P` imports a supported selection and `Ctrl+Alt+Shift+P` imports the clipboard; neither shortcut generates a prompt. See [desktop setup](desktop.md) for build/runtime prerequisites and verification limits.
+
+| Symptom | What to check |
+| --- | --- |
+| No companion appears on Windows | Check the watcher status in Settings, then try a standard native text control. The host must expose selected text through UI Automation; Chromium/Electron, including Codex and Claude, remains unverified. Copy the intended text and choose **Import clipboard** when capture is unavailable. |
+| No companion appears on Linux | Check for an X11 session, the X11 RECORD extension, and X11/Xtst runtime libraries. Wayland deliberately uses manual input/clipboard import without this observer. An XWayland window does not enable capture in native Wayland apps. |
+| X11 imports text from an earlier selection | X11 PRIMARY can outlive visible highlighting, and the right-click position does not prove freshness. Review the imported source before generating; explicitly copy and import the intended text when uncertain. |
+| A shortcut is unavailable | Check Settings and other apps using the same shortcut. Linux shortcut registration may require desktop approval. Use the manual workspace if registration is denied. |
+| The Linux package will not launch | Use a compatible glibc distribution and the documented host libraries. If AppImage mounting lacks FUSE 2 support, use the tarball. Keep sandbox/runtime files together and run as your normal user; do not disable the sandbox. |
+
 Clearing the workspace removes its current input/result, not the system clipboard, saved settings, provider-side data, or files you deliberately saved. A clipboard manager outside PromptFinch can retain copied text under its own policy.
 
 ## Output quality and bug reports
 
 Review the copied prompt against the original intent, facts, exact strings, numerical limits, answer language and format. More headings or a longer prompt are not proof of improvement. The optimizer should add useful execution guidance where needed and keep already-clear requests concise; it should not perform the original task.
 
-The Codex GIF is a hand-authored synthetic illustration. Earlier language samples do not validate every subsequent policy version. The newest task-guidance live attempts failed with provider errors; [the record](optimization-value-verification.md) does not claim a successful before/after comparison.
+The Codex GIF is a hand-authored synthetic illustration. Earlier language samples do not validate every subsequent policy version. The [current prompt-quality record](prompt-quality-verification.md) distinguishes successful live responses, semantic failures and provider-review limits; it does not establish general correctness or better downstream task results. The [earlier task-guidance record](optimization-value-verification.md) retains its unsuccessful provider attempts as historical evidence. Compare important requirements yourself even when the provider review says `approved`.
 
 Report ordinary bugs through [GitHub Issues](https://github.com/JERMYSUEN/promptfinch/issues) using the format in [Contributing](../CONTRIBUTING.md). Include the source revision, environment, entry point, expected/actual behavior and a small synthetic case. Do not paste `.env`, real prompts, clipboard contents or an unreviewed diagnostic log. For sensitive vulnerabilities, follow [Security](../SECURITY.md).

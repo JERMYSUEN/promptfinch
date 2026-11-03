@@ -2,6 +2,7 @@
 import fs from "fs";
 import path from "path";
 import process from "process";
+import { currentDownloadFiles, releaseDocumentationErrors } from './docs-contract.js';
 
 const root = path.resolve(import.meta.dirname, "..");
 const errs = [];
@@ -118,6 +119,10 @@ if (nativeVersion !== pkg.version) warn(`macos/Info.plist version ${nativeVersio
 if (!/^[1-9]\d*$/.test(nativeBuild ?? "")) warn(`macos/Info.plist invalid build ${nativeBuild}`);
 const lock = JSON.parse(fs.readFileSync(path.join(root, "package-lock.json"), "utf8"));
 if (lock.version !== pkg.version || lock.packages?.[""]?.version !== pkg.version) warn("package-lock.json release version differs from package.json");
+const releaseDocs = Object.fromEntries([...currentDownloadFiles, 'CHANGELOG.md', `docs/releases/v${pkg.version}.md`].map(file => [
+  file, fs.existsSync(path.join(root, file)) ? fs.readFileSync(path.join(root, file), 'utf8') : '',
+]));
+for (const error of releaseDocumentationErrors(pkg.version, releaseDocs)) warn(error);
 
 // ---------- summary ----------
 let bad = 0;

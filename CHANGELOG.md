@@ -4,7 +4,14 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 
 ## [Unreleased]
 
-No changes recorded yet.
+### Fixed
+
+- Clear stale macOS model readiness during configuration switches, restarts and health checks. Failed changes display a ready backend only after a successful, health-verified rollback; lifecycle regressions cover failure and recovery.
+- Preserve missing-versus-insufficient execution gates and no-question fallback handling in editing/revision. Treat reviewer feedback as fallible, and describe editing notes against the original request rather than an internal draft. Add eight synthetic branch/control cases; provider review remains optional and is not a correctness guarantee.
+- Point primary English, Simplified Chinese, Traditional Chinese and macOS downloads to v1.3.0. Preserve signing, runtime, backend-upgrade and preview limitations, and keep older release evidence labeled as historical.
+- Correct the current architecture, contributor guidance and troubleshooting to cover complete prompts in both instruction languages, Electron's direct optimizer calls, Chromium CI checks and Windows/Linux selection limits.
+- Keep current download blocks and changelog release/reference links covered by documentation checks.
+- Update Electron from 44.9.0 to 44.9.3 and the indirect `fast-uri` dependency to 3.1.9 to address reported security advisories. Existing release assets retain their packaged dependencies.
 
 ## [1.3.0] - 2026-10-19
 
@@ -102,6 +109,8 @@ First public release, corresponding to [tag v1.0.0](https://github.com/JERMYSUEN
 - Historical pre-release records report 55 Node tests and 190 native checks; these are dated evidence, not a claim that those counts cover current `main` or every host/model. See the [reliability record](docs/reliability-verification.md) and [release notes](docs/releases/v1.0.0.md).
 - Source installation requires `npm run build:mac` **before** `npm run install:mac`. Follow the [current macOS guide](docs/macos.md) for prerequisites, permissions and configuration.
 
-[Unreleased]: https://github.com/JERMYSUEN/promptfinch/compare/v1.1.0...main
+[Unreleased]: https://github.com/JERMYSUEN/promptfinch/compare/v1.3.0...main
+[1.3.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0
+[1.2.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0
 [1.1.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0
 [1.0.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.0.0

@@ -1,10 +1,10 @@
 # Contributing
 
-Start with the [documentation index](docs/README.md) and [architecture](docs/design.md). The backend uses Node.js built-ins without third-party runtime packages; the native client uses Swift, AppKit and SwiftUI without Swift package dependencies. Keep changes focused and explain any new dependency.
+Start with the [documentation index](docs/README.md) and [architecture](docs/design.md). The optimizer and HTTP backend use Node.js built-ins without third-party runtime packages. The native macOS client uses Swift, AppKit and SwiftUI without Swift package dependencies; the Windows/Linux preview uses Electron with platform selection helpers. Keep changes focused and explain any new dependency.
 
 ## Development checks
 
-Use Node.js 22 or later. Native checks/builds also need macOS 13+ and Apple's Xcode Command Line Tools.
+Use Node.js 22.12 or later for source development. Native checks/builds also need macOS 13+ and Apple's Xcode Command Line Tools.
 
 ```sh
 npm ci
@@ -27,7 +27,7 @@ npm run build:mac
 npm run package:source
 ```
 
-Run checks appropriate to the change and report what actually ran. The GitHub workflow runs syntax/documentation checks, Node tests, native checks and a native build. Browser flows and physical mouse acceptance are separate; CI does not publish releases or prove live-model quality.
+Run checks appropriate to the change and report what actually ran. The [Checks workflow](.github/workflows/check.yml) runs syntax/documentation checks, Node tests, Chromium browser flows, native checks and public macOS package validation on pushes and pull requests. The [desktop workflow](.github/workflows/desktop.yml) builds and checks Windows/Linux packages on their matching hosts for relevant changes. Physical mouse and host-app acceptance remain separate; CI does not publish releases or prove live-model quality.
 
 For existing native installations, installing a new app preserves the active external backend. Native-plus-backend changes need `build:mac`, `install:mac`, then `update:mac-backend` from the trusted updated checkout. Backend-only changes use `update:mac-backend`. See the [macOS guide](docs/macos.md) for stable local signing and permissions. Do not commit private signing material.
 
@@ -43,9 +43,9 @@ English `README.md` is the source. Localized pages use `docs/readme/README.<loca
 
 Preserve commands, API field names, identifiers and example literals when translating. Resolve relative links from each document's own directory. A language link changes the documentation page; it does not switch app language or certify model coverage. For a new locale, update every language banner and the `readmeLocales` allowlist in `scripts/package-source.js`. Obtain language review where possible; structural checks do not certify a translation.
 
-When adding a public guide, link it from `docs/README.md` and add it to `scripts/package-source.js` if it belongs in the source archive. Keep dated test records labeled with their source revision and limitations. Do not rewrite raw synthetic evidence to make a result look successful. Current release-note source is [docs/releases/v1.1.0.md](docs/releases/v1.1.0.md); the [original notes](docs/releases/v1.0.0.md) keep the older snapshot identifiable. Updating release text does not rebuild a download. `npm run package:mac` builds public ad-hoc app/source packages and input-hash evidence from a clean public copy on macOS; it does not read real private configuration, notarize or publish. Run and record appropriate checks against the actual release commit and packaged files before publication.
+When adding a public guide, link it from `docs/README.md` and add it to `scripts/package-source.js` if it belongs in the source archive. Keep dated test records labeled with their source revision and limitations. Do not rewrite raw synthetic evidence to make a result look successful. Current release-note source is [docs/releases/v1.3.0.md](docs/releases/v1.3.0.md); earlier notes retain their respective snapshots. For a new release, update the marked `current-release-downloads` blocks in the English and two full Chinese READMEs and `docs/macos.md`, the documentation index, and the changelog version/reference links together. Updating release text does not rebuild a download. `npm run package:mac` builds public ad-hoc app/source packages and input-hash evidence from a clean public copy on macOS; it does not read real private configuration, notarize or publish. Run and record appropriate checks against the actual release commit and packaged files before publication.
 
-`npm run check:docs` checks navigation, README structure and changelog ordering. Also check local links, anchors, image paths, commands and factual claims against the relevant implementation. Avoid personal absolute paths and do not publish ignored handoff notes, local artifacts or original private recordings.
+`npm run check:docs` checks navigation, README structure, current release-download blocks and changelog ordering/reference links. Also check local links, anchors, image paths, commands and factual claims against the relevant implementation. Avoid personal absolute paths and do not publish ignored handoff notes, local artifacts or original private recordings.
 
 ## Bug reports and pull requests
 

@@ -47,8 +47,9 @@ macOS App 生成英文 Prompt 指令。浏览器默认生成英文指令，也�
 | --- | --- |
 | 浏览器工作台／HTTP API | Node.js 22 或更新版本；不需第三方运行时依赖。 |
 | macOS 原生 App | macOS 13 或更新版本作为编译目标，并安装 Node.js 22+ 运行时。App 不包含 Node。 |
+| Windows／Linux 桌面预览版 | Windows 10/11 x64，或可运行 Electron 的 Linux x64 桌面环境。内含 Node；Windows UIA／Linux X11 的全局选择仍属实验功能，Wayland 使用剪贴板导入。 |
 | 构建 macOS App | Apple Xcode Command Line Tools，包含 Swift 与 Apple 签名工具；不需要完整 Xcode。 |
-| 开发与浏览器测试 | `npm ci` 安装开发依赖；Playwright 需要已安装的测试浏览器。 |
+| 开发与浏览器测试 | Node.js 22.12+；`npm ci` 安装开发依赖；Playwright 需要已安装的测试浏览器。 |
 
 原生构建会依 Node 程序架构产生 `arm64` 或 `x86_64`，不是 Universal Binary。已记录的原生检查是在 Apple Silicon 上运行；尚未在实体 Intel 设备或最低 macOS 13 版本上验证。
 
@@ -56,16 +57,27 @@ macOS App 生成英文 Prompt 指令。浏览器默认生成英文指令，也�
 
 ## 快速开始
 
-获取源码后，选择浏览器演示或 macOS App：
+获取源码以运行浏览器演示或构建桌面版。现成桌面安装包请使用下方发行下载：
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
 
-[v1.3.0 桌面预览版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) 提供内含运行时的 Windows x64 与 Linux x64 安装包；支持范围、配置及验证说明见[发行指南（英文）](../releases/v1.3.0.md)。
+<!-- current-release-downloads:start -->
+当前的 [v1.3.0 发行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) 提供以下下载：
 
-[v1.1.0 发行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0) 提供 `PromptFinch-1.1.0-macos-arm64.zip`、`PromptFinch-source-v1.1.0.zip` 及 `SHA256SUMS`。App 下载适用于 Apple Silicon，采用 ad-hoc 签名、未经过公证；需另外安装 Node.js 22+。解压后将 App 移至应用程序文件夹。设置及验证范围见[发行说明](../releases/v1.1.0.md)，也可从此源码工作目录自行构建。[变更记录](../../CHANGELOG.md)区分之前的快照；目前没有自动更新或 Intel／Universal Binary 下载。
+| 系统 | 安装包 | 运行时 |
+| --- | --- | --- |
+| macOS Apple Silicon | `PromptFinch-1.3.0-macos-arm64.zip` | 另装 Node.js 22+ |
+| Windows x64 预览版 | `PromptFinch-1.3.0-windows-x64-setup.exe` 或 `PromptFinch-1.3.0-windows-x64.zip` | 已内含 |
+| Linux x64 预览版 | `PromptFinch-1.3.0-linux-x64.AppImage` 或 `PromptFinch-1.3.0-linux-x64.tar.gz` | 已内含；仍需兼容的系统库 |
+| 源码 | `PromptFinch-source-v1.3.0.zip` | 见上方系统需求 |
+
+请使用同一发行版的校验码及验证文件。配置、平台限制与验证范围见[发行指南（英文）](../releases/v1.3.0.md)。macOS 请解压后将 App 移至应用程序文件夹；App 采用 ad-hoc 签名、未经过公证，没有 Intel／Universal Binary 下载。Windows／Linux 安装包未签名，仍属实验预览版。
+
+升级 macOS 时，替换 App 会保留现有外部后端。请在新 App 选择**设置 → 使用此 App 随附后端**，才会采用内置优化器；这个操作保留私人模型配置，启动失败时会尝试恢复。没有自动更新器。[变更记录](../../CHANGELOG.md)区分之前的快照；更新 `main` 不会重新构建已发布下载。
+<!-- current-release-downloads:end -->
 
 ### 浏览器演示（不需 API 密钥）
 
@@ -269,7 +281,12 @@ Native macOS workspace / selection result panel
 Optional browser workspace / HTTP API client
   -> standalone Node.js backend on 127.0.0.1:3000
 
-Either backend
+Windows / Linux desktop preview
+  -> Electron renderer / preload IPC
+  -> main-process optimizer, without an HTTP listener
+
+All three paths
+  -> shared lib/optimizer.js
   -> labeled mock template, or configured model provider
   -> prompt + separate improvements / assumptions
 ```
@@ -280,6 +297,7 @@ Either backend
 - [lib/optimizer.js](../../lib/optimizer.js)：配置、mock／实时模型适配器、编辑指示与响应验证。
 - [public/](../../public)：支持响应式版面的繁体中文浏览器工作台。
 - [macos/Sources/](../../macos/Sources)：原生工作台、后端生命周期、选择、结果面板与贴回功能。
+- [desktop/](../../desktop)：Windows／Linux Electron 工作台、IPC、主进程模型调用与平台取字辅助程序。
 - [scripts/](../../scripts)：原生构建、本地签名、安装、后端更新与开发检查。
 
 ## 隐私与数据处理
@@ -295,7 +313,7 @@ Either backend
 
 ## 验证结果与限制
 
-[当前的 Prompt 质量验证记录](../prompt-quality-verification.md)说明本次编辑与复核逻辑、受控检查及尚未完成的实时模型评估。以下先前记录保留各自的历史范围，不代表当前版本或所有语义案例均已通过。
+[Prompt 质量比较记录](../prompt-quality-verification.md)保留先前的编辑与复核评估。[执行分支回归补充记录](../prompt-quality-branch-regressions.md)说明后续实验，可查阅原始与最终优化器源码的哈希及其限制。请依各次测试的源码与配置理解结果；这些记录不代表当前版本或所有语义案例均已通过。
 
 [优化效果验证记录](../optimization-value-verification.md)定义了 8 个合成案例，检查翻译之外的任务指引，以及清楚需求是否保持精简。最初检查遇到供应商超时与服务错误；后来的[改善验证记录](../improvement-verification.md)记录已取得的实时样本、机械检查与单独复核的语义问题。示意结果不代表已证明模型或下游任务表现改善。
 
@@ -303,7 +321,7 @@ Either backend
 
 用户先前确认辅助菜单出现时不会自动生成，且明确点击一次即可获取英文结果。此版本在 Codex／Claude 中使用实体鼠标操作，以及完整的复制／贴回／取消行为仍需验收。[文本选择验证](../context-menu-verification.md)与[多语样本审阅](../multilingual-verification.md)各自记录不同的验证范围。
 
-目前限制包括宿主 App 的文本选择支持、没有 OCR、不能自定义全局快捷键、未内含 Node、没有自动更新，以及没有现成且经过公证的安装程序或 Universal Binary 发布版。Intel／最低 macOS 版本硬件、实体移动设备、Docker 与远程部署仍未验证。实际语义质量仍需人工复核；检查与剩余限制见[当前的 Prompt 质量验证](../prompt-quality-verification.md)。
+目前限制包括宿主 App 的文本选择支持、没有 OCR、不能自定义全局快捷键、macOS App 未内含 Node、没有自动更新，以及没有现成且经过公证的安装程序或 Universal Binary 发布版。Intel／最低 macOS 版本硬件、实体移动设备、Docker 与远程部署仍未验证。实际语义质量仍需人工复核；检查与剩余限制见[质量比较记录](../prompt-quality-verification.md)及[分支回归补充记录](../prompt-quality-branch-regressions.md)。
 
 ## 开发
 
@@ -327,7 +345,7 @@ npm run build:mac
 
 在具备 Node.js 22+ 与 Xcode Command Line Tools 的 macOS 上运行 `npm run package:mac`，可生成公开用 Apple Silicon App ZIP 与源码 ZIP。它只复制明确列出的公开文件，以 ad-hoc 签名构建，不读取真实 `.env` 或个人签名配置。发行 manifest 记录相对输入路径与 SHA-256；`SHA256SUMS` 列出下载文件校验码。这项打包不会公证 App 或发布到 GitHub。只需源码包时可运行 `npm run package:source`。
 
-`npm run dev` 会以 Node watch 模式运行独立服务器。`npm run check:docs` 会检查 README 导览、翻译结构与变更记录顺序，不会认证翻译准确度或模型质量。API 测试使用本地假模型服务；原生测试使用合成目标与具名测试剪贴板。[GitHub 工作流程](../../.github/workflows/check.yml)会运行 JavaScript／文档检查、Node 测试与 macOS 原生检查、公开封装与解压后验证，不会发布发行文件。浏览器测试目前在本地运行；特定提交的结果请查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
+`npm run dev` 会以 Node watch 模式运行独立服务器。`npm run check:docs` 会检查 README 导览、翻译结构、当前发行下载区块与变更记录链接，不会认证翻译准确度或模型质量。API 测试使用本地假模型服务；原生测试使用合成目标与具名测试剪贴板。[Checks 工作流程](../../.github/workflows/check.yml)在推送与 Pull Request 运行 JavaScript／文档检查、Node 测试、Chromium 浏览器流程、macOS 原生检查、公开封装与解压后验证，不会发布发行文件。另一个[桌面版工作流程](../../.github/workflows/desktop.yml)会针对相关变更构建并检查 Windows／Linux 安装包。浏览器流程使用合成数据及受控供应商；实体鼠标／宿主 App 验收与真实模型质量仍需分别验证。特定提交的结果请查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
 
 ## 贡献与授权
 

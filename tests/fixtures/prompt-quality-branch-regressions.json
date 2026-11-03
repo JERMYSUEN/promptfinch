@@ -1,0 +1,141 @@
+[
+  {
+    "id": "branch-mixed-insufficient-criteria",
+    "task": "analysis",
+    "locale": "ja-KR-zh",
+    "prompt": "チーム用のノートアプリを2つ比較して、条件に合う候補を1つ理由つきで選んで。제품과 조건이 있어도 판단에 필요한 조건이 부족하면 먼저 필요한 질문만 하세요. 韓国語の短い表と候補1つだけを出してください。製品は Aster Notes と Juno Notes。確認済みの製品情報：Aster Notes は保存日数を設定できる。Juno Notes は30日で削除する。条件：符合我公司的資料保留規則，但公司規則尚未提供。製品情報を推測しないで。",
+    "provenance": "Unchanged synthetic source from quality-analysis-mixed-insufficient-criteria in prompt-quality.json; a known historical execution-core failure.",
+    "expected": {
+      "literals": ["Aster Notes", "Juno Notes", "30"],
+      "answerLanguage": "Korean",
+      "answerLanguageSource": "explicit",
+      "assumptions": [],
+      "criticalChecks": [
+        "Names and facts are already supplied; ask only for the missing decision-critical company retention rule.",
+        "Recommendation requires sufficient criteria, not merely nonempty fields. Ask necessary questions and wait before comparing or choosing.",
+        "Once sufficient criteria are available, allow the short Korean table and exactly one reasoned choice. Do not permanently forbid the requested task.",
+        "Preserve both product facts and avoid invented company rules, features, budget or platform questions."
+      ]
+    }
+  },
+  {
+    "id": "branch-missing-source-no-questions",
+    "task": "summary",
+    "locale": "zh-TW",
+    "prompt": "請將這份會議紀錄整理成繁體中文三點摘要，只寫已確認的決議與負責人。會議紀錄目前沒有提供。不得提問，也不要自行編造。",
+    "provenance": "Unchanged synthetic source from quality-summary-zh-missing-no-questions in prompt-quality.json; a known historical execution-core failure.",
+    "expected": {
+      "literals": [],
+      "answerLanguage": "Traditional Chinese",
+      "answerLanguageSource": "explicit",
+      "assumptions": [],
+      "criticalChecks": [
+        "Explicitly direct a brief Traditional Chinese missing-source limitation notice, without requesting minutes or inventing a summary.",
+        "Do not retain an unconditional summarize-the-missing-minutes command. The three-summary-point format belongs to the unavailable artifact, not the limitation notice.",
+        "The limitation branch is legitimate dependency handling, not an invented deliverable to remove during revision.",
+        "Notes describe the original-to-final edit only, with no internal review/prior-draft history or assumption that the explicit language was inferred."
+      ]
+    }
+  },
+  {
+    "id": "branch-sufficient-criteria-proceed-control",
+    "task": "analysis",
+    "locale": "en",
+    "prompt": "Compare Lynx Export and Heron Export and choose one for our data retention policy. Lynx Export can delete after a configurable number of days. Heron Export deletes after 45 days. Our policy requires deletion no later than 14 days. Use only these facts, give a brief English explanation, and ask a question only if information essential to this retention decision is missing or insufficient.",
+    "expected": {
+      "literals": ["Lynx Export", "Heron Export", "45", "14"],
+      "answerLanguage": "English",
+      "answerLanguageSource": "explicit",
+      "assumptions": [],
+      "criticalChecks": [
+        "The decision-critical rule and product facts are sufficient; permit the future model to compare and choose without a mandatory questionnaire.",
+        "Preserve the inclusive no-later-than-14-days boundary and the 45-day deletion fact, without calculating or choosing the answer during editing.",
+        "Retain the conditional missing-or-insufficient gate without declaring a blocker or inventing unrelated criteria."
+      ]
+    }
+  },
+  {
+    "id": "branch-source-supplied-late-control",
+    "task": "summary",
+    "locale": "zh-TW",
+    "prompt": "請把下面的會議紀錄整理成繁體中文兩點摘要，不得提問，也不要新增人名或日期。前面的草稿註記『紀錄待補』已經過期，請讀完本段再判斷。正式紀錄：DEMO-62 決定先做離線匯出。上線日期仍未決定。",
+    "expected": {
+      "literals": ["DEMO-62 決定先做離線匯出。上線日期仍未決定。"],
+      "answerLanguage": "Traditional Chinese",
+      "answerLanguageSource": "explicit",
+      "assumptions": [],
+      "criticalChecks": [
+        "The source is supplied at the end and overrides the outdated missing-source note. Allow a two-point Traditional Chinese summary instead of a missing-source notice.",
+        "Preserve the complete actual source as bounded data, the no-question restriction, and the prohibition on adding names or dates.",
+        "Do not summarize the source during editing or treat its source language as a new language assumption."
+      ]
+    }
+  },
+  {
+    "id": "branch-missing-source-explicit-json-fallback",
+    "task": "summary",
+    "locale": "ja",
+    "prompt": "この議事録を韓国語で要約して。議事録はまだ提供していない。質問は禁止。資料がない場合は要約せず、JSONだけを返して。キーは status と message、status の値は missing_source、message は韓国語の短い説明にして。資料や内容を作り出さないで。",
+    "expected": {
+      "literals": ["status", "message", "missing_source"],
+      "answerLanguage": "Korean",
+      "answerLanguageSource": "explicit",
+      "assumptions": [],
+      "criticalChecks": [
+        "Retain the user's explicit fallback: no summary or questions; only JSON with status=missing_source and a brief Korean message.",
+        "Do not replace the compatible fallback format with plain text, turn it into the optimizer's task answer, or translate the fixed keys/value.",
+        "Japanese operative instructions do not override the explicitly Korean answer language. Notes must use the selected notes language."
+      ]
+    }
+  },
+  {
+    "id": "branch-code-template-no-questions-control",
+    "task": "coding",
+    "locale": "ja",
+    "prompt": "PythonでCSVのemail列を大文字小文字を区別せず重複排除する再利用可能なスクリプトを書いて。最初の行、ヘッダー、行順を保持して。パスは [INPUT_CSV] と [OUTPUT_CSV] のままにする。実際のCSVは渡さないので内容を想像しないで。質問はせず、コードだけ返して。",
+    "expected": {
+      "literals": ["Python", "CSV", "email", "[INPUT_CSV]", "[OUTPUT_CSV]"],
+      "answerLanguage": null,
+      "answerLanguageSource": "not-applicable",
+      "assumptions": [],
+      "criticalChecks": [
+        "Generate instructions for reusable code; intentional placeholders and absent private data do not prevent drafting the template.",
+        "Retain case-insensitive deduplication, first-row retention, header/order preservation, no questions and code-only final task output.",
+        "Do not invent file contents, ask for actual paths, produce the script during editing, or invent a prose answer-language assumption."
+      ]
+    }
+  },
+  {
+    "id": "branch-explicit-language-not-assumption-control",
+    "task": "writing",
+    "locale": "ko",
+    "prompt": "팀원에게 내일 회의에 물병을 가져오라고 한국어로 친근한 한 문장만 써 줘. 제목이나 설명은 붙이지 마.",
+    "expected": {
+      "literals": [],
+      "answerLanguage": "Korean",
+      "answerLanguageSource": "explicit",
+      "assumptions": [],
+      "criticalChecks": [
+        "Keep the single friendly Korean reminder sentence, tomorrow's meeting and reusable prompt role. Do not write the reminder while editing.",
+        "Korean is explicitly requested, so it must not be placed in assumptions or described as inferred.",
+        "No extra title, explanation, checklist or invented context; translation/minimal editing is sufficient and notes must honestly reflect that."
+      ]
+    }
+  },
+  {
+    "id": "branch-inferred-language-source-exclusion-control",
+    "task": "summary",
+    "locale": "es",
+    "prompt": "Resume el siguiente aviso en una sola frase para el equipo; no añadas información. Texto: The launch is postponed. The new date is not confirmed.",
+    "expected": {
+      "literals": ["The launch is postponed. The new date is not confirmed."],
+      "answerLanguage": "Spanish",
+      "answerLanguageSource": "inferred",
+      "criticalChecks": [
+        "Spanish is inferred from the operative request and stated in both the future prompt and assumptions, in the selected notes language.",
+        "Preserve the complete English source as data without inferring an English answer from it.",
+        "Request a single sentence for the team with no new information; do not perform the summary during editing."
+      ]
+    }
+  }
+]
