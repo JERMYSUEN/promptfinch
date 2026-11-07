@@ -200,7 +200,7 @@ jobs:
   macos-development:
     name: macOS development workspace (native release unchanged)
     if: github.event_name != 'workflow_dispatch' || !inputs.windows_selection_only
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
