@@ -55,6 +55,16 @@ const path = require('node:path');
     await page.locator('#copy-button').click();
     const copied = await application.evaluate(({ app }) => new Promise(resolve => app.emit('promptfinch-test-read-clipboard', null, resolve)));
     check(copied === prompt, 'copy includes only prompt, using isolated in-memory clipboard');
+    await application.evaluate(({ dialog }) => {
+      dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] });
+    });
+    await page.locator('#settings-button').click();
+    await page.evaluate(async () => {
+      document.querySelector('#choose-config').click();
+      await window.promptfinch.getState();
+    });
+    check((await page.locator('#optimized-prompt').inputValue()) === prompt, 'canceling the config picker preserves the visible result');
+    await page.locator('#settings-button').click();
     await page.locator('#clear-button').click();
     await expect(page.locator('#original-prompt')).toHaveValue('');
     await expect(page.locator('#optimized-prompt')).toHaveValue('');

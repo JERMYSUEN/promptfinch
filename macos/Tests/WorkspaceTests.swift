@@ -248,7 +248,9 @@ private func checkWorkspaceBackendState(check: (Bool, String) -> Void) async thr
 
     failHealth = true
     model.original = "Synthetic request: preserve ACME-42."
+    model.resultPanel.finish(prompt: "Earlier synthetic prompt.", status: "", canPasteBack: false, error: false)
     model.generate()
+    check(!model.resultPanel.isVisible, "a foreground generation hides the previous result panel")
     check(model.config == nil && model.busy, "generation rechecks readiness before dispatching content")
     try await waitUntil { !model.busy }
     check(model.isError && model.config == nil && model.result == nil,
@@ -299,12 +301,14 @@ private func checkWorkspaceBackendState(check: (Bool, String) -> Void) async thr
     for healthSucceeds in [true, false] {
         holdNextHealth = true
         model.original = "Synthetic superseded request: preserve ACME-42."
-        model.generate()
+        model.generate(background: true, anchor: .zero)
         let generation = model.generationOperationForTesting!
         try await waitUntil { pendingHealth != nil }
+        check(model.resultPanel.isVisible, "a background generation displays its progress panel")
         let oldHealth = pendingHealth!
         pendingHealth = nil
         model.restart()
+        check(!model.resultPanel.isVisible, "switching backends dismisses superseded generation progress")
         try await waitUntil { !model.backendSwitching }
         let currentInstance = model.config?.backendInstanceID
         let status = model.message
@@ -316,8 +320,8 @@ private func checkWorkspaceBackendState(check: (Bool, String) -> Void) async thr
         check(model.config?.ready == true && model.config?.backendInstanceID == currentInstance
               && backend.verifiedConfiguration?.backendInstanceID == currentInstance && model.message == status,
               "an old \(healthSucceeds ? "successful" : "failed") health reply cannot overwrite a newer backend switch")
-        check(model.result == nil && !model.busy && !model.isError,
-              "a superseded generation cannot publish output or errors after the backend switch")
+        check(model.result == nil && !model.busy && !model.isError && !model.resultPanel.isVisible,
+              "a superseded generation cannot publish output or errors or reopen its panel after the backend switch")
     }
 
     failCandidateHealth = true

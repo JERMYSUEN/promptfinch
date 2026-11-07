@@ -173,7 +173,11 @@ final class WorkspaceModel: ObservableObject {
         config = nil
         result = nil; resultOriginal = ""; busy = true; notify(L10n.text(.refining))
         DebugLog.write("generate seq=\(eventID) started background=\(background) selectedUTF16=\(input.prompt.utf16.count)")
-        if background { resultPanel.present(anchor: anchor ?? mouseAnchor, eventSequence: activeEventSequence) }
+        if background {
+            resultPanel.present(anchor: anchor ?? mouseAnchor, eventSequence: activeEventSequence)
+        } else {
+            resultPanel.orderOut(nil)
+        }
         preferences.set(task, forKey: "task")
         preferences.set(targetModel, forKey: "targetModel")
         operation = Task {
@@ -327,7 +331,9 @@ final class WorkspaceModel: ObservableObject {
     func cancel() {
         invalidatePendingPasteFeedback()
         generationID = UUID()
-        operation?.cancel(); operation = nil; busy = false
+        operation?.cancel(); operation = nil
+        if busy { resultPanel.orderOut(nil) }
+        busy = false
     }
 
     func invalidatePendingPasteFeedback() { pasteFeedbackID = UUID() }

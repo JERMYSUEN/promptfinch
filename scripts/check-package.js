@@ -145,10 +145,12 @@ try {
   assert.equal(lock.packages[''].version, version);
   if (manifest) {
     assert.equal(manifest.backendID, await computeBackendID(source));
+    const usesSDKProbe = readFileSync(join(source, 'scripts/build-macos.js'), 'utf8').includes('./macos-sdk.js');
     for (const required of [
       'package.json', 'package-lock.json', 'macos/Info.plist', 'macos/Icon.swift',
       ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => `macos/Sources/${name}.swift`),
       'scripts/build-macos.js', 'scripts/package-macos.js', 'scripts/package-source.js', ...BACKEND_FILES,
+      ...(usesSDKProbe ? ['scripts/macos-sdk.js'] : []),
     ]) assert.ok(manifest.sourceInputsSHA256[required], `Missing build input hash: ${required}`);
     for (const [relative, hash] of Object.entries(manifest.sourceInputsSHA256)) {
       assert.ok(files.includes(relative), `Manifest input missing from source ZIP: ${relative}`);

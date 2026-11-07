@@ -1032,6 +1032,11 @@ final class ResultPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
+    override func orderOut(_ sender: Any?) {
+        busy(false)
+        super.orderOut(sender)
+    }
+
     func updateLanguage(from previous: UILanguage) {
         header.stringValue = L10n.text(.englishPrompt)
         pasteButton.title = L10n.text(.pasteBack)

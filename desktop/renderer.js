@@ -300,7 +300,7 @@ function registerEvents() {
   });
   $('choose-config').addEventListener('click', async () => {
     const reply = await call('chooseConfig');
-    if (reply.ok) { forgetResult(); renderState(); }
+    if (reply.ok && reply.value.changed) { forgetResult(); renderState(); }
   });
   $('create-config').addEventListener('click', async () => {
     const reply = await call('createConfig');

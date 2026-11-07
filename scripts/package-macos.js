@@ -177,7 +177,7 @@ try {
   const sourceInputs = [
     'package.json', 'package-lock.json', 'macos/Info.plist', 'macos/Icon.swift',
     ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => `macos/Sources/${name}.swift`),
-    'scripts/build-macos.js', 'scripts/backend-release.js', 'scripts/package-source.js',
+    'scripts/build-macos.js', 'scripts/macos-sdk.js', 'scripts/backend-release.js', 'scripts/package-source.js',
     'scripts/package-macos.js', 'scripts/app-install.js', 'scripts/check-package.js', '.env.deepseek.example', ...BACKEND_FILES,
   ];
   const manifest = {

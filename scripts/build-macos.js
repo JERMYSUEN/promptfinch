@@ -4,6 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { BACKEND_FILES, computeBackendID } from './backend-release.js';
+import { selectMacOSSDK } from './macos-sdk.js';
 
 if (process.platform !== 'darwin') throw new Error('原生 App 必須在 macOS 建置。');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -22,18 +23,20 @@ function run(command, args) {
   if (result.status !== 0) throw new Error(`${command} 建置失敗 (${result.status})。`);
 }
 
+mkdirSync(cache, { recursive: true });
+const sdk = selectMacOSSDK(cache);
+
 // Remove only our generated bundle; never touch user configuration or installed apps.
 rmSync(app, { recursive: true, force: true });
 mkdirSync(resolve(contents, 'MacOS'), { recursive: true });
 mkdirSync(resources, { recursive: true });
-mkdirSync(cache, { recursive: true });
 cpSync(resolve(root, 'macos/Info.plist'), resolve(contents, 'Info.plist'));
 if (process.env.PROMPT_STUDIO_BUILD_NUMBER) {
   if (!/^\d+$/.test(process.env.PROMPT_STUDIO_BUILD_NUMBER)) throw new Error('PROMPT_STUDIO_BUILD_NUMBER 必須是整數。');
   run('plutil', ['-replace', 'CFBundleVersion', '-string', process.env.PROMPT_STUDIO_BUILD_NUMBER, resolve(contents, 'Info.plist')]);
 }
 const architecture = process.arch === 'arm64' ? 'arm64' : 'x86_64';
-const compile = ['swiftc', '-swift-version', '5', '-O', '-module-cache-path', cache, '-target', `${architecture}-apple-macosx13.0`];
+const compile = ['swiftc', '-sdk', sdk, '-swift-version', '5', '-O', '-module-cache-path', cache, '-target', `${architecture}-apple-macosx13.0`];
 run('xcrun', [...compile, '-parse-as-library', ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), '-o', resolve(contents, 'MacOS/PromptSelection')]);
 
 // Explicit allowlist: .env, logs, tests, artifacts and dependencies are never bundled.

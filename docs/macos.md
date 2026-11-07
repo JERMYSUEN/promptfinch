@@ -159,6 +159,8 @@ npm run build:mac
 PLAYWRIGHT_CHANNEL=chrome npm run test:ui
 ```
 
+若預設 macOS SDK 缺少 SwiftUI 巨集，建置與測試會嘗試同一套開發工具下已安裝的相容 SDK。也可設定 `SDKROOT` 指定 SDK。若找不到相容版本，請更新 Xcode Command Line Tools。
+
 Swift 測試編譯全部原生來源，包含空白、UTF-16 長度、輸入不變、英文 API 參數，以及真正的 URLSession 對本機 mock HTTP 流程。選取與貼回測試使用合成來源及獨立命名剪貼簿，檢查選取變動、範圍缺失、唯讀欄位、焦點切換、暫存／還原失敗與較新的複製內容；`WorkspaceTests.swift` 以假操作驗證貼回狀態、過期回呼、關閉與清除。Node 測試用本機假模型檢查兩種指令語言的完整 Prompt 契約、獨立說明欄位、可選覆核流程、Host／Origin 白名單與錯誤處理。它們不等同所有 App 的取字相容性測試或真實模型的語意品質驗證。
 
 ## GitHub 與發佈

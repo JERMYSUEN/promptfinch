@@ -135,8 +135,11 @@ function registerIPC() {
     chooseConfig: async () => {
       const selected = await dialog.showOpenDialog(mainWindow, { title: 'Select model configuration', properties: ['openFile'],
         filters: [{ name: 'Configuration', extensions: ['env', 'txt'] }, { name: 'All files', extensions: ['*'] }] });
-      if (!selected.canceled && selected.filePaths[0]) { await controller.selectConfig(selected.filePaths[0]); result = null; }
-      return sendState();
+      if (selected.canceled || !selected.filePaths[0]) return { changed: false };
+      await controller.selectConfig(selected.filePaths[0]);
+      result = null;
+      sendState();
+      return { changed: true };
     },
     createConfig: async () => { const file = await controller.createTemplate(); const error = await shell.openPath(file); if (error) { shell.showItemInFolder(file); } return { created: true }; },
     useDemo: async () => { await controller.useDemo(); result = null; return sendState(); },
