@@ -13,7 +13,7 @@ struct BackendRelease {
 @MainActor
 struct BackendStore {
     static let files = [
-        "server.js", "lib/optimizer.js", "public/index.html", "public/app.js", "public/style.css", "public/favicon.svg",
+        "server.js", "lib/optimizer.js",
     ]
     let root: URL
     let seed: URL

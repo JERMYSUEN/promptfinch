@@ -421,13 +421,10 @@ struct WorkspaceView: View {
     @State private var comparisonVisible = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L10n.text(.workspaceTitle)).font(.system(size: 25, weight: .semibold))
-                    Text(L10n.text(.workspaceIntro))
-                        .font(.system(size: 12)).foregroundStyle(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center) {
+                Text(L10n.text(.workspaceTitle)).font(.system(size: 17, weight: .semibold))
+                    .help(L10n.text(.workspaceIntro))
                 Spacer()
                 Button { model.settingsVisible = true } label: { Label(L10n.text(.settings), systemImage: "gearshape") }
                     .accessibilityIdentifier("settings")
@@ -438,14 +435,16 @@ struct WorkspaceView: View {
                 Spacer()
                 Text(L10n.text(.memoryOnly)).font(.system(size: 11)).foregroundStyle(.secondary)
             }
-            HStack(alignment: .top, spacing: 18) {
-                VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text(.privacy))
+                .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(L10n.text(.original)).font(.headline)
                     TextEditor(text: $model.original).font(.system(size: 14))
                         .padding(8).background(Color(nsColor: .textBackgroundColor))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
-                        .frame(minHeight: 190)
+                        .frame(minHeight: 140)
                         .disabled(model.unavailable).accessibilityIdentifier("originalPrompt")
                     HStack {
                         Picker(L10n.text(.purpose), selection: $model.task) {
@@ -466,10 +465,8 @@ struct WorkspaceView: View {
                             .frame(maxWidth: .infinity).padding(.vertical, 5)
                     }.buttonStyle(.borderedProminent).tint(accent).disabled(model.unavailable)
                         .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("generate")
-                    Text(L10n.text(.privacy))
-                        .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                }.frame(minWidth: 285, maxWidth: .infinity)
-                VStack(alignment: .leading, spacing: 12) {
+                }.frame(minWidth: 260, maxWidth: .infinity)
+                VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(L10n.text(.copyablePrompt)).font(.headline)
                         Spacer()
@@ -485,7 +482,7 @@ struct WorkspaceView: View {
                             .font(.system(size: 14)).foregroundStyle(model.result == nil ? .secondary : .primary)
                             .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(14)
                             .accessibilityIdentifier("resultPrompt")
-                    }.frame(minHeight: 255, maxHeight: .infinity)
+                    }.frame(minHeight: 160, maxHeight: .infinity)
                         .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
                     if let result = model.result {
@@ -521,7 +518,7 @@ struct WorkspaceView: View {
                 Spacer()
                 if model.busy { Button(L10n.text(.cancel)) { model.cancel(); model.notify(L10n.text(.cancelled)) } }
             }.foregroundStyle(model.isError ? Color.red : .secondary).frame(minHeight: 30)
-        }.padding(24).frame(minWidth: 760, minHeight: 620).background(Color(nsColor: .windowBackgroundColor))
+        }.padding(14).frame(minWidth: 680, minHeight: 480).background(Color(nsColor: .windowBackgroundColor))
             .sheet(isPresented: $model.settingsVisible) { SettingsView(model: model) }
             .environment(\.locale, Locale(identifier: model.language.rawValue))
             .onChange(of: model.original) { _ in

@@ -11,14 +11,14 @@ body:not(.ready) #workspace-shell { visibility: hidden; }
 .settings-actions { margin: 14px 0 10px; }
 .desktop-settings .settings-help { font-size: 12px; }
 .desktop-input-settings { align-items: flex-end; justify-content: flex-start; margin-bottom: 20px; gap: 18px; }
-.desktop-input-settings .model-field { min-width: 260px; flex: 1; max-width: 560px; }
+.desktop-input-settings .model-field { min-width: 180px; flex: 1; max-width: 420px; }
 .desktop-input-settings .task-field { min-width: 170px; }
 .import-actions { margin: 14px 0 18px; }
 .import-actions button { font-size: 12px; }
 .input-actions { flex-wrap: wrap; }
 .input-actions .shortcut { margin-right: auto; }
-#original-prompt { min-height: 300px; }
-#optimized-prompt { height: 393px; }
+#original-prompt { min-height: 160px; }
+#optimized-prompt { height: 200px; }
 .input-pane, .output-pane { align-self: stretch; }
 #result-tag { max-width: 140px; white-space: normal; }
 .output-pane .pane-heading { flex-wrap: wrap; }
@@ -60,6 +60,6 @@ body.companion #workspace-shell { display: none; }
   .desktop-input-settings .task-field, .desktop-input-settings .model-field { min-width: 0; width: 100%; max-width: none; }
   .input-actions { justify-content: stretch; }
   .input-actions .primary-button { flex: 1; width: auto; }
-  #optimized-prompt { height: 340px; }
+  #optimized-prompt { height: 180px; }
   .desktop-settings { padding: 17px; }
 }

@@ -16,7 +16,7 @@ module.exports = {
    * developer artifacts out of the installed app. Helpers are separate below. */
   files: [
     'desktop/*.cjs', 'desktop/*.mjs', 'desktop/*.js', 'desktop/*.html', 'desktop/*.css', 'desktop/*.svg',
-    '!desktop/builder.config.cjs', 'lib/optimizer.js', 'public/style.css', 'public/favicon.svg',
+    '!desktop/builder.config.cjs', 'lib/optimizer.js',
     'package.json', 'LICENSE',
   ],
   beforePack(context) {

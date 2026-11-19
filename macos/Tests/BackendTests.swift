@@ -167,7 +167,7 @@ func runBackendStoreTests(check: (Bool, String) -> Void) async throws {
     let corruptRoot = temporary.appendingPathComponent("corrupt", isDirectory: true)
     let corrupt = BackendStore(root: corruptRoot, seed: firstSeed)
     let corrupted = try corrupt.prepare()
-    try Data("unexpected".utf8).write(to: corrupted.root.appendingPathComponent("public/style.css"))
+    try Data("unexpected".utf8).write(to: corrupted.root.appendingPathComponent("lib/optimizer.js"))
     check(rejects { _ = try corrupt.prepare() }, "a corrupt selected release cannot launch")
     check(rejects { _ = try corrupt.stageBundled() }, "a corrupt same-hash release is never overwritten")
     check(try corrupt.currentTarget() == corrupted.target, "corruption errors do not delete or redirect the selection")

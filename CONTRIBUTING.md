@@ -12,13 +12,6 @@ npm run check
 npm run check:docs
 npm test
 
-# Install a test browser once, then run browser checks.
-npx playwright install chromium
-npm run test:ui
-
-# Or use an installed Google Chrome.
-PLAYWRIGHT_CHANNEL=chrome npm run test:ui
-
 # macOS only
 npm run test:mac
 npm run build:mac
@@ -27,7 +20,7 @@ npm run build:mac
 npm run package:source
 ```
 
-Run checks appropriate to the change and report what actually ran. The [Checks workflow](.github/workflows/check.yml) runs syntax/documentation checks, Node tests, Chromium browser flows, native checks and public macOS package validation on pushes and pull requests. The [desktop workflow](.github/workflows/desktop.yml) builds and checks Windows/Linux packages on their matching hosts for relevant changes. Physical mouse and host-app acceptance remain separate; CI does not publish releases or prove live-model quality.
+Run checks appropriate to the change and report what actually ran. The [Checks workflow](.github/workflows/check.yml) runs syntax/documentation checks, Node tests, native checks and public macOS package validation on pushes and pull requests. The [desktop workflow](.github/workflows/desktop.yml) builds and checks Windows/Linux packages on their matching hosts for relevant changes. Physical mouse and host-app acceptance remain separate; CI does not publish releases or prove live-model quality.
 
 For existing native installations, installing a new app preserves the active external backend. Native-plus-backend changes need `build:mac`, `install:mac`, then `update:mac-backend` from the trusted updated checkout. Backend-only changes use `update:mac-backend`. See the [macOS guide](docs/macos.md) for stable local signing and permissions. Do not commit private signing material.
 

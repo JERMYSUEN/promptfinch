@@ -1,17 +1,9 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { isIP } from 'node:net';
 import { AppError, MAX_PROMPT_LENGTH, TASKS, NOTES_LANGUAGES, readConfig, validateInput, optimize } from './lib/optimizer.js';
 
-const PUBLIC_DIR = new URL('./public/', import.meta.url);
-const STATIC_FILES = new Map([
-  ['/', ['index.html', 'text/html; charset=utf-8']],
-  ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
-  ['/style.css', ['style.css', 'text/css; charset=utf-8']],
-  ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
-]);
 const BODY_LIMIT = 98304;
 
 // Parse authorities without URL's forgiving handling of credentials, paths,
@@ -165,15 +157,8 @@ export function createApp(config = readConfig()) {
         }
         return;
       }
-      if (STATIC_FILES.has(pathname) && ['GET', 'HEAD'].includes(request.method)) {
-        const [filename, type] = STATIC_FILES.get(pathname);
-        const content = await readFile(new URL(filename, PUBLIC_DIR));
-        response.writeHead(200, { 'Content-Type': type });
-        response.end(request.method === 'HEAD' ? undefined : content);
-        return;
-      }
       if (pathname.startsWith('/api/')) throw new AppError(405, '這個 API 路徑或請求方式不受支援。');
-      throw new AppError(404, '找不到頁面，請返回首頁。');
+      throw new AppError(404, '找不到這個路徑。');
     } catch (error) {
       if (!response.headersSent && !response.destroyed) {
         sendJson(response, error instanceof AppError ? error.status : 500, {
@@ -197,7 +182,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
       process.exitCode = 1;
     });
     server.listen(config.port, config.host, () => {
-      console.log(`Prompt 工作台：http://${config.host}:${server.address().port}（${config.mode === 'mock' ? '示範模式' : '模型模式'}）`);
+      console.log(`PromptFinch API：http://${config.host}:${server.address().port}（${config.mode === 'mock' ? '示範模式' : '模型模式'}）`);
     });
     for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => {
       server.closeAllConnections();

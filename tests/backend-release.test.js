@@ -4,7 +4,7 @@ import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { activateBackendTarget, computeBackendID, currentBackendTarget, stageBackendRelease } from '../scripts/backend-release.js';
+import { BACKEND_FILES, activateBackendTarget, computeBackendID, currentBackendTarget, stageBackendRelease } from '../scripts/backend-release.js';
 
 const projectRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -13,7 +13,7 @@ async function isolatedProject(t) {
   const source = join(root, 'source');
   const backend = join(root, 'support', 'backend');
   await mkdir(source, { recursive: true });
-  for (const item of ['server.js', 'lib/optimizer.js', 'public/index.html', 'public/app.js', 'public/style.css', 'public/favicon.svg']) {
+  for (const item of BACKEND_FILES) {
     const from = join(projectRoot, item);
     const to = join(source, item);
     await mkdir(join(to, '..'), { recursive: true });
@@ -38,7 +38,7 @@ test('後端版本在隔離目錄完成語法、mock HTTP 流程與原子切換'
   assert.equal(await currentBackendTarget(backend), staged.relativeTarget);
 
   const originalID = await computeBackendID(source);
-  await writeFile(join(source, 'public/style.css'), `${await readFile(join(source, 'public/style.css'), 'utf8')}\n/* staged update */\n`);
+  await writeFile(join(source, 'lib/optimizer.js'), `${await readFile(join(source, 'lib/optimizer.js'), 'utf8')}\n/* staged update */\n`);
   const updated = await stageBackendRelease(source, backend);
   assert.notEqual(updated.id, originalID);
   await activateBackendTarget(backend, updated.relativeTarget);
@@ -60,6 +60,6 @@ test('不合法候選後端不能影響 current 版本', async t => {
 test('不覆寫被竄改的同識別版本資料夾', async t => {
   const { source, backend } = await isolatedProject(t);
   const staged = await stageBackendRelease(source, backend);
-  await writeFile(join(staged.releaseRoot, 'public/style.css'), 'unexpected');
+  await writeFile(join(staged.releaseRoot, 'lib/optimizer.js'), 'unexpected');
   await assert.rejects(stageBackendRelease(source, backend), /內容與版本識別不符/);
 });

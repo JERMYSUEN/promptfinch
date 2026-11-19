@@ -57,7 +57,7 @@ function appIcon() {
   return nativeImage.createFromBitmap(pixels, { width: 32, height: 32, scaleFactor: 1 });
 }
 function buildWindow(extra = {}) {
-  const window = new BrowserWindow({ width: 1180, height: 860, minWidth: 600, minHeight: 520,
+  const window = new BrowserWindow({ width: 880, height: 640, minWidth: 560, minHeight: 460,
     show: false, backgroundColor: '#151917', title: 'PromptFinch', autoHideMenuBar: true, icon: appIcon(),
     ...extra, webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false,
       contextIsolation: true, sandbox: true, webSecurity: true, devTools: smoke,

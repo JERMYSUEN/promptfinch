@@ -5,8 +5,8 @@ const ORIGIN = 'promptfinch://app';
 const FILES = Object.freeze({
   '/': 'desktop/index.html', '/index.html': 'desktop/index.html',
   '/renderer.js': 'desktop/renderer.js', '/locales.js': 'desktop/locales.js',
-  '/desktop.css': 'desktop/desktop.css', '/base.css': 'public/style.css',
-  '/icon.svg': 'public/favicon.svg',
+  '/desktop.css': 'desktop/desktop.css', '/base.css': 'desktop/base.css',
+  '/icon.svg': 'desktop/icon.svg',
 });
 
 function trustedURL(value) {

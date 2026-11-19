@@ -80,7 +80,7 @@ test('多語 Unicode 原文不受來源語言限制且逐字保留', () => {
   assert.equal(validateInput({ prompt, promptLanguage: 'en' }).prompt, prompt);
 });
 
-test('設定 API 不洩漏金鑰或服務商網址，且前端文件不載入外部資源', async t => {
+test('設定 API 不洩漏金鑰或服務商網址，且不提供網頁工作台', async t => {
   const url = await app(t, { LLM_API_KEY: 'private-key', LLM_BASE_URL: 'https://secret-provider.invalid/v1' });
   const response = await fetch(`${url}/api/config`);
   assert.equal(response.headers.get('cache-control'), 'no-store');
@@ -92,9 +92,8 @@ test('設定 API 不洩漏金鑰或服務商網址，且前端文件不載入外
   assert.ok(!JSON.stringify(data).includes('private-key'));
   assert.ok(!JSON.stringify(data).includes('secret-provider'));
   const page = await fetch(url);
-  assert.equal(page.status, 200);
-  assert.ok(page.headers.get('content-security-policy').includes("connect-src 'self'"));
-  assert.ok((await page.text()).includes('lang="zh-Hant"'));
+  assert.equal(page.status, 404);
+  assert.equal((await fetch(`${url}/app.js`)).status, 404);
   assert.equal((await fetch(`${url}/.env`)).status, 404);
   assert.equal((await fetch(`${url}/lib/optimizer.js`)).status, 404);
 });

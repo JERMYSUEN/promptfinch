@@ -5,8 +5,7 @@
 ## 目前架構（2026-10-25 文件核對）
 
 ```text
-原生 macOS 工作台／選取助手 ─→ App 管理的 Node HTTP 後端（127.0.0.1:3210）──┐
-可選瀏覽器工作台／HTTP 用戶端 ─→ 獨立 Node HTTP 後端（預設 127.0.0.1:3000）─┤
+原生 macOS 工作台／選取助手 ─→ App 管理的 Node HTTP API（127.0.0.1:3210）──┐
 Windows／Linux Electron 畫面 ─→ 受限 IPC ─→ Electron 主程序（無 HTTP 監聽）──┤
                                                                        ↓
                                                       共用 lib/optimizer.js
@@ -14,19 +13,18 @@ Windows／Linux Electron 畫面 ─→ 受限 IPC ─→ Electron 主程序（�
                                                        └─ live：由後端／主程序呼叫自備相容模型
 ```
 
-三種工作台共用優化器，不共用執行中的設定或生命週期。macOS 原生 App 會啟動、驗證及停止自己的 Node 後端，不會把埠上任意既有服務當成可信任子程序。Windows／Linux 預覽版在 Electron 主程序直接呼叫優化器，沒有本機 HTTP 服務；已封裝版本包含執行環境，macOS App 仍需另裝 Node。
+兩個桌面工作台共用優化器，不共用執行中的設定或生命週期。macOS 原生 App 會啟動、驗證及停止自己的 Node 後端，不會把埠上任意既有服務當成可信任子程序。Windows／Linux 預覽版在 Electron 主程序直接呼叫優化器，沒有本機 HTTP 服務；已封裝版本包含執行環境，macOS App 仍需另裝 Node。
 
 | 元件 | 責任與邊界 |
 | --- | --- |
-| [server.js](../server.js) | Node.js 22+ 原生 HTTP 服務、明確靜態檔案清單、`GET /api/config`、`POST /api/optimize`、Host／Origin 與大小限制、取消及每程序最多 4 個優化請求；沒有資料庫、帳號或一般內容歷史。 |
+| [server.js](../server.js) | Node.js 22+ 本機 HTTP API、`GET /api/config`、`POST /api/optimize`、Host／Origin 與大小限制、取消及每程序最多 4 個優化請求；不提供網頁。沒有資料庫、帳號或一般內容歷史。 |
 | [lib/optimizer.js](../lib/optimizer.js) | 設定、輸入與模型回應驗證，繁中／英文編輯規則，mock，以及 OpenAI 相容 Chat Completions adapter。更換 API 協定時從這個 adapter 著手；同協定供應商通常只需環境設定。 |
-| [public/](../public/) | 無前端框架的 HTML／CSS／JavaScript；繁中介面、英文／繁中指令切換、範例、取消、清除、複製與狀態。無遠端字型、追蹤或內容儲存。 |
 | [macos/Sources/App.swift](../macos/Sources/App.swift)、[Localization.swift](../macos/Sources/Localization.swift) | SwiftUI／AppKit 手動工作台、設定、狀態與生成協調；繁中、英文、日文、韓文介面。新生成的說明依介面語言送出 `notesLanguage`；不重寫原文或既有模型結果。對照功能使用生成時原文快照，只標示文字差異。 |
 | [Selection.swift](../macos/Sources/Selection.swift)、[Watcher.swift](../macos/Sources/Watcher.swift) | Accessibility 選取、全域快捷鍵、獨立右鍵附加選單與結果浮窗；明確操作後再次核對來源。已辨識終端只複製，其他可靠可編輯來源才允許要求貼回。 |
 | [Backend.swift](../macos/Sources/Backend.swift)、[Core.swift](../macos/Sources/Core.swift) | App 管理的本機服務與 API 契約；讀取設定檔路徑，核對後端內容 ID 與本次程序識別，原生請求固定英文指令。App 包含後端來源，另需本機 Node 執行環境。 |
 | [desktop/main.cjs](../desktop/main.cjs)、[controller.mjs](../desktop/controller.mjs)、[preload.cjs](../desktop/preload.cjs)、[security.cjs](../desktop/security.cjs) | Windows／Linux 預覽版；具沙箱與 context isolation 的畫面只可透過受限 IPC 操作。主程序讀取私有模型設定並使用共用優化器，畫面拿不到 API 金鑰。原生取字由 [capture.cjs](../desktop/capture.cjs) 及對應平台 helper 執行；Windows UIA／Linux X11 為實驗支援，Wayland 使用手動輸入或剪貼簿。結果只供複製，不自動貼回。 |
 | [scripts/](../scripts/) | 建置／安裝、個人本機簽章、公開來源封裝、乾淨副本的 ad-hoc App 封裝、內容定址的本機後端更新及明示 live 測例工具；沒有自動下載 GitHub release 的更新器。 |
-| [tests/](../tests/)、[macos/Tests/](../macos/Tests/)、[Checks CI](../.github/workflows/check.yml)、[桌面 CI](../.github/workflows/desktop.yml) | 受控 API／錯誤測試、Chromium 瀏覽器流程及合成原生狀態檢查。Checks 在推送／Pull Request 執行語法、文件、Node、瀏覽器、原生測試與 macOS 公開封裝驗證；桌面 CI 針對相關變更建置及檢查 Windows／Linux。實體滑鼠／宿主相容性、安裝器與付費模型品質仍需分別驗收。 |
+| [tests/](../tests/)、[macos/Tests/](../macos/Tests/)、[Checks CI](../.github/workflows/check.yml)、[桌面 CI](../.github/workflows/desktop.yml) | 受控 API／錯誤測試及合成原生狀態檢查。Checks 在推送／Pull Request 執行語法、文件、Node、原生測試與 macOS 公開封裝驗證；桌面 CI 針對相關變更建置及檢查 Windows／Linux。實體滑鼠／宿主相容性、安裝器與付費模型品質仍需分別驗收。 |
 
 用途 ID 為 `general`、`writing`、`analysis`、`coding`、`summary`、`marketing`。目標模型欄位是編輯提示；真正呼叫的模型來自伺服器 `LLM_MODEL`，不會因選取該欄就切換供應商。輸入上限為 12,000 個 UTF-16 code units，不等於可見字元數。
 

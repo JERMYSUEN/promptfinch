@@ -7,10 +7,6 @@ import { pathToFileURL } from 'node:url';
 export const BACKEND_FILES = [
   'server.js',
   'lib/optimizer.js',
-  'public/index.html',
-  'public/app.js',
-  'public/style.css',
-  'public/favicon.svg',
 ];
 
 export async function computeBackendID(sourceRoot) {

@@ -69,7 +69,7 @@
         </div>
         <div class="workspace">
           <section class="input-pane" aria-labelledby="input-heading">
-            <div class="pane-heading"><div><span class="step" aria-hidden="true">1</span><h2 id="input-heading" data-i18n="original">原始需求</h2></div><button id="clear-button" type="button" class="text-button" data-i18n="clear">清除</button></div>
+            <div class="pane-heading"><h2 id="input-heading" data-i18n="original">原始需求</h2><button id="clear-button" type="button" class="text-button" data-i18n="clear">清除</button></div>
             <p class="pane-description" data-i18n="inputHelp">貼上任何語言的需求，也可以匯入選取文字或剪貼簿。</p>
             <div class="editor-wrap">
               <label class="sr-only" for="original-prompt" data-i18n="original">原始需求</label>
@@ -82,7 +82,7 @@
           </section>
 
           <section class="output-pane" aria-labelledby="output-heading" aria-busy="false">
-            <div class="pane-heading"><div><span class="step" aria-hidden="true">2</span><h2 id="output-heading" data-i18n="output">可直接複製的 Prompt</h2><span id="result-tag" class="result-tag" hidden></span></div><button id="copy-button" type="button" class="copy-button" disabled data-i18n="copy">複製</button></div>
+            <div class="pane-heading"><div><h2 id="output-heading" data-i18n="output">可直接複製的 Prompt</h2><span id="result-tag" class="result-tag" hidden></span></div><button id="copy-button" type="button" class="copy-button" disabled data-i18n="copy">複製</button></div>
             <p class="pane-description" data-i18n="outputHelp">以下只有 Prompt；改善說明與假設會分開顯示。</p>
             <div id="empty-state" class="empty-state"><h3 data-i18n="emptyTitle">英文 Prompt 會顯示在這裡</h3><p data-i18n="emptyHelp">先輸入原始需求，再按生成。</p></div>
             <div id="loading-state" class="loading-state" hidden><span class="spinner" aria-hidden="true"></span><h3 data-i18n="working">正在整理指令…</h3><p data-i18n="cancelHelp">可以隨時取消，原始輸入會保留。</p></div>

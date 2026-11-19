@@ -17,7 +17,7 @@ test('desktop only trusts its two owned documents, never remote or nested frames
 });
 
 test('desktop static routing cannot expose environment files or arbitrary paths', () => {
-  assert.equal(assetPath('promptfinch://app/base.css', '/safe'), join('/safe', 'public/style.css'));
+  assert.equal(assetPath('promptfinch://app/base.css', '/safe'), join('/safe', 'desktop/base.css'));
   for (const url of ['promptfinch://app/.env', 'promptfinch://app/desktop/main.cjs', 'promptfinch://app/../../package.json', 'promptfinch://app/%2e%2e/.env', 'https://app/', 'promptfinch://user@app/']) assert.equal(assetPath(url, '/safe'), null, url);
 });
 

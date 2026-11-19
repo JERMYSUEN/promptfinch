@@ -87,8 +87,7 @@ async function smoke(source) {
     assert.equal(config.ready, true);
     assert.equal(config.backendID, id);
     const page = await fetch(base);
-    assert.equal(page.status, 200);
-    assert.match(await page.text(), /PromptFinch/);
+    assert.equal(page.status, 404);
     const invalid = await fetch(`${base}/api/optimize`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: '   ' }),
     });

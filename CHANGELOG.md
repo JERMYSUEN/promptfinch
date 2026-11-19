@@ -4,6 +4,10 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the browser workspace. macOS keeps its local API, and the Windows/Linux preview keeps the Electron workspace. The server no longer serves HTML, scripts or stylesheets.
+
 ### Fixed
 
 - Clear stale macOS model readiness during configuration switches, restarts and health checks. Failed changes display a ready backend only after a successful, health-verified rollback; lifecycle regressions cover failure and recovery.

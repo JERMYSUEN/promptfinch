@@ -8,7 +8,7 @@ The guides describe current `main`. The [v1.3.0 release notes](releases/v1.3.0.m
 
 | Goal | Guide | Language |
 | --- | --- | --- |
-| Choose browser/API, macOS or the Windows/Linux preview, install and configure a model | [Quick start and settings](../README.md#quick-start) | English; full Chinese editions above |
+| Install the macOS app or the Windows/Linux preview and configure a model | [Quick start and settings](../README.md#quick-start) | English; full Chinese editions above |
 | Install or build the Windows / Linux desktop preview; check X11 / Wayland limits | [Desktop guide](desktop.md) | English |
 | Set up the native app, permissions, signing and updates | [macOS guide](macos.md) | Traditional Chinese |
 | Use selected text in Apple Terminal with Claude Code/Codex CLI | [Terminal workflow](terminal.md) | English |

@@ -4,15 +4,15 @@ Use this guide with the [quick start](../README.md#quick-start). For detailed na
 
 ## Choose the correct workflow
 
-The browser/API can run with Node.js 22+; a browser tab alone cannot add a system-wide context-menu action. For cross-app selection, use the native macOS app or the experimental Windows UI Automation / Linux X11 desktop preview. Wayland supports manual input and clipboard import, without a global right-click menu. Read the [desktop support table](desktop.md#support-and-limits) for the intended operating system and host app. Terminal support described in the [Terminal guide](terminal.md) is the macOS selection assistant alongside a CLI, not a `promptfinch` shell command, CLI plugin, or use of Claude Code/Codex credentials.
+A browser tab cannot add a system-wide context-menu action. For cross-app selection, use the native macOS app or the experimental Windows UI Automation / Linux X11 desktop preview. Wayland supports manual input and clipboard import, without a global right-click menu. Read the [desktop support table](desktop.md#support-and-limits) for the intended operating system and host app. Terminal support described in the [Terminal guide](terminal.md) is the macOS selection assistant alongside a CLI, not a `promptfinch` shell command, CLI plugin, or use of Claude Code/Codex credentials.
 
-The macOS and Windows/Linux desktop interfaces offer Traditional Chinese, English, Japanese and Korean. The browser interface is Traditional Chinese. New desktop explanation notes follow the interface language; existing results are kept as generated. The browser has a separate notes-language selector. These settings do not change the generation model or the task’s requested answer language. See [language coverage](../README.md#documentation-languages).
+The macOS and Windows/Linux desktop interfaces offer Traditional Chinese, English, Japanese and Korean. New explanation notes follow the interface language; existing results are kept as generated. These settings do not change the generation model or the task’s requested answer language. See [language coverage](../README.md#documentation-languages).
 
 ## Startup, installation and updates
 
 | Symptom | What to check |
 | --- | --- |
-| `node` is missing or the macOS app cannot find it | Install Node.js 22+ separately for macOS or the browser/API. Select its executable in native Settings, particularly for nvm or another version manager. Packaged Windows/Linux editions include their runtime; source development needs Node.js 22.12+. |
+| `node` is missing or the macOS app cannot find it | Install Node.js 22+ for the macOS app. Select its executable in native Settings, particularly for nvm or another version manager. Packaged Windows/Linux editions include their runtime; source development needs Node.js 22.12+. |
 | `install:mac` says the app is missing | Run `npm run build:mac` first; installation does not compile the app. Build prerequisites include Apple's Command Line Tools. |
 | A downloaded ZIP behaves differently from this README | Check the release tag and [changelog](../CHANGELOG.md). Use the current [v1.3.0 packages](releases/v1.3.0.md) for macOS Apple Silicon or Windows/Linux x64. Earlier assets retain their original code; updating `main` does not rebuild them. No macOS download is notarized. |
 | The app's version label says 0.1.0 | That is the original v1.0.0 download's internal version (build 11). The v1.3.0 macOS app uses version 1.3.0 / build 14. App version alone does not identify a separately updated backend; include the source commit and `/api/config` backend ID when reporting a macOS/API problem. |

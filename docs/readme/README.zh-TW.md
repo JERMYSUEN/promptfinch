@@ -8,7 +8,7 @@
 
 PromptFinch 是適用於寫作、程式開發、研究、摘要與規劃的 Prompt 編輯與優化工具。將以你慣用語言寫下的粗略需求，整理成讓目標模型更容易執行的指令。優化器會要求模型釐清目標、輸入與限制，按需要安排步驟、處理關鍵資訊缺口，並從原始需求推導檢查方式。已經清楚的需求應保持精簡；新增結構應有助於任務，不應擅自添加新要求。
 
-**macOS App** 可作為手動工作台或選取助手：在相容應用程式中選取文字、按右鍵，在輔助操作選單選擇 **轉為英文 Prompt**，再於附近面板檢視結果。只按右鍵不會將文字傳送給模型。另有使用相同後端的**瀏覽器工作台與 HTTP API**。
+**macOS App** 可作為手動工作台或選取助手：在相容應用程式中選取文字、按右鍵，在輔助操作選單選擇 **轉為英文 Prompt**，再於附近面板檢視結果。只按右鍵不會將文字傳送給模型。macOS App 透過自己的本機 API 呼叫同一個優化器。
 
 Windows／Linux 桌面預覽版新增相同工作台，以及 Windows UI Automation／Linux X11 的實驗性右鍵附加選單。Wayland 可使用手動輸入及剪貼簿匯入，沒有全域右鍵選單。詳見[桌面版支援指引（英文）](../desktop.md)。
 
@@ -24,9 +24,9 @@ PromptFinch 會編輯指令，不會執行指令描述的任務。它以保留�
 
 最上方連結可切換 README 頁面。英文是原始版本；簡體中文（zh-CN）與繁體中文（zh-TW）包含完整參考內容。其他 26 個版本提供翻譯介紹，並連結至英文設定指引。這些連結切換文件，不會更改 App 語言。
 
-macOS App 的**設定 → 介面語言**可選繁體中文（預設）、英文、日文與韓文。瀏覽器介面仍為繁體中文。新生成的優化說明與假設會使用原生介面語言；瀏覽器另有說明語言選單。切換語言不會重寫既有結果。
+macOS App 的**設定 → 介面語言**可選繁體中文（預設）、英文、日文與韓文。Windows／Linux 預覽版也提供這四種介面語言。新生成的優化說明與假設會使用介面語言。切換語言不會重寫既有結果。
 
-macOS App 生成英文 Prompt 指令。瀏覽器預設生成英文指令，也提供繁體中文選項。API 使用 `promptLanguage: "en"` 取得英文指令；省略時保留 `zh-Hant` 預設值。最終答案語言是原始 Prompt 中的另一項需求。工具接受 Unicode 輸入，但文件翻譯不代表每種語言的模型品質均已驗證。
+桌面 App 生成英文 Prompt 指令。API 使用 `promptLanguage: "en"` 取得英文指令；省略時保留 `zh-Hant` 預設值。最終答案語言是原始 Prompt 中的另一項需求。工具接受 Unicode 輸入，但文件翻譯不代表每種語言的模型品質均已驗證。
 
 [文件索引](../README.md) · [疑難排解](../troubleshooting.md) · [完整 API 參考](../api.md)
 
@@ -45,11 +45,10 @@ macOS App 生成英文 Prompt 指令。瀏覽器預設生成英文指令，也�
 
 | 用途 | 需求 |
 | --- | --- |
-| 瀏覽器工作台／HTTP API | Node.js 22 或更新版本；不需第三方執行階段套件。 |
-| macOS 原生 App | macOS 13 或更新版本作為編譯目標，並安裝 Node.js 22+ 執行階段。App 不內含 Node。 |
+| macOS 原生 App | macOS 13 或更新版本作為編譯目標，並安裝 Node.js 22+ 執行階段。App 不內含 Node，會自行啟動本機 API。 |
 | Windows／Linux 桌面預覽版 | Windows 10/11 x64，或可執行 Electron 的 Linux x64 桌面環境。內含 Node；Windows UIA／Linux X11 的全域選取仍屬實驗功能，Wayland 使用剪貼簿匯入。 |
 | 建置 macOS App | Apple Xcode Command Line Tools，包含 Swift 與 Apple 簽署工具；不需要完整 Xcode。 |
-| 開發與瀏覽器測試 | Node.js 22.12+；`npm ci` 安裝開發依賴；Playwright 需要已安裝的測試瀏覽器。 |
+| 開發 | Node.js 22.12+；`npm ci` 安裝開發依賴。Playwright 用於桌面冒煙檢查。 |
 
 原生建置會依 Node 程序架構產生 `arm64` 或 `x86_64`，不是 Universal Binary。已記錄的原生檢查是在 Apple Silicon 上執行；尚未在實體 Intel 裝置或最低 macOS 13 版本上驗證。
 
@@ -57,7 +56,7 @@ macOS App 生成英文 Prompt 指令。瀏覽器預設生成英文指令，也�
 
 ## 快速開始
 
-取得原始碼以執行瀏覽器示範或建置桌面版。現成桌面安裝包請使用下方發行下載：
+取得原始碼以建置桌面版。現成桌面安裝包請使用下方發行下載：
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
@@ -79,20 +78,6 @@ cd promptfinch
 升級 macOS 時，替換 App 會保留既有外部後端。請在新 App 選擇**設定 → 使用此 App 隨附後端**，才會採用內附優化器；這個操作保留私人模型設定，啟動失敗時會嘗試回復。沒有自動更新器。[變更紀錄](../../CHANGELOG.md)區分先前快照；更新 `main` 不會重新建置已發布下載。
 <!-- current-release-downloads:end -->
 
-### 瀏覽器示範（不需 API 金鑰）
-
-```sh
-# Create a local configuration only if one does not already exist.
-cp -n .env.example .env
-npm start
-```
-
-開啟 [http://127.0.0.1:3000](http://127.0.0.1:3000)。若 `.env` 已存在，請先檢查內容，並設定 `OPTIMIZER_MODE=mock` 進行本機示範，不要覆寫原檔。執行服務不需要 `npm install`。
-
-**Mock 輸出不會翻譯，也不會進行語意優化。**它是用來檢查輸入、載入、結果顯示及複製流程的範本，不會呼叫模型或將 Prompt 傳送給供應商。
-
-瀏覽器的 Prompt 語言選單控制指令語言。原始需求中明確指定的答案語言仍會保留。
-
 ### 建置並安裝 macOS App
 
 ```sh
@@ -102,7 +87,7 @@ npm run build:mac
 npm run install:mac
 ```
 
-建置結果為 `build/PromptFinch.app`。安裝程式會將 App 放入使用者的 `~/Applications` 並開啟。無須另外啟動瀏覽器伺服器：App 會在 `http://127.0.0.1:3210` 啟動自己的後端。
+建置結果為 `build/PromptFinch.app`。安裝程式會將 App 放入使用者的 `~/Applications` 並開啟。App 會在 `http://127.0.0.1:3210` 啟動自己的 API，不開啟網頁。
 
 安裝程式也會處理舊 App 名稱的遷移；詳見[更名說明](../branding.md)。
 
@@ -278,14 +263,11 @@ Native macOS workspace / selection result panel
   -> SwiftUI + AppKit client
   -> app-managed Node.js backend on 127.0.0.1:3210
 
-Optional browser workspace / HTTP API client
-  -> standalone Node.js backend on 127.0.0.1:3000
-
 Windows / Linux desktop preview
   -> Electron renderer / preload IPC
   -> main-process optimizer, without an HTTP listener
 
-All three paths
+Both paths
   -> shared lib/optimizer.js
   -> labeled mock template, or configured model provider
   -> prompt + separate improvements / assumptions
@@ -293,9 +275,8 @@ All three paths
 
 主要原始碼：
 
-- [server.js](../../server.js)：HTTP API、靜態檔案、請求驗證與錯誤處理。
+- [server.js](../../server.js)：本機 HTTP API、請求驗證與錯誤處理，不提供網頁。
 - [lib/optimizer.js](../../lib/optimizer.js)：設定、mock／即時模型介接器、編輯指示與回應驗證。
-- [public/](../../public)：支援響應式版面的繁體中文瀏覽器工作台。
 - [macos/Sources/](../../macos/Sources)：原生工作台、後端生命週期、選取、結果面板與貼回功能。
 - [desktop/](../../desktop)：Windows／Linux Electron 工作台、IPC、主程序模型呼叫與平台取字輔助程式。
 - [scripts/](../../scripts)：原生建置、本機簽署、安裝、後端更新與開發檢查。
@@ -305,7 +286,7 @@ All three paths
 - API 金鑰由 Node.js 後端從本機設定讀取，不會暴露在前端程式碼或封裝進 App。目前金鑰以純文字環境檔保存；尚未整合 Keychain 金鑰儲存。
 - 輸入、結果與說明在記憶體中處理，不使用資料庫或 Prompt 歷史紀錄。原生偏好設定（包括任務類型與目標模型提示）及設定路徑會儲存在本機。原生診斷記錄狀態中繼資料與長度，不記錄 Prompt 內容；分享日誌前仍須檢視 App／程序中繼資料。
 - 即時模式會將請求與編輯指示傳送至已設定的模型供應商；啟用模型覆核時，也會傳送原始要求與候選內容。這些呼叫都受同一供應商的資料保留政策約束。Mock 不會呼叫模型。
-- 瀏覽器介面不使用 Cookie、瀏覽器儲存、分析工具或遠端字型；重新載入會清空工作區。原生工作區可透過清除操作或結束記憶體工作階段清空。
+- 桌面工作區把輸入與結果留在記憶體。可用清除操作或結束工作階段清空，不使用瀏覽器儲存或分析工具。
 - 啟用選取操作後，App 會監聽滑鼠事件並讀取可存取的文字選取內容。若安全的可編輯欄位提供非空選取範圍但沒有選取文字屬性，助手可能暫時讀取欄位值。超過 65,536 個 UTF-16 code unit 的值會被拒絕；只會回傳選取範圍，也不會記錄欄位內容。
 - 複製、貼回及備援複製會使用系統剪貼簿。復原操作會先確認使用者沒有複製新內容。清空工作區不會刪除已複製到系統剪貼簿的文字。
 
@@ -331,13 +312,6 @@ npm run check
 npm run check:docs
 npm test
 
-# Browser checks: install the test browser once.
-npx playwright install chromium
-npm run test:ui
-
-# Alternatively, use an installed Google Chrome.
-PLAYWRIGHT_CHANNEL=chrome npm run test:ui
-
 # macOS-only checks and native build.
 npm run test:mac
 npm run build:mac
@@ -345,7 +319,7 @@ npm run build:mac
 
 在具備 Node.js 22+ 與 Xcode Command Line Tools 的 macOS 上執行 `npm run package:mac`，可產生公開用 Apple Silicon App ZIP 與來源 ZIP。它只複製明確列出的公開檔案，以 ad-hoc 簽章建置，不讀取真實 `.env` 或個人簽章設定。發行 manifest 記錄相對輸入路徑與 SHA-256；`SHA256SUMS` 列出下載檔案校驗碼。這項封裝不會公證 App 或發布到 GitHub。只需來源包時可執行 `npm run package:source`。
 
-`npm run dev` 會以 Node watch 模式執行獨立伺服器。`npm run check:docs` 會檢查 README 導覽、翻譯結構、目前發行下載區塊與變更紀錄連結，不會認證翻譯準確度或模型品質。API 測試使用本機假模型服務；原生測試使用合成目標與具名測試剪貼簿。[Checks 工作流程](../../.github/workflows/check.yml)在推送與 Pull Request 執行 JavaScript／文件檢查、Node 測試、Chromium 瀏覽器流程、macOS 原生檢查、公開封裝與解壓後驗證，不會發布發行檔案。另一個[桌面版工作流程](../../.github/workflows/desktop.yml)會針對相關變更建置並檢查 Windows／Linux 安裝包。瀏覽器流程使用合成資料及受控供應商；實體滑鼠／宿主 App 驗收與真實模型品質仍需分別驗證。特定提交的結果請查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
+`npm run dev` 會以 Node watch 模式執行獨立伺服器。`npm run check:docs` 會檢查 README 導覽、翻譯結構、目前發行下載區塊與變更紀錄連結，不會認證翻譯準確度或模型品質。API 測試使用本機假模型服務；原生測試使用合成目標與具名測試剪貼簿。[Checks 工作流程](../../.github/workflows/check.yml)在推送與 Pull Request 執行 JavaScript／文件檢查、Node 測試、macOS 原生檢查、公開封裝與解壓後驗證，不會發布發行檔案。另一個[桌面版工作流程](../../.github/workflows/desktop.yml)會針對相關變更建置並檢查 Windows／Linux 安裝包。實體滑鼠／宿主 App 驗收與真實模型品質仍需分別驗證。特定提交的結果請查看 [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions)。
 
 ## 貢獻與授權
 

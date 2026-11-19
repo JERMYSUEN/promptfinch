@@ -6,11 +6,11 @@
 
 **Select. Refine. Paste.**
 
-[Install PromptFinch or try the browser demo](#quick-start)
+[Install PromptFinch](#quick-start)
 
 A prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer, actionable instructions for the model you plan to use. The optimizer is instructed to clarify the objective, inputs and constraints, arrange useful steps, address critical information gaps and derive checks from your requirements. Already-clear requests should receive minimal edits; added structure should help the task, without inventing new requirements.
 
-Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. The **Windows and Linux desktop preview** adds the same workspace and an experimental companion menu on Windows UI Automation and Linux X11. Linux Wayland supports manual input and clipboard import, without a global right-click menu. An optional **browser workspace and HTTP API** use the same backend. See the [desktop support guide](docs/desktop.md).
+Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. The **Windows and Linux desktop preview** adds the same workspace and an experimental companion menu on Windows UI Automation and Linux X11. Linux Wayland supports manual input and clipboard import, without a global right-click menu. The macOS app calls that optimizer through its own local API. See the [desktop support guide](docs/desktop.md).
 
 PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API configuration. Without a key, a clearly labeled mock mode lets you try the workflow without translating or optimizing the text.
 
@@ -24,9 +24,9 @@ A 15-second recreation of the Codex desktop workflow: select a rough CSV bug-fix
 
 The links at the top switch between README pages. English is the source; Simplified Chinese (zh-CN) and Traditional Chinese (zh-TW) include the full reference. The other 26 editions contain translated introductions and link to the English setup instructions. These links change the documentation, not the app's language.
 
-In the macOS app, **Settings → Interface language** offers Traditional Chinese (default), English, Japanese and Korean. The browser interface remains Traditional Chinese. New improvement and assumption notes follow the native interface language. The browser offers a separate notes-language selector; changing language does not rewrite an existing result.
+In the macOS app, **Settings → Interface language** offers Traditional Chinese (default), English, Japanese and Korean. The Windows and Linux preview offers the same four interface languages. New improvement and assumption notes follow the interface language. Changing language does not rewrite an existing result.
 
-The macOS app generates English prompt instructions. The browser defaults to English instructions and also offers Traditional Chinese. API clients use `promptLanguage: "en"` for English; omitting it retains the `zh-Hant` default. The language of the eventual answer is a separate requirement in your original prompt. Unicode input is accepted, but documentation translations do not certify model quality in every language.
+The desktop apps generate English prompt instructions. API clients use `promptLanguage: "en"` for English; omitting it retains the `zh-Hant` default. The language of the eventual answer is a separate requirement in your original prompt. Unicode input is accepted, but documentation translations do not certify model quality in every language.
 
 <a id="english"></a>
 
@@ -49,11 +49,10 @@ The task choices are general, writing, analysis, coding, summary, and marketing.
 
 | Use | Requirements |
 | --- | --- |
-| Browser workspace / HTTP API | Node.js 22 or newer. No third-party runtime packages are required. |
-| Native macOS app | macOS 13 or newer as the compilation target, plus an installed Node.js 22+ runtime. Node is not bundled with the app. |
+| Native macOS app | macOS 13 or newer as the compilation target, plus an installed Node.js 22+ runtime. Node is not bundled with the app. The app starts its own local API. |
 | Windows / Linux desktop preview | Windows 10/11 x64, or Linux x64 with a supported Electron desktop runtime. Node is bundled. Global selection is experimental on Windows UIA / Linux X11; Wayland uses clipboard import. |
 | Build the macOS app | Apple Xcode Command Line Tools, including Swift and Apple's signing tools. Full Xcode is not required. |
-| Development and browser tests | Node.js 22.12+; `npm ci` installs the development dependencies; Playwright needs an installed test browser. |
+| Development | Node.js 22.12+; `npm ci` installs the development dependencies. Playwright is used by the desktop smoke check. |
 
 Native builds target `arm64` when the build's Node process is ARM64, otherwise `x86_64`; they are not Universal Binaries. Recorded native checks were on Apple Silicon. Intel and the minimum macOS 13 target have not been validated on physical machines.
 
@@ -75,23 +74,12 @@ Windows and Linux packages include Node. See the [release guide](docs/releases/v
 
 The desktop apps start in demo mode without a key. To optimize real prompts, create or select a private configuration file in Settings, add your [model settings](#model-configuration), then reload it.
 
-**Use the browser or build from source:** clone the repository or extract `PromptFinch-source-v1.3.0.zip` from the same release. Run the commands below from the project directory.
+**Build from source:** clone the repository or extract `PromptFinch-source-v1.3.0.zip` from the same release. Run the commands below from the project directory.
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
 cd promptfinch
 ```
-
-#### Browser demo, no API key
-
-With Node.js 22+ installed:
-
-```sh
-cp -n .env.example .env
-npm start
-```
-
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000). For an existing `.env`, set `OPTIMIZER_MODE=mock` to run the demo. No `npm install` is needed. Mock mode makes no model calls and does not translate or optimize text.
 
 #### Build and install the macOS app
 
@@ -259,16 +247,13 @@ See the [Terminal guide](docs/terminal.md) for setup, fallback steps and verific
 ```text
 Native macOS workspace / selection result panel
   -> SwiftUI + AppKit client
-  -> app-managed Node.js backend on 127.0.0.1:3210
-
-Optional browser workspace / HTTP API client
-  -> standalone Node.js backend on 127.0.0.1:3000
+  -> app-managed Node.js API on 127.0.0.1:3210
 
 Windows / Linux desktop preview
   -> Electron renderer / preload IPC
   -> main-process optimizer, without an HTTP listener
 
-All three paths
+Both paths
   -> shared lib/optimizer.js
   -> labeled mock template, or configured model provider
   -> prompt + separate improvements / assumptions
@@ -276,9 +261,8 @@ All three paths
 
 Main source files:
 
-- [server.js](server.js): HTTP API, static files, request validation, and errors.
+- [server.js](server.js): local HTTP API, request validation, and errors. It does not serve a web page.
 - [lib/optimizer.js](lib/optimizer.js): configuration, mock/live adapter, editing instructions, and response validation.
-- [public/](public/): Traditional Chinese browser workspace with responsive layout.
 - [macos/Sources/](macos/Sources/): native workspace, backend lifecycle, selection, result panel, and paste-back.
 - [desktop/](desktop/): Windows/Linux Electron workspace, IPC, main-process model calls, and platform selection helpers.
 - [scripts/](scripts/): native build, local signing, installation, backend update, and development checks.
@@ -288,7 +272,7 @@ Main source files:
 - API keys are read by the Node.js backend from local configuration, not exposed in frontend code or bundled with the app. Keys currently live in a plain-text environment file; API-key storage is not integrated with Keychain.
 - Input, results, and explanations are processed in memory without a database or prompt-history feature. Native preferences, including task type and the target-model hint, and configuration paths are stored locally. Native diagnostics record status metadata and lengths, not prompt content; review app/process metadata before sharing a log.
 - Live mode sends the request and editing context to the configured model provider, plus the original requirements and candidate when model review is enabled. The same provider's data retention policy applies to those calls. Mock does not make a model request.
-- The browser interface uses no cookies, browser storage, analytics, or remote fonts. Reloading clears its workspace. The native workspace is cleared using its clear action or by ending its in-memory session.
+- Desktop workspaces keep input and results in memory. Clear them with the clear action or by ending the session. They do not use browser storage or analytics.
 - Enabled selection actions observe mouse events and read accessible text selection. Where a safe editable field exposes a nonempty selected range but no selected-text attribute, the assistant may temporarily read the field value. Values over 65,536 UTF-16 code units are rejected; only the selected range is returned, and field contents are not logged.
 - Copy, paste-back, and fallback copying use the system clipboard. Restoration is guarded so a newer user copy is not overwritten. Clearing the workspace does not delete text already copied to the system clipboard.
 
@@ -314,13 +298,6 @@ npm run check
 npm run check:docs
 npm test
 
-# Browser checks: install the test browser once.
-npx playwright install chromium
-npm run test:ui
-
-# Alternatively, use an installed Google Chrome.
-PLAYWRIGHT_CHANNEL=chrome npm run test:ui
-
 # macOS-only checks and native build.
 npm run test:mac
 npm run build:mac
@@ -328,7 +305,7 @@ npm run build:mac
 
 To produce a public Apple Silicon app ZIP and source ZIP on macOS with Node.js 22+ and Xcode Command Line Tools, run `npm run package:mac`. It builds an ad-hoc-signed app from a clean copy of explicitly selected public files, without reading your real `.env` or personal signing configuration. The release manifest records relative input paths and SHA-256 hashes; `SHA256SUMS` covers the generated downloads. This packaging does not notarize the app or publish to GitHub. To create only the source archive, run `npm run package:source`.
 
-`npm run dev` runs the standalone server with Node's watch mode. `npm run check:docs` checks README navigation, translation structure, current release-download blocks and changelog references; it does not certify translation accuracy or model quality. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [Checks workflow](.github/workflows/check.yml) runs JavaScript/documentation checks, Node tests, Chromium browser flows, native macOS checks, public packaging and unpacked-artifact verification on pushes and pull requests; it does not publish release assets. The separate [desktop workflow](.github/workflows/desktop.yml) builds and checks Windows/Linux packages for matching changes. Browser flows use synthetic data and controlled providers; physical mouse/host-app acceptance and live-model quality require separate verification. See [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for a specific commit's results.
+`npm run dev` runs the standalone server with Node's watch mode. `npm run check:docs` checks README navigation, translation structure, current release-download blocks and changelog references; it does not certify translation accuracy or model quality. API tests use local fake model services; native tests use synthetic targets and named test clipboards. The [Checks workflow](.github/workflows/check.yml) runs JavaScript/documentation checks, Node tests, native macOS checks, public packaging and unpacked-artifact verification on pushes and pull requests; it does not publish release assets. The separate [desktop workflow](.github/workflows/desktop.yml) builds and checks Windows/Linux packages for matching changes. Physical mouse/host-app acceptance and live-model quality require separate verification. See [GitHub Actions](https://github.com/JERMYSUEN/promptfinch/actions) for a specific commit's results.
 
 ### Contributing and license
 
