@@ -399,6 +399,37 @@ struct CoreTests {
         }
         panelLayoutTest.orderOut(nil)
 
+        // Native Swift optimizer engine, secret redactor, and app-aware preset tests.
+        let secretInput = "Test sk-proj-ExampleSecretKey1234567890 and ghp_ExampleGitHubToken1234567890"
+        let redacted = LocalSecretRedactor.redact(secretInput)
+        check(!redacted.masked.contains("sk-proj-ExampleSecretKey1234567890")
+              && !redacted.masked.contains("ghp_ExampleGitHubToken1234567890")
+              && redacted.tokens.count == 2,
+              "local secret redactor masks API keys and GitHub tokens before network transmission")
+        check(LocalSecretRedactor.restore("Keep: \(redacted.masked)", tokens: redacted.tokens) == "Keep: \(secretInput)",
+              "local secret redactor restores masked tokens verbatim")
+        check(AppContextPreset.suggestedTask(forBundleID: "com.apple.Terminal", fallback: "general") == "coding",
+              "app-aware preset maps terminal/IDE apps to coding")
+        check(AppContextPreset.suggestedTask(forBundleID: "com.apple.mail", fallback: "general") == "writing",
+              "app-aware preset maps mail/chat apps to writing")
+        check(AppContextPreset.suggestedTask(forBundleID: "notion.id", fallback: "general") == "analysis",
+              "app-aware preset maps notes apps to analysis")
+        check(AppContextPreset.suggestedTask(forBundleID: "com.unknown.app", fallback: "marketing") == "marketing",
+              "app-aware preset keeps user fallback for unknown apps")
+        check(NativeOptimizerEngine.stripCodeFence("```json\n{\"prompt\":\"ok\"}\n```") == "{\"prompt\":\"ok\"}",
+              "native engine strips JSON code fences cleanly")
+        check(NativeOptimizerEngine.parseJSONObject("{\"prompt\":\"ok\",\"improvements\":[],\"assumptions\":[]") != nil,
+              "native engine repairs missing EOF JSON closing braces deterministically")
+        let memorySecrets = InMemorySecretStore()
+        memorySecrets.writeSecret("test-key", account: ProviderPreset.anthropic.rawValue)
+        let nativeEngine = NativeOptimizerEngine(secrets: memorySecrets)
+        var anthropicConfig = NativeProviderConfig.default(preset: .anthropic)
+        anthropicConfig.enabled = true
+        check(nativeEngine.hasCredential(for: anthropicConfig), "native engine detects Keychain-backed provider credential")
+        var ollamaConfig = NativeProviderConfig.default(preset: .ollama)
+        ollamaConfig.enabled = true
+        check(nativeEngine.hasCredential(for: ollamaConfig), "native Ollama local preset requires no API key")
+
         await checkWorkspacePasteFeedback(check: { value, message in check(value, message) })
         print("Swift 核心、本機 API、選取目標與剪貼簿競態：\(checks) 項檢查通過。")
     }
@@ -846,6 +877,13 @@ private func testPasteBackFlow() async -> [(Bool, String)] {
     results.append((switchResult == .notAttempted && switchEvents == 0 && switchOutcomes == [.restored]
                     && board.string(forType: .string) == "original", "late app switch after clipboard preparation cancels keys and restores immediately"))
     return results
+}
+
+private final class InMemorySecretStore: SecretStorage {
+    private var storage: [String: String] = [:]
+    func readSecret(account: String) -> String? { storage[account] }
+    @discardableResult func writeSecret(_ value: String, account: String) -> Bool { storage[account] = value; return true }
+    @discardableResult func deleteSecret(account: String) -> Bool { storage.removeValue(forKey: account); return true }
 }
 
 private final class UnavailableClipboardDataProvider: NSObject, NSPasteboardItemDataProvider {

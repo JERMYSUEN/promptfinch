@@ -12,7 +12,7 @@ const cache = resolve(root, 'build/swift-cache');
 mkdirSync(cache, { recursive: true });
 const sdk = selectMacOSSDK(cache);
 const binary = resolve(root, 'build/core-tests');
-const compile = spawnSync('xcrun', ['swiftc', '-sdk', sdk, '-swift-version', '5', '-D', 'PROMPTFINCH_TESTS', '-parse-as-library', '-module-cache-path', cache, ...['Localization', 'Core', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), resolve(root, 'macos/Tests/CoreTests.swift'), resolve(root, 'macos/Tests/WorkspaceTests.swift'), resolve(root, 'macos/Tests/BackendTests.swift'), resolve(root, 'macos/Tests/ClientTests.swift'), resolve(root, 'macos/Tests/ProcessTests.swift'), '-o', binary], { stdio: 'inherit' });
+const compile = spawnSync('xcrun', ['swiftc', '-sdk', sdk, '-swift-version', '5', '-D', 'PROMPTFINCH_TESTS', '-parse-as-library', '-module-cache-path', cache, ...['Localization', 'Core', 'NativeOptimizer', 'Backend', 'Selection', 'Watcher', 'App'].map(name => resolve(root, `macos/Sources/${name}.swift`)), resolve(root, 'macos/Tests/CoreTests.swift'), resolve(root, 'macos/Tests/WorkspaceTests.swift'), resolve(root, 'macos/Tests/BackendTests.swift'), resolve(root, 'macos/Tests/ClientTests.swift'), resolve(root, 'macos/Tests/ProcessTests.swift'), '-o', binary], { stdio: 'inherit' });
 if (compile.error) throw compile.error;
 if (compile.status !== 0) process.exit(compile.status || 1);
 const server = createApp(readConfig({

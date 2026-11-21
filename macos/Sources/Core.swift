@@ -36,13 +36,14 @@ struct PromptRequest: Encodable {
     let prompt: String
     let task: String
     let targetModel: String
-    let promptLanguage = "en"
+    let promptLanguage: String
     let notesLanguage: String
 
-    init(prompt: String, task: String, targetModel: String, notesLanguage: String = "zh-TW") {
+    init(prompt: String, task: String, targetModel: String, promptLanguage: String = "en", notesLanguage: String = "zh-TW") {
         self.prompt = prompt
         self.task = task
         self.targetModel = targetModel
+        self.promptLanguage = promptLanguage
         self.notesLanguage = notesLanguage
     }
 
@@ -52,6 +53,9 @@ struct PromptRequest: Encodable {
         }
         // Match JavaScript's UTF-16 length rather than Swift's grapheme count.
         if prompt.utf16.count > 12000 { throw ToolError.message(L10n.text(.inputTooLong)) }
+        guard ["en", "zh-Hant"].contains(promptLanguage) else {
+            throw ToolError.message(L10n.text(.invalidResult))
+        }
         guard ["zh-TW", "en", "ja", "ko"].contains(notesLanguage) else {
             throw ToolError.message(L10n.text(.invalidResult))
         }
@@ -114,7 +118,7 @@ final class PromptClient {
             throw ToolError.message(L10n.relocalize(message, from: .traditionalChinese))
         }
         guard let result = try? JSONDecoder().decode(PromptResult.self, from: data),
-              result.promptLanguage == "en", !result.prompt.isEmpty else {
+              result.promptLanguage == input.promptLanguage, !result.prompt.isEmpty else {
             throw ToolError.message(L10n.text(.invalidResult))
         }
         return result

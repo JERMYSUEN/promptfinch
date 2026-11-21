@@ -50,8 +50,17 @@ final class WorkspaceModel: ObservableObject {
     }
     var onLanguageChange: (() -> Void)?
     let backend: LocalBackend
+    let nativeEngine: NativeOptimizerEngine
     let watcher = SelectionWatcher()
     let resultPanel = ResultPanel()
+    @Published var promptLanguage: String
+    @Published var nativeConfig: NativeProviderConfig
+    @Published var appAwarePresetsEnabled: Bool {
+        didSet { preferences.set(appAwarePresetsEnabled, forKey: "appAwarePresetsEnabled") }
+    }
+    @Published var redactSecretsEnabled: Bool {
+        didSet { preferences.set(redactSecretsEnabled, forKey: "redactSecretsEnabled") }
+    }
     @Published var pasteBackEnabled: Bool = SelectionWatcher.pasteBack {
         didSet { UserDefaults.standard.set(pasteBackEnabled, forKey: SelectionWatcher.pasteBackKey) }
     }
@@ -64,18 +73,59 @@ final class WorkspaceModel: ObservableObject {
     private var pasteFeedbackID = UUID()
     private let pasteOperations: PasteOperations
     private let preferences: UserDefaults
+    private let secretStore: SecretStorage
     var showWindow: (() -> Void)?
 
     init(pasteOperations: PasteOperations? = nil, backend: LocalBackend? = nil,
-         preferences: UserDefaults = .standard) {
+         preferences: UserDefaults = .standard, secretStore: SecretStorage = KeychainSecretStore(),
+         nativeEngine: NativeOptimizerEngine? = nil) {
         self.pasteOperations = pasteOperations ?? SystemPasteOperations()
         self.backend = backend ?? LocalBackend()
         self.preferences = preferences
+        self.secretStore = secretStore
+        self.nativeEngine = nativeEngine ?? NativeOptimizerEngine(secrets: secretStore)
         task = preferences.string(forKey: "task") ?? "general"
         targetModel = preferences.string(forKey: "targetModel") ?? ""
+        let storedLang = preferences.string(forKey: "promptLanguage") ?? "en"
+        promptLanguage = ["en", "zh-Hant"].contains(storedLang) ? storedLang : "en"
+        nativeConfig = NativeProviderConfig.load(from: preferences)
+        appAwarePresetsEnabled = preferences.object(forKey: "appAwarePresetsEnabled") as? Bool ?? true
+        redactSecretsEnabled = preferences.object(forKey: "redactSecretsEnabled") as? Bool ?? false
         resultPanel.onPasteBack = { [weak self] in self?.pasteBackFromPanel() }
         resultPanel.onCopy = { [weak self] in self?.copyFromPanel() }
         resultPanel.onClose = { [weak self] in self?.closeResultPanel() }
+    }
+
+    func savedAPIKey(for preset: ProviderPreset) -> String {
+        secretStore.readSecret(account: preset.rawValue) ?? ""
+    }
+
+    func saveNativeProvider(_ updated: NativeProviderConfig, apiKey: String?) {
+        updated.save(to: preferences)
+        nativeConfig = updated
+        if let apiKey {
+            _ = secretStore.writeSecret(apiKey, account: updated.preset.rawValue)
+        }
+        if updated.enabled {
+            config = nativeEngine.serviceConfig(for: updated)
+            Task { try? await backend.stop() }
+        } else {
+            refresh()
+        }
+    }
+
+    func testNativeProviderConnection() {
+        guard !unavailable else { return }
+        let current = nativeConfig
+        notify(L10n.text(.connecting))
+        Task {
+            do {
+                let outcome = try await nativeEngine.testConnection(config: current)
+                notify("\(outcome.model) · OK (\(outcome.latencyMs)ms)")
+            } catch {
+                notify(L10n.errorDescription(error), error: true)
+            }
+        }
     }
 
     var modeLabel: String {
@@ -87,6 +137,11 @@ final class WorkspaceModel: ObservableObject {
 
     func refresh() {
         guard !unavailable else { return }
+        if nativeConfig.enabled {
+            configurationID = UUID()
+            config = nativeEngine.serviceConfig(for: nativeConfig)
+            return
+        }
         let token = UUID()
         configurationID = token
         config = nil
@@ -164,7 +219,15 @@ final class WorkspaceModel: ObservableObject {
 
     func generate(autoPaste: Bool = false, background: Bool = false, anchor: CGPoint? = nil) {
         guard !backendSwitching else { return }
-        let input = PromptRequest(prompt: original, task: task, targetModel: targetModel, notesLanguage: language.rawValue)
+        let resolvedTask: String
+        if background && appAwarePresetsEnabled, let pid = sourcePID,
+           let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier {
+            resolvedTask = AppContextPreset.suggestedTask(forBundleID: bundleID, fallback: task)
+        } else {
+            resolvedTask = task
+        }
+        let input = PromptRequest(prompt: original, task: resolvedTask, targetModel: targetModel,
+                                  promptLanguage: promptLanguage, notesLanguage: language.rawValue)
         let eventID = activeEventSequence.map(String.init) ?? "-"
         do { try input.validate() }
         catch {
@@ -178,9 +241,12 @@ final class WorkspaceModel: ObservableObject {
         generationID = token
         let configToken = UUID()
         configurationID = configToken
-        config = nil
+        let useNative = nativeConfig.enabled
+        let activeNativeConfig = nativeConfig
+        let redact = redactSecretsEnabled
+        if !useNative { config = nil }
         result = nil; resultOriginal = ""; busy = true; notify(L10n.text(.refining))
-        DebugLog.write("generate seq=\(eventID) started background=\(background) selectedUTF16=\(input.prompt.utf16.count)")
+        DebugLog.write("generate seq=\(eventID) started background=\(background) native=\(useNative) selectedUTF16=\(input.prompt.utf16.count)")
         if background {
             resultPanel.present(anchor: anchor ?? mouseAnchor, eventSequence: activeEventSequence)
         } else {
@@ -188,17 +254,24 @@ final class WorkspaceModel: ObservableObject {
         }
         preferences.set(task, forKey: "task")
         preferences.set(targetModel, forKey: "targetModel")
+        preferences.set(promptLanguage, forKey: "promptLanguage")
         operation = Task {
             do {
-                _ = try await backend.ensureRunning()
-                // Backend health belongs to the configuration, even if the
-                // content generation was cancelled while checking it. Read the
-                // current lifecycle's snapshot rather than an old await result.
-                if configurationID == configToken { config = backend.verifiedConfiguration }
-                try Task.checkCancellation()
-                guard generationID == token else { return }
-                DebugLog.write("generate seq=\(eventID) backend=ready request=sent")
-                let output = try await backend.client.optimize(input)
+                let output: PromptResult
+                if useNative {
+                    if configurationID == configToken { config = nativeEngine.serviceConfig(for: activeNativeConfig) }
+                    output = try await nativeEngine.optimize(input, config: activeNativeConfig, redactSecrets: redact)
+                } else {
+                    _ = try await backend.ensureRunning()
+                    // Backend health belongs to the configuration, even if the
+                    // content generation was cancelled while checking it. Read the
+                    // current lifecycle's snapshot rather than an old await result.
+                    if configurationID == configToken { config = backend.verifiedConfiguration }
+                    try Task.checkCancellation()
+                    guard generationID == token else { return }
+                    DebugLog.write("generate seq=\(eventID) backend=ready request=sent")
+                    output = try await backend.client.optimize(input)
+                }
                 DebugLog.write("generate seq=\(eventID) done mode=\(output.mode) generatedUTF16=\(output.prompt.utf16.count)")
                 guard generationID == token, !Task.isCancelled else { return }
                 result = output
@@ -216,7 +289,7 @@ final class WorkspaceModel: ObservableObject {
                 }
             } catch {
                 DebugLog.write("generate seq=\(eventID) errorType=\(String(describing: type(of: error)))")
-                if configurationID == configToken { config = backend.verifiedConfiguration }
+                if !useNative && configurationID == configToken { config = backend.verifiedConfiguration }
                 guard generationID == token, !Task.isCancelled else { return }
                 if let networkError = error as? URLError, networkError.code == .cannotConnectToHost {
                     notify(L10n.text(.cannotConnect), error: true)
