@@ -63,3 +63,17 @@ body.companion #workspace-shell { display: none; }
   #optimized-prompt { height: 180px; }
   .desktop-settings { padding: 17px; }
 }
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--ink); cursor: pointer; }
+.checkbox-row input { accent-color: var(--blue); }
+body.mini-mode main { padding: 10px 12px 14px; }
+body.mini-mode .topbar { padding: 8px 12px; }
+body.mini-mode .intro p, body.mini-mode .pane-description, body.mini-mode .privacy-note, body.mini-mode .mode-notice { display: none; }
+body.mini-mode .intro { margin: 0 0 8px; }
+body.mini-mode .intro h1 { font-size: 15px; }
+body.mini-mode .desktop-input-settings { gap: 8px; margin-bottom: 10px; }
+body.mini-mode .workspace { grid-template-columns: 1fr; gap: 10px; }
+body.mini-mode #original-prompt { min-height: 92px; }
+body.mini-mode #optimized-prompt { height: 128px; }
+body.mini-mode .import-actions { margin: 8px 0 10px; }
+body.mini-mode .header-actions select { max-width: 96px; font-size: 11px; padding: 5px 6px; }
+body.mini-mode .header-actions button { font-size: 11px; padding: 5px 8px; }

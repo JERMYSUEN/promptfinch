@@ -981,24 +981,32 @@ final class ResultPanel: NSPanel {
     var onCopy: (() -> Void)?
     var onClose: (() -> Void)?
 
+    private let panelWidth: CGFloat = 410
     private let header = NSTextField(labelWithString: L10n.text(.englishPrompt))
     private let closeButton = NSButton(title: "✕", target: nil, action: nil)
-    private let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: 438, height: 158))
+    private let textScroll = NSScrollView(frame: .zero)
+    private let textView = NSTextView(frame: .zero)
+    private let notesToggle = NSButton(title: "", target: nil, action: nil)
+    private let notesScroll = NSScrollView(frame: .zero)
+    private let notesView = NSTextView(frame: .zero)
     private let statusLine = NSTextField(wrappingLabelWithString: "")
     private let pasteButton = NSButton(title: L10n.text(.pasteBack), target: nil, action: nil)
     private let copyButton = NSButton(title: L10n.text(.copy), target: nil, action: nil)
     private let spinner = NSProgressIndicator()
     private let busyLabel = NSTextField(labelWithString: L10n.text(.converting))
+    private var currentNotesCount = 0
+    private var notesExpanded = false
+    private var currentPromptHeight: CGFloat = 110
 
     init() {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: 470, height: 300),
+        super.init(contentRect: NSRect(x: 0, y: 0, width: 410, height: 220),
                    styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false; backgroundColor = .clear
         level = .popUpMenu
         hasShadow = true
         isMovableByWindowBackground = true
 
-        let container = FlippedView(frame: NSRect(x: 0, y: 0, width: 470, height: 300))
+        let container = FlippedView(frame: NSRect(x: 0, y: 0, width: 410, height: 220))
         let effect = NSVisualEffectView(frame: container.bounds)
         effect.material = .popover; effect.blendingMode = .behindWindow
         effect.state = .active; effect.wantsLayer = true
@@ -1008,65 +1016,177 @@ final class ResultPanel: NSPanel {
         effect.autoresizingMask = [.width, .height]
         container.addSubview(effect)
 
-        header.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        header.font = NSFont.systemFont(ofSize: 12.5, weight: .semibold)
         header.textColor = .labelColor
-        header.frame = NSRect(x: 16, y: 12, width: 300, height: 22)
+        header.frame = NSRect(x: 14, y: 10, width: 340, height: 20)
         container.addSubview(header)
 
         closeButton.isBordered = false
         closeButton.contentTintColor = .secondaryLabelColor
-        closeButton.font = NSFont.systemFont(ofSize: 13)
-        closeButton.frame = NSRect(x: 432, y: 10, width: 26, height: 22)
+        closeButton.font = NSFont.systemFont(ofSize: 12.5)
+        closeButton.frame = NSRect(x: 374, y: 8, width: 24, height: 22)
         closeButton.target = self; closeButton.action = #selector(closeTapped)
         container.addSubview(closeButton)
 
-        let scroll = NSScrollView(frame: NSRect(x: 16, y: 40, width: 438, height: 158))
-        scroll.hasVerticalScroller = true
-        scroll.borderType = .noBorder
-        scroll.drawsBackground = false
+        textScroll.hasVerticalScroller = true
+        textScroll.borderType = .noBorder
+        textScroll.drawsBackground = false
         textView.isEditable = false; textView.isSelectable = true
         textView.drawsBackground = false; textView.backgroundColor = .clear
         textView.font = NSFont.systemFont(ofSize: 13)
         textView.textColor = .labelColor
-        textView.textContainerInset = NSSize(width: 6, height: 8)
-        scroll.documentView = textView
-        container.addSubview(scroll)
+        textView.textContainerInset = NSSize(width: 4, height: 6)
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.textContainer?.widthTracksTextView = true
+        textScroll.documentView = textView
+        container.addSubview(textScroll)
+
+        notesToggle.isBordered = false
+        notesToggle.alignment = .left
+        notesToggle.font = NSFont.systemFont(ofSize: 11.5, weight: .medium)
+        notesToggle.contentTintColor = .controlAccentColor
+        notesToggle.target = self; notesToggle.action = #selector(toggleNotes)
+        notesToggle.isHidden = true
+        container.addSubview(notesToggle)
+
+        notesScroll.hasVerticalScroller = true
+        notesScroll.borderType = .noBorder
+        notesScroll.drawsBackground = true
+        notesScroll.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.55)
+        notesScroll.wantsLayer = true
+        notesScroll.layer?.cornerRadius = 7
+        notesScroll.isHidden = true
+        notesView.isEditable = false; notesView.isSelectable = true
+        notesView.drawsBackground = false; notesView.backgroundColor = .clear
+        notesView.font = NSFont.systemFont(ofSize: 11.5)
+        notesView.textColor = .secondaryLabelColor
+        notesView.textContainerInset = NSSize(width: 6, height: 6)
+        notesView.isVerticallyResizable = true
+        notesView.isHorizontallyResizable = false
+        notesView.textContainer?.widthTracksTextView = true
+        notesScroll.documentView = notesView
+        container.addSubview(notesScroll)
 
         spinner.style = .spinning
-        spinner.frame = NSRect(x: 225, y: 92, width: 20, height: 20)
+        spinner.controlSize = .small
+        spinner.frame = NSRect(x: 197, y: 54, width: 16, height: 16)
         spinner.isDisplayedWhenStopped = false
         container.addSubview(spinner)
         busyLabel.font = NSFont.systemFont(ofSize: 12)
         busyLabel.textColor = .secondaryLabelColor
         busyLabel.alignment = .center
-        busyLabel.frame = NSRect(x: 16, y: 122, width: 438, height: 18)
+        busyLabel.frame = NSRect(x: 14, y: 78, width: 382, height: 18)
         container.addSubview(busyLabel)
 
-        statusLine.font = NSFont.systemFont(ofSize: 12)
+        statusLine.font = NSFont.systemFont(ofSize: 11.5)
         statusLine.textColor = .secondaryLabelColor
-        statusLine.frame = NSRect(x: 16, y: 204, width: 438, height: 36)
         container.addSubview(statusLine)
 
         for (button, action) in [(pasteButton, #selector(pasteTapped)), (copyButton, #selector(copyTapped))] {
             button.bezelStyle = .rounded
+            button.controlSize = .regular
             button.frame = .zero
             button.target = self; button.action = action
             container.addSubview(button)
         }
-        layoutActionButtons()
         contentView = container
         closeButton.setAccessibilityLabel(L10n.text(.close))
+        relayout(isBusy: false, preserveTopLeft: false)
     }
 
-    private func layoutActionButtons() {
-        let pasteWidth = max(130, ceil(pasteButton.intrinsicContentSize.width) + 22)
-        let copyWidth = max(92, ceil(copyButton.intrinsicContentSize.width) + 22)
-        if pasteButton.isHidden {
-            copyButton.frame = NSRect(x: 16, y: 248, width: copyWidth, height: 30)
-        } else {
-            pasteButton.frame = NSRect(x: 16, y: 248, width: min(220, pasteWidth), height: 30)
-            copyButton.frame = NSRect(x: pasteButton.frame.maxX + 8, y: 248, width: copyWidth, height: 30)
+    private func measurePromptHeight(_ text: String) -> CGFloat {
+        let contentWidth = panelWidth - 36
+        let font = NSFont.systemFont(ofSize: 13)
+        let rect = (text as NSString).boundingRect(
+            with: NSSize(width: contentWidth, height: 1000),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font]
+        )
+        return min(196, max(72, ceil(rect.height) + 18))
+    }
+
+    private func relayout(isBusy: Bool, preserveTopLeft: Bool) {
+        let oldTopLeft = NSPoint(x: frame.minX, y: frame.maxY)
+        let innerWidth = panelWidth - 32
+        var y: CGFloat = 34
+
+        if isBusy {
+            textScroll.isHidden = true
+            notesToggle.isHidden = true
+            notesScroll.isHidden = true
+            statusLine.isHidden = true
+            let totalHeight: CGFloat = 122
+            resizeKeepingAnchor(width: panelWidth, height: totalHeight, topLeft: oldTopLeft, preserveTopLeft: preserveTopLeft)
+            return
         }
+
+        textScroll.isHidden = textView.string.isEmpty
+        if !textScroll.isHidden {
+            textScroll.frame = NSRect(x: 16, y: y, width: innerWidth, height: currentPromptHeight)
+            textView.frame = NSRect(x: 0, y: 0, width: innerWidth, height: max(currentPromptHeight, textView.frame.height))
+            y += currentPromptHeight + 6
+        }
+
+        if currentNotesCount > 0 {
+            let arrow = notesExpanded ? "▾" : "▸"
+            notesToggle.title = L10n.text(.notesSummary, String(currentNotesCount)) + " " + arrow
+            notesToggle.frame = NSRect(x: 16, y: y, width: innerWidth, height: 20)
+            notesToggle.isHidden = false
+            y += 22
+            if notesExpanded {
+                notesScroll.frame = NSRect(x: 16, y: y, width: innerWidth, height: 82)
+                notesView.frame = NSRect(x: 0, y: 0, width: innerWidth, height: max(82, notesView.frame.height))
+                notesScroll.isHidden = false
+                y += 88
+            } else {
+                notesScroll.isHidden = true
+            }
+        } else {
+            notesToggle.isHidden = true
+            notesScroll.isHidden = true
+        }
+
+        let hasStatus = !statusLine.stringValue.isEmpty
+        statusLine.isHidden = !hasStatus
+        if hasStatus {
+            let statusRect = (statusLine.stringValue as NSString).boundingRect(
+                with: NSSize(width: innerWidth, height: 80),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: [.font: statusLine.font ?? NSFont.systemFont(ofSize: 11.5)]
+            )
+            let statusHeight = min(46, max(16, ceil(statusRect.height) + 4))
+            statusLine.frame = NSRect(x: 16, y: y, width: innerWidth, height: statusHeight)
+            y += statusHeight + 8
+        }
+
+        let hasButtons = !pasteButton.isHidden || !copyButton.isHidden
+        if hasButtons {
+            let pasteWidth = max(116, ceil(pasteButton.intrinsicContentSize.width) + 20)
+            let copyWidth = max(84, ceil(copyButton.intrinsicContentSize.width) + 20)
+            if pasteButton.isHidden {
+                copyButton.frame = NSRect(x: 16, y: y, width: copyWidth, height: 28)
+            } else {
+                pasteButton.frame = NSRect(x: 16, y: y, width: min(210, pasteWidth), height: 28)
+                copyButton.frame = NSRect(x: pasteButton.frame.maxX + 8, y: y, width: copyWidth, height: 28)
+            }
+            y += 38
+        } else {
+            y += 8
+        }
+
+        let totalHeight = min(390, max(110, y))
+        resizeKeepingAnchor(width: panelWidth, height: totalHeight, topLeft: oldTopLeft, preserveTopLeft: preserveTopLeft)
+    }
+
+    private func resizeKeepingAnchor(width: CGFloat, height: CGFloat, topLeft: NSPoint, preserveTopLeft: Bool) {
+        setContentSize(NSSize(width: width, height: height))
+        guard preserveTopLeft else { return }
+        let wanted = NSRect(x: topLeft.x, y: topLeft.y - height, width: width, height: height)
+        let visible = NSScreen.screens.first(where: { $0.visibleFrame.intersects(wanted) })?.visibleFrame ?? wanted
+        let x = min(max(topLeft.x, visible.minX + 4), visible.maxX - width - 4)
+        let y = min(max(topLeft.y, visible.minY + height + 4), visible.maxY - 4)
+        setFrameTopLeftPoint(NSPoint(x: x, y: y))
     }
 
     override var canBecomeKey: Bool { false }
@@ -1084,42 +1204,56 @@ final class ResultPanel: NSPanel {
         busyLabel.stringValue = L10n.text(.converting)
         closeButton.setAccessibilityLabel(L10n.text(.close))
         statusLine.stringValue = L10n.relocalize(statusLine.stringValue, from: previous)
-        layoutActionButtons()
+        relayout(isBusy: !spinner.isHidden, preserveTopLeft: isVisible)
     }
 
     func present(anchor: CGPoint, eventSequence: UInt64? = nil) {
-        let wanted = NSRect(x: anchor.x, y: anchor.y + 8, width: 470, height: 300)
+        currentNotesCount = 0
+        notesExpanded = false
+        textView.string = ""
+        notesView.string = ""
+        statusLine.stringValue = ""
+        busy(true)
+        let loadingHeight: CGFloat = 122
+        let wanted = NSRect(x: anchor.x, y: anchor.y + 8, width: panelWidth, height: loadingHeight)
         let matchingScreen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(wanted) })
         let visible = matchingScreen?.visibleFrame ?? wanted
         let x = min(max(wanted.minX, visible.minX + 4), visible.maxX - wanted.width - 4)
         let y = min(max(wanted.maxY, visible.minY + wanted.height + 4), visible.maxY - 4)
+        setContentSize(NSSize(width: panelWidth, height: loadingHeight))
         setFrameTopLeftPoint(NSPoint(x: x, y: y))
-        textView.string = ""
-        statusLine.stringValue = ""
-        busy(true)
         orderFrontRegardless()
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") presented=true screenMatch=\(matchingScreen != nil) screenCount=\(NSScreen.screens.count) anchor=\(Int(anchor.x)),\(Int(anchor.y)) visible=\(Int(visible.minX)),\(Int(visible.minY)),\(Int(visible.width)),\(Int(visible.height)) frame=\(Int(frame.minX)),\(Int(frame.minY)),\(Int(frame.width)),\(Int(frame.height))")
     }
 
-    func finish(prompt: String, status: String, canPasteBack: Bool, error: Bool, eventSequence: UInt64? = nil) {
+    func finish(prompt: String, status: String, canPasteBack: Bool, error: Bool,
+                improvements: [String] = [], assumptions: [String] = [], eventSequence: UInt64? = nil) {
         busy(false)
         textView.string = prompt
+        currentPromptHeight = measurePromptHeight(prompt)
+        let combinedNotes = improvements.map { "• \($0)" } + assumptions.map { "ⓘ \($0)" }
+        currentNotesCount = combinedNotes.count
+        notesExpanded = false
+        notesView.string = combinedNotes.joined(separator: "\n")
         statusLine.stringValue = status
         statusLine.textColor = error ? NSColor.systemOrange : .secondaryLabelColor
         pasteButton.isHidden = !canPasteBack
         copyButton.isHidden = false
-        layoutActionButtons()
+        relayout(isBusy: false, preserveTopLeft: isVisible)
         orderFrontRegardless()
-        DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") finished=true visible=\(isVisible) promptUTF16=\(prompt.utf16.count) pasteButton=\(!pasteButton.isHidden) error=\(error)")
+        DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") finished=true visible=\(isVisible) promptUTF16=\(prompt.utf16.count) notes=\(currentNotesCount) pasteButton=\(!pasteButton.isHidden) error=\(error)")
     }
 
     func fail(status: String, eventSequence: UInt64? = nil) {
         busy(false)
+        currentNotesCount = 0
+        notesExpanded = false
         textView.string = ""
+        notesView.string = ""
         statusLine.stringValue = status
         statusLine.textColor = .systemOrange
         pasteButton.isHidden = true; copyButton.isHidden = true
-        layoutActionButtons()
+        relayout(isBusy: false, preserveTopLeft: isVisible)
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") failed=true visible=\(isVisible)")
     }
 
@@ -1128,6 +1262,7 @@ final class ResultPanel: NSPanel {
     func updateStatus(_ status: String, error: Bool) {
         statusLine.stringValue = status
         statusLine.textColor = error ? NSColor.systemOrange : .secondaryLabelColor
+        relayout(isBusy: false, preserveTopLeft: isVisible)
     }
 
     private func busy(_ running: Bool) {
@@ -1138,6 +1273,11 @@ final class ResultPanel: NSPanel {
             pasteButton.isHidden = true
             copyButton.isHidden = true
         }
+    }
+
+    @objc private func toggleNotes() {
+        notesExpanded.toggle()
+        relayout(isBusy: false, preserveTopLeft: isVisible)
     }
 
     @objc private func pasteTapped() { onPasteBack?() }

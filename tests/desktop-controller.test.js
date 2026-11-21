@@ -120,3 +120,14 @@ test('unsupported UI languages and relative model paths are rejected', async t =
   await assert.rejects(controller.selectConfig('relative.env'), { code: 'CONFIG_PATH' });
   assert.equal(controller.snapshot().mode, 'mock');
 });
+
+test('desktop controller forwards opt-in local secret redaction flag cleanly', async t => {
+  const captured = [];
+  const { controller } = await workspace(t, async (input, config) => {
+    captured.push(input);
+    return { prompt: 'Refined.', mode: config.mode };
+  });
+  await controller.generate({ prompt: 'Keep sk-proj-ExampleSecretKey1234567890 safe.', redactSecrets: true });
+  assert.equal(captured[0].redactSecrets, true);
+  assert.equal(captured[0].promptLanguage, 'en');
+});

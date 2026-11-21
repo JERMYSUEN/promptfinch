@@ -141,7 +141,7 @@ export class DesktopController {
     try {
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid input');
       input = validateInput({ prompt: body.prompt, task: body.task, targetModel: body.targetModel,
-        promptLanguage: 'en', notesLanguage: this.#language });
+        promptLanguage: 'en', notesLanguage: this.#language, redactSecrets: Boolean(body.redactSecrets) });
     } catch { throw new DesktopError('INPUT'); }
     const active = { abort: new AbortController(), id: randomUUID() };
     this.#active = active; this.#error = null;

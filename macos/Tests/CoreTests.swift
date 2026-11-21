@@ -430,6 +430,31 @@ struct CoreTests {
         ollamaConfig.enabled = true
         check(nativeEngine.hasCredential(for: ollamaConfig), "native Ollama local preset requires no API key")
 
+        // Miniaturized ResultPanel dynamic sizing & inline notes drawer tests.
+        let miniPanel = ResultPanel()
+        miniPanel.present(anchor: CGPoint(x: 200, y: 200))
+        let loadingHeight = miniPanel.frame.height
+        check(loadingHeight <= 130 && miniPanel.frame.width == 410,
+              "result panel opens compactly while loading instead of reserving a 470x300 box")
+        miniPanel.finish(prompt: "Short prompt.", status: "Ready", canPasteBack: false, error: false,
+                         improvements: ["Clarified output format."], assumptions: ["Kept default tone."])
+        let collapsedHeight = miniPanel.frame.height
+        let notesToggleBtn = miniPanel.contentView?.subviews.compactMap { $0 as? NSButton }
+            .first { $0.title.contains("2") && !$0.isHidden }
+        check(notesToggleBtn != nil, "result panel exposes inline notes disclosure toggle when notes exist")
+        notesToggleBtn?.performClick(nil)
+        check(miniPanel.frame.height > collapsedHeight, "toggling inline notes expands the floating card dynamically")
+        miniPanel.orderOut(nil)
+
+        let draft = SettingsDraftState()
+        let draftPrefsSuite = "PromptFinch-mini-draft-\(UUID().uuidString)"
+        let draftPrefs = UserDefaults(suiteName: draftPrefsSuite)!
+        defer { draftPrefs.removePersistentDomain(forName: draftPrefsSuite) }
+        let draftModel = WorkspaceModel(preferences: draftPrefs, secretStore: memorySecrets, nativeEngine: nativeEngine)
+        draft.selectPreset(.anthropic, model: draftModel)
+        check(draft.baseURL == ProviderPreset.anthropic.defaultBaseURL && draft.apiKey == "test-key",
+              "settings draft switches presets and loads matching Keychain secret")
+
         await checkWorkspacePasteFeedback(check: { value, message in check(value, message) })
         print("Swift 核心、本機 API、選取目標與剪貼簿競態：\(checks) 項檢查通過。")
     }

@@ -19,7 +19,7 @@ const ownsLock = smoke || app.requestSingleInstanceLock();
 if (!ownsLock) { app.quit(); }
 
 let mainWindow, companion, tray, controller, watcher, candidate, result, DesktopErrorType;
-let watchStatus = 'disabled', shortcutStatus = 'disabled', quitting = false, candidateTimer;
+let watchStatus = 'disabled', shortcutStatus = 'disabled', quitting = false, candidateTimer, miniMode = false;
 const root = path.resolve(__dirname, '..');
 const linuxX11 = process.platform === 'linux' && !process.env.WAYLAND_DISPLAY && process.env.XDG_SESSION_TYPE !== 'wayland';
 const selectionSupport = process.platform === 'win32' ? 'windows-uia' : linuxX11 ? 'x11' : 'clipboard-only';
@@ -33,7 +33,7 @@ const fail = code => { const error = new Error(code); error.code = code; throw e
 function emit(window, name, value) {
   if (window && !window.isDestroyed() && !window.webContents.isDestroyed()) window.webContents.send(`promptfinch:${name}`, value);
 }
-function state() { return { ...controller.snapshot(), platform: process.platform, selectionSupport, watchStatus, shortcutStatus }; }
+function state() { return { ...controller.snapshot(), platform: process.platform, selectionSupport, watchStatus, shortcutStatus, miniMode }; }
 function companionState() { return { ...state(), selectionPreview: candidate?.text.slice(0, 70).replace(/\s+/g, ' ') || '' }; }
 function sendState() { const value = state(); emit(mainWindow, 'state', value); emit(companion, 'state', companionState()); updateTray(); return value; }
 function showWorkspace() { mainWindow.show(); mainWindow.focus(); }
@@ -64,7 +64,7 @@ function appIcon() {
   return nativeImage.createFromBitmap(pixels, { width: 32, height: 32, scaleFactor: 1 });
 }
 function buildWindow(extra = {}) {
-  const window = new BrowserWindow({ width: 880, height: 640, minWidth: 560, minHeight: 460,
+  const window = new BrowserWindow({ width: 880, height: 640, minWidth: 360, minHeight: 460,
     show: false, backgroundColor: '#151917', title: 'PromptFinch', autoHideMenuBar: true, icon: appIcon(),
     ...extra, webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false,
       contextIsolation: true, sandbox: true, webSecurity: true, devTools: smoke,
@@ -139,6 +139,19 @@ function registerIPC() {
   const handlers = {
     getState: () => state(),
     setLanguage: async value => { await controller.setLanguage(value); return sendState(); },
+    toggleMiniMode: () => {
+      miniMode = !miniMode;
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        if (miniMode) {
+          mainWindow.setSize(400, 540, true);
+          mainWindow.setAlwaysOnTop(true, 'floating');
+        } else {
+          mainWindow.setAlwaysOnTop(false);
+          mainWindow.setSize(880, 640, true);
+        }
+      }
+      return sendState();
+    },
     chooseConfig: async () => {
       const selected = await dialog.showOpenDialog(mainWindow, { title: 'Select model configuration', properties: ['openFile'],
         filters: [{ name: 'Configuration', extensions: ['env', 'txt'] }, { name: 'All files', extensions: ['*'] }] });

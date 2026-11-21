@@ -12,6 +12,7 @@ const subscribe = (name, callback) => {
 contextBridge.exposeInMainWorld('promptfinch', Object.freeze({
   getState: () => invoke('getState'),
   setLanguage: language => invoke('setLanguage', language),
+  toggleMiniMode: () => invoke('toggleMiniMode'),
   chooseConfig: () => invoke('chooseConfig'),
   createConfig: () => invoke('createConfig'),
   useDemo: () => invoke('useDemo'),

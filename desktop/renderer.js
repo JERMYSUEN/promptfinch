@@ -18,7 +18,12 @@ document.body.classList.toggle('companion', companion);
 $('companion-menu').hidden = !companion;
 
 function inputValue() {
-  return { prompt: $('original-prompt').value, task: $('task-select').value, targetModel: $('target-model').value };
+  return {
+    prompt: $('original-prompt').value,
+    task: $('task-select').value,
+    targetModel: $('target-model').value,
+    redactSecrets: Boolean($('redact-secrets')?.checked),
+  };
 }
 
 function setStatus(key, kind = '') {
@@ -120,6 +125,13 @@ function renderState() {
   for (const element of document.querySelectorAll('[data-i18n-placeholder]')) element.placeholder = t(element.dataset.i18nPlaceholder);
   $('language-select').value = state.language;
   $('language-select').setAttribute('aria-label', t('language'));
+  const miniButton = $('mini-mode-button');
+  if (miniButton) {
+    const isMini = Boolean(state.miniMode);
+    document.body.classList.toggle('mini-mode', isMini);
+    miniButton.textContent = t(isMini ? 'fullMode' : 'miniMode');
+    miniButton.setAttribute('aria-pressed', String(isMini));
+  }
   const live = state.mode === 'live';
   const badgeKey = !state.ready ? 'modeUnavailable' : live ? 'modeLive' : 'modeMock';
   $('mode-badge').textContent = t(badgeKey, { model: state.model || '' });
@@ -297,6 +309,13 @@ function registerEvents() {
     const open = $('settings-panel').hidden;
     $('settings-panel').hidden = !open;
     $('settings-button').setAttribute('aria-expanded', String(open));
+  });
+  $('mini-mode-button')?.addEventListener('click', async () => {
+    const reply = await call('toggleMiniMode');
+    if (reply.ok && reply.value && typeof reply.value === 'object') {
+      state = { ...state, ...reply.value };
+      renderState();
+    }
   });
   $('choose-config').addEventListener('click', async () => {
     const reply = await call('chooseConfig');

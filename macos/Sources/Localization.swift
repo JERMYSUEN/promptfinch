@@ -205,6 +205,36 @@ enum L10n {
         case providerReviewIncomplete
         case providerReviewRejected
         case serviceBusy
+        case tabGeneral
+        case tabModel
+        case tabTriggers
+        case tabPrivacy
+        case outputPromptLanguage
+        case promptLangEnglish
+        case promptLangZhHant
+        case menuBarOnlyMode
+        case menuBarOnlyHelp
+        case engineModeHeading
+        case engineNative
+        case engineLegacy
+        case providerPresetLabel
+        case providerBaseURLLabel
+        case providerModelLabel
+        case providerAPIKeyLabel
+        case providerAPIKeyPlaceholder
+        case providerKeychainNote
+        case saveAndActivate
+        case testConnection
+        case nativeProviderSaved
+        case appAwarePresets
+        case appAwarePresetsHelp
+        case redactSecretsToggle
+        case redactSecretsHelp
+        case notesSummary
+        case openFullStudio
+        case recentSessionHistory
+        case noRecentHistory
+        case privacyZeroDiskHeading
     }
 
     static var language: UILanguage { UILanguage.load() }
@@ -388,6 +418,36 @@ enum L10n {
         .providerReviewIncomplete: ["模型品質覆核未完成或格式不符；沒有提供未經覆核的結果。請重新優化。", "The model review was incomplete or invalid. No unreviewed result was returned. Try refining again.", "モデルによる確認が未完了、または形式が不正です。未確認の結果は返していません。再度改善を実行してください。", "모델 검토가 완료되지 않았거나 형식이 올바르지 않습니다. 검토하지 않은 결과는 반환하지 않았습니다. 다시 최적화하세요."],
         .providerReviewRejected: ["優化結果未通過模型保真覆核；沒有提供可能改變原意的結果。請重新優化。", "The prompt did not pass the model's fidelity review. No rejected result was returned. Try refining again.", "プロンプトがモデルによる原意保持の確認を通過しませんでした。不承認の結果は返していません。再度改善を実行してください。", "프롬프트가 모델의 원문 충실도 검토를 통과하지 못했습니다. 거절된 결과는 반환하지 않았습니다. 다시 최적화하세요."],
         .serviceBusy: ["目前正在處理其他優化，請稍後再試。", "Other requests are being processed. Try again shortly.", "他の依頼を処理中です。少し待って再試行してください。", "다른 요청을 처리 중입니다. 잠시 후 다시 시도하세요."],
+        .tabGeneral: ["一般", "General", "一般", "일반"],
+        .tabModel: ["模型", "Model", "モデル", "모델"],
+        .tabTriggers: ["觸發", "Triggers", "トリガー", "트리거"],
+        .tabPrivacy: ["隱私", "Privacy", "プライバシー", "개인정보"],
+        .outputPromptLanguage: ["輸出 Prompt 語言", "Output prompt language", "出力プロンプト言語", "출력 프롬프트 언어"],
+        .promptLangEnglish: ["英文 (EN)", "English (EN)", "英語 (EN)", "영어 (EN)"],
+        .promptLangZhHant: ["繁體中文", "Traditional Chinese", "繁体字中国語", "번체 중국어"],
+        .menuBarOnlyMode: ["純選單列常駐模式（隱藏 Dock 圖示）", "Menu-bar-only mode (hide Dock icon)", "メニューバー常駐モード（Dock アイコンを隠す）", "메뉴 막대 전용 모드 (Dock 아이콘 숨김)"],
+        .menuBarOnlyHelp: ["開啟後不佔用 Dock 與 ⌘Tab，點擊上方選單列 PromptFinch 圖示即可快速開啟迷你工作面板。", "Stays out of your Dock and ⌘Tab. Click the menu bar finch icon anytime to open the compact popover.", "Dock や ⌘Tab に表示せず、メニューバーのアイコンからすぐコンパクト画面を開けます。", "Dock과 ⌘Tab에 표시하지 않고 메뉴 막대 아이콘으로 미니 패널을 바로 엽니다."],
+        .engineModeHeading: ["連線引擎模式", "Connection engine", "接続エンジン", "연결 엔진"],
+        .engineNative: ["原生直連（免 Node.js）", "Native direct (no Node.js)", "ネイティブ直結（Node.js 不要）", "네이티브 직결 (Node.js 불필요)"],
+        .engineLegacy: ["本機 Node.js .env 後端", "Local Node.js .env backend", "ローカル Node.js .env バックエンド", "로컬 Node.js .env 백엔드"],
+        .providerPresetLabel: ["服務商預設", "Provider preset", "プロバイダー", "서비스 제공자"],
+        .providerBaseURLLabel: ["API 網址", "API Base URL", "API ベース URL", "API 기본 URL"],
+        .providerModelLabel: ["模型名稱", "Model name", "モデル名", "모델 이름"],
+        .providerAPIKeyLabel: ["API 金鑰", "API Key", "API キー", "API 키"],
+        .providerAPIKeyPlaceholder: ["輸入金鑰（本機 Ollama 可留空）", "Enter API key (blank for local Ollama)", "キーを入力（ローカル Ollama は空欄可）", "API 키 입력 (로컬 Ollama는 비워 둠)"],
+        .providerKeychainNote: ["金鑰加密存放在 macOS 鑰匙圈（Keychain），絕不寫入設定檔或傳輸給非指定主機。", "Keys are encrypted in macOS Keychain and never stored in plain preferences.", "キーは macOS キーチェーンに暗号化保存され、設定ファイルには書き出しません。", "키는 macOS 키체인에 암호화되어 저장되며 설정 파일에 기록되지 않습니다."],
+        .saveAndActivate: ["儲存並啟用", "Save & Activate", "保存して有効化", "저장 및 활성화"],
+        .testConnection: ["測試連線", "Test connection", "接続テスト", "연결 테스트"],
+        .nativeProviderSaved: ["已儲存原生模型設定（%@）。", "Native provider settings saved (%@).", "ネイティブモデル設定を保存しました（%@）。", "네이티브 모델 설정을 저장했습니다 (%@)."],
+        .appAwarePresets: ["依來源軟體自動切換用途（IDE → 程式開發）", "App-aware presets (IDE → Coding, Docs → Writing)", "アプリ別自動プリセット（IDE → 開発）", "앱별 자동 프리셋 (IDE → 코딩)"],
+        .appAwarePresetsHelp: ["從 Xcode、VS Code、Cursor 或終端機觸發時自動套用程式開發策略；郵件與文件自動套用寫作策略。", "Automatically applies Coding rules from IDEs/terminals and Writing rules from editors/mail.", "IDE やターミナルからは開発向け、メールや文書からは文章作成向けルールを自動適用します。", "IDE·터미널에서는 코딩 규칙을, 메일·문서에서는 글쓰기 규칙을 자동 적용합니다."],
+        .redactSecretsToggle: ["本機敏感遮罩（送出前自動遮蔽 API 金鑰與憑證）", "Local Secret Shield (mask API keys & tokens before sending)", "ローカル機密マスク（送信前に API キー等を自動遮蔽）", "로컬 민감 정보 차단 (전송 전 API 키·토큰 자동 마스킹)"],
+        .redactSecretsHelp: ["在離線本機先將 OpenAI / Anthropic / GitHub / AWS / JWT / PEM 私鑰替換為佔位符，模型回傳後再於本機原樣還原。", "Replaces API keys, JWTs, and PEM blocks with local placeholders before transmission, then restores them locally.", "API キーや JWT、PEM 鍵をローカルで一時置換してから送信し、応答後に元の値へ復元します。", "API 키·JWT·PEM 키를 로컬에서 자리 표시자로 치환한 뒤 전송하고 응답 후 로컬에서 복원합니다."],
+        .notesSummary: ["✦ %@ 項優化說明", "✦ %@ editing notes", "✦ %@ 件の編集メモ", "✦ %@개 편집 메모"],
+        .openFullStudio: ["展開完整視窗", "Open full studio", "フル画面を開く", "전체 창 열기"],
+        .recentSessionHistory: ["本次暫存紀錄（僅存記憶體）", "Recent session (memory only)", "今回の履歴（メモリ内のみ）", "최근 기록 (메모리 전용)"],
+        .noRecentHistory: ["尚無本次紀錄。", "No recent items yet.", "まだ履歴はありません。", "최근 기록이 없습니다."],
+        .privacyZeroDiskHeading: ["零硬碟留存保證", "Zero-disk-storage guarantee", "ディスク非保存の保証", "디스크 미저장 보장"],
     ]
 
     static func text(_ key: Key, _ arguments: CVarArg..., language: UILanguage? = nil) -> String {

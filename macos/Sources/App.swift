@@ -61,9 +61,19 @@ final class WorkspaceModel: ObservableObject {
     @Published var redactSecretsEnabled: Bool {
         didSet { preferences.set(redactSecretsEnabled, forKey: "redactSecretsEnabled") }
     }
+    @Published var menuBarOnlyMode: Bool {
+        didSet {
+            preferences.set(menuBarOnlyMode, forKey: "menuBarOnlyMode")
+            onMenuBarModeChange?(menuBarOnlyMode)
+        }
+    }
+    @Published private(set) var sessionHistory: [SessionHistoryEntry] = []
     @Published var pasteBackEnabled: Bool = SelectionWatcher.pasteBack {
         didSet { UserDefaults.standard.set(pasteBackEnabled, forKey: SelectionWatcher.pasteBackKey) }
     }
+    let settingsDraft = SettingsDraftState()
+    let miniUIState = MiniUIState()
+    var onMenuBarModeChange: ((Bool) -> Void)?
     private var sourcePID: pid_t?
     private var sourceCapture: SelectionCapture?
     private var activeEventSequence: UInt64?
@@ -91,9 +101,34 @@ final class WorkspaceModel: ObservableObject {
         nativeConfig = NativeProviderConfig.load(from: preferences)
         appAwarePresetsEnabled = preferences.object(forKey: "appAwarePresetsEnabled") as? Bool ?? true
         redactSecretsEnabled = preferences.object(forKey: "redactSecretsEnabled") as? Bool ?? false
+        menuBarOnlyMode = preferences.object(forKey: "menuBarOnlyMode") as? Bool ?? false
         resultPanel.onPasteBack = { [weak self] in self?.pasteBackFromPanel() }
         resultPanel.onCopy = { [weak self] in self?.copyFromPanel() }
         resultPanel.onClose = { [weak self] in self?.closeResultPanel() }
+    }
+
+    var compactStatusLabel: String {
+        guard let config else { return L10n.text(.connecting) }
+        if config.mode == "mock" { return "Demo" }
+        if !config.ready { return L10n.text(.incompleteConfig) }
+        return config.generationModel ?? L10n.text(.configuredModel)
+    }
+
+    func restoreSessionEntry(_ entry: SessionHistoryEntry) {
+        guard !unavailable else { return }
+        original = entry.original
+        result = entry.result
+        resultOriginal = entry.original
+        notify(L10n.text(.promptReady))
+    }
+
+    private func recordSessionHistory(original: String, result: PromptResult) {
+        let entry = SessionHistoryEntry(original: original, result: result)
+        sessionHistory.removeAll { $0.original == original && $0.result.prompt == result.prompt }
+        sessionHistory.insert(entry, at: 0)
+        if sessionHistory.count > 5 {
+            sessionHistory = Array(sessionHistory.prefix(5))
+        }
     }
 
     func savedAPIKey(for preset: ProviderPreset) -> String {
@@ -163,13 +198,13 @@ final class WorkspaceModel: ObservableObject {
 
     func notify(_ text: String, error: Bool = false) { message = text; isError = error }
 
-    func receive(_ text: String, generateImmediately: Bool = true) {
+    func receive(_ text: String, generateImmediately: Bool = true, openStudio: Bool = true) {
         guard !backendSwitching else { return }
-        clear()
+        clear(wipeHistory: false)
         original = text
         sourcePID = nil
         sourceCapture = nil
-        showWindow?()
+        if openStudio { showWindow?() }
         if generateImmediately { generate() }
     }
 
@@ -180,7 +215,7 @@ final class WorkspaceModel: ObservableObject {
     func convert(_ text: String, sourcePID: pid_t?, sourceCapture: SelectionCapture? = nil,
                  anchor: CGPoint? = nil, eventSequence: UInt64? = nil) {
         guard !backendSwitching else { return }
-        clear()
+        clear(wipeHistory: false)
         original = text
         self.sourcePID = sourcePID
         self.sourceCapture = sourceCapture
@@ -200,12 +235,14 @@ final class WorkspaceModel: ObservableObject {
         watcher.invalidatePendingActions()
     }
 
-    func clipboard() {
+    func clipboard(openStudio: Bool = true) {
         guard !backendSwitching else { return }
         guard let text = NSPasteboard.general.string(forType: .string), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            showWindow?(); notify(L10n.text(.emptyClipboard), error: true); return
+            if openStudio { showWindow?() }
+            notify(L10n.text(.emptyClipboard), error: true)
+            return
         }
-        receive(text)
+        receive(text, generateImmediately: openStudio, openStudio: openStudio)
     }
 
     func selection() {
@@ -276,16 +313,19 @@ final class WorkspaceModel: ObservableObject {
                 guard generationID == token, !Task.isCancelled else { return }
                 result = output
                 resultOriginal = input.prompt
+                recordSessionHistory(original: input.prompt, result: output)
                 if output.mode == "mock" {
                     notify(L10n.text(.mockNotice))
                     if background {
-                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.mockPanelNotice), canPasteBack: false, error: true, eventSequence: activeEventSequence)
+                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.mockPanelNotice), canPasteBack: false, error: true, improvements: output.improvements, assumptions: output.assumptions, eventSequence: activeEventSequence)
                     } else if autoPaste { showWindow?() }
                 } else if autoPaste {
                     pasteBack(output.prompt)
                 } else {
                     notify(L10n.text(.promptReady))
-                    if background { resultPanel.finish(prompt: output.prompt, status: L10n.text(.promptComplete), canPasteBack: canOfferPasteBack, error: false, eventSequence: activeEventSequence) }
+                    if background {
+                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.promptComplete), canPasteBack: canOfferPasteBack, error: false, improvements: output.improvements, assumptions: output.assumptions, eventSequence: activeEventSequence)
+                    }
                 }
             } catch {
                 DebugLog.write("generate seq=\(eventID) errorType=\(String(describing: type(of: error)))")
@@ -305,6 +345,8 @@ final class WorkspaceModel: ObservableObject {
             copyTerminalResult(prompt)
             return
         }
+        let improvements = result?.improvements ?? []
+        let assumptions = result?.assumptions ?? []
         guard pasteBackEnabled, TextSelection.authorized else {
             let copied = pasteOperations.copy(prompt)
             DebugLog.write("pasteBack skipped: enabled=\(pasteBackEnabled) authorized=\(TextSelection.authorized)")
@@ -314,7 +356,8 @@ final class WorkspaceModel: ObservableObject {
             notify(status, error: !copied)
             resultPanel.finish(prompt: prompt,
                                status: copied && canOfferPasteBack ? L10n.text(.manualPasteHelp) : status,
-                               canPasteBack: canOfferPasteBack, error: !copied, eventSequence: activeEventSequence)
+                               canPasteBack: canOfferPasteBack, error: !copied,
+                               improvements: improvements, assumptions: assumptions, eventSequence: activeEventSequence)
             return
         }
         requestPasteBack(prompt)
@@ -330,7 +373,8 @@ final class WorkspaceModel: ObservableObject {
         let status = L10n.text(copied ? .terminalCopied : .copyFailedPanel)
         notify(status, error: !copied)
         resultPanel.finish(prompt: prompt, status: status, canPasteBack: false,
-                           error: !copied, eventSequence: activeEventSequence)
+                           error: !copied, improvements: result?.improvements ?? [],
+                           assumptions: result?.assumptions ?? [], eventSequence: activeEventSequence)
     }
 
     private func requestPasteBack(_ prompt: String) {
@@ -340,6 +384,8 @@ final class WorkspaceModel: ObservableObject {
             copyTerminalResult(prompt)
             return
         }
+        let improvements = result?.improvements ?? []
+        let assumptions = result?.assumptions ?? []
         let feedbackID = UUID()
         pasteFeedbackID = feedbackID
         let generation = generationID
@@ -364,18 +410,21 @@ final class WorkspaceModel: ObservableObject {
             requested = true
             let status = L10n.text(.pasteRequested)
             notify(status)
-            resultPanel.finish(prompt: prompt, status: status, canPasteBack: false, error: false, eventSequence: activeEventSequence)
+            resultPanel.finish(prompt: prompt, status: status, canPasteBack: false, error: false,
+                               improvements: improvements, assumptions: assumptions, eventSequence: activeEventSequence)
         case .notAttempted:
             let copied = pasteOperations.copy(prompt)
             let status = L10n.text(copied ? .unsafeTargetCopied : .unsafePasteFailed)
             notify(status, error: !copied)
-            resultPanel.finish(prompt: prompt, status: status, canPasteBack: false, error: !copied, eventSequence: activeEventSequence)
+            resultPanel.finish(prompt: prompt, status: status, canPasteBack: false, error: !copied,
+                               improvements: improvements, assumptions: assumptions, eventSequence: activeEventSequence)
         case .clipboardUnavailable:
             // An unsafe snapshot or failed recovery must not be followed by an
             // automatic copy that overwrites the clipboard we tried to protect.
             let status = L10n.text(.clipboardUnavailable)
             notify(status, error: true)
-            resultPanel.finish(prompt: prompt, status: status, canPasteBack: false, error: true, eventSequence: activeEventSequence)
+            resultPanel.finish(prompt: prompt, status: status, canPasteBack: false, error: true,
+                               improvements: improvements, assumptions: assumptions, eventSequence: activeEventSequence)
         }
     }
 
@@ -392,7 +441,9 @@ final class WorkspaceModel: ObservableObject {
         let status = copied ? L10n.text(.copied) : L10n.text(.copyFailed)
         notify(status, error: !copied)
         resultPanel.finish(prompt: result.prompt, status: copied ? L10n.text(.copiedClipboard) : status,
-                           canPasteBack: false, error: !copied, eventSequence: activeEventSequence)
+                           canPasteBack: false, error: !copied,
+                           improvements: result.improvements, assumptions: result.assumptions,
+                           eventSequence: activeEventSequence)
     }
 
     func closeResultPanel() {
@@ -428,7 +479,7 @@ final class WorkspaceModel: ObservableObject {
     }
     #endif
 
-    func clear() {
+    func clear(wipeHistory: Bool = true) {
         cancel()
         resultPanel.orderOut(nil)
         original = ""
@@ -437,6 +488,7 @@ final class WorkspaceModel: ObservableObject {
         sourcePID = nil
         sourceCapture = nil
         activeEventSequence = nil
+        if wipeHistory { sessionHistory = [] }
         notify("")
     }
 
@@ -485,6 +537,7 @@ final class WorkspaceModel: ObservableObject {
         configurationID = UUID()
         watcher.stop()
         cancel()
+        sessionHistory = []
         do { try await backend.stop() }
         catch {
             backendSwitching = false
@@ -570,11 +623,15 @@ struct WorkspaceView: View {
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
                         .frame(minHeight: 140)
                         .disabled(model.unavailable).accessibilityIdentifier("originalPrompt")
-                    HStack {
+                    HStack(spacing: 8) {
                         Picker(L10n.text(.purpose), selection: $model.task) {
                             Text(L10n.text(.general)).tag("general"); Text(L10n.text(.writing)).tag("writing"); Text(L10n.text(.analysis)).tag("analysis")
                             Text(L10n.text(.coding)).tag("coding"); Text(L10n.text(.summary)).tag("summary"); Text(L10n.text(.marketing)).tag("marketing")
-                        }.frame(maxWidth: 185)
+                        }.frame(maxWidth: 160)
+                        Picker("", selection: $model.promptLanguage) {
+                            Text("EN").tag("en")
+                            Text("繁中").tag("zh-Hant")
+                        }.labelsHidden().pickerStyle(.segmented).frame(width: 88)
                         Spacer()
                         Text("\(model.original.utf16.count) / 12,000").font(.system(size: 11)).foregroundStyle(.secondary)
                     }.disabled(model.unavailable)
@@ -643,7 +700,7 @@ struct WorkspaceView: View {
                 if model.busy { Button(L10n.text(.cancel)) { model.cancel(); model.notify(L10n.text(.cancelled)) } }
             }.foregroundStyle(model.isError ? Color.red : .secondary).frame(minHeight: 30)
         }.padding(14).frame(minWidth: 680, minHeight: 480).background(Color(nsColor: .windowBackgroundColor))
-            .sheet(isPresented: $model.settingsVisible) { SettingsView(model: model) }
+            .sheet(isPresented: $model.settingsVisible) { CompactSettingsView(model: model, draft: model.settingsDraft) }
             .environment(\.locale, Locale(identifier: model.language.rawValue))
             .onReceive(model.$original.dropFirst().removeDuplicates()) { _ in
                 if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.originalChanged)) }
@@ -717,124 +774,13 @@ struct PromptComparisonView: View {
     }
 }
 
-struct SettingsView: View {
-    @ObservedObject var model: WorkspaceModel
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(L10n.text(.settingsTitle)).font(.title2).fontWeight(.semibold)
-                    Picker(L10n.text(.interfaceLanguage), selection: $model.language) {
-                        ForEach(UILanguage.allCases) { language in
-                            Text(language.name).tag(language)
-                        }
-                    }.pickerStyle(.menu).accessibilityIdentifier("interfaceLanguage")
-                    Text(L10n.text(.languageHelp))
-                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Divider()
-                    Text(L10n.text(.modelSettingsHelp))
-                        .font(.system(size: 13)).fixedSize(horizontal: false, vertical: true)
-                    HStack {
-                        Text(model.backend.configurationPath.isEmpty ? L10n.text(.usingDemo) : L10n.text(.configFile, URL(fileURLWithPath: model.backend.configurationPath).lastPathComponent))
-                            .font(.system(size: 12)).lineLimit(1)
-                        Spacer()
-                        Button(L10n.text(.chooseEnv)) { chooseConfig() }.disabled(model.unavailable)
-                    }
-                    HStack {
-                        Button(L10n.text(.editModelConfig)) { createConfig() }
-                        Button(L10n.text(.reloadConfig)) { model.restart() }
-                        Button(L10n.text(.useDemo)) { model.useConfig(nil) }
-                    }.disabled(model.unavailable)
-                    Divider()
-                    Text(L10n.text(.globalShortcut)).font(.headline)
-                    Text(L10n.text(.permissionHelp, L10n.text(model.accessibilityGranted ? .permissionGranted : .permissionMissing)))
-                        .font(.system(size: 12)).fixedSize(horizontal: false, vertical: true)
-                    HStack {
-                        Button(L10n.text(.openAccessibility)) {
-                            TextSelection.requestPermission()
-                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-                        }
-                        Button(L10n.text(.recheckPermission)) {
-                            model.accessibilityGranted = TextSelection.authorized
-                            model.watcher.start()
-                        }
-                    }
-                    Divider()
-                    Text(L10n.text(.selectionHeading)).font(.headline)
-                    Toggle(L10n.text(.showFloatingButton), isOn: $model.watcherLeft)
-                    Toggle(L10n.text(.showRightClickMenu), isOn: $model.watcherRight)
-                    Text(L10n.text(.explicitActionHelp))
-                        .font(.caption).foregroundColor(.secondary)
-                    Toggle(L10n.text(.autoPaste), isOn: $model.pasteBackEnabled)
-                    Text(L10n.text(.selectionHelp))
-                        .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Text(L10n.text(.terminalHelp))
-                        .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Divider()
-                    HStack {
-                        Text(L10n.text(.runtime)).font(.system(size: 12))
-                        Spacer()
-                        Button(L10n.text(.chooseNode)) { chooseNode() }.disabled(model.unavailable)
-                    }
-                    HStack {
-                        Button(L10n.text(.useBundledBackend)) { model.useBundledBackend() }
-                            .disabled(model.unavailable).accessibilityIdentifier("useBundledBackend")
-                        if model.backendSwitching { ProgressView().controlSize(.small) }
-                    }
-                    Text(L10n.text(.bundledBackendHelp))
-                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    if !model.message.isEmpty {
-                        Text(model.message).font(.caption).foregroundStyle(model.isError ? Color.red : .secondary)
-                            .textSelection(.enabled).accessibilityIdentifier("settingsStatus")
-                    }
-                    Text(L10n.text(.localPrivacy))
-                        .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                }.padding(24)
-            }
-            Divider()
-            HStack { Spacer(); Button(L10n.text(.done)) { model.settingsVisible = false }.keyboardShortcut(.defaultAction) }
-                .padding(.horizontal, 24).padding(.vertical, 12)
-        }.frame(width: 610, height: min(720, (NSScreen.main?.visibleFrame.height ?? 820) - 100))
-    }
-
-    private func chooseConfig() {
-        let panel = NSOpenPanel()
-        panel.title = L10n.text(.chooseConfigTitle); panel.showsHiddenFiles = true
-        panel.canChooseDirectories = false; panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url { model.useConfig(url) }
-    }
-
-    private func chooseNode() {
-        let panel = NSOpenPanel(); panel.title = L10n.text(.chooseNodeTitle)
-        panel.canChooseDirectories = false; panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url { model.backend.setNode(url); model.restart() }
-    }
-
-    private func createConfig() {
-        do {
-            let folder = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                .appendingPathComponent("PromptSelection", isDirectory: true)
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            let destination = folder.appendingPathComponent("settings.env")
-            if !FileManager.default.fileExists(atPath: destination.path) {
-                guard let template = Bundle.main.url(forResource: "deepseek", withExtension: "env.example") else { throw ToolError.message(L10n.text(.missingTemplate)) }
-                try FileManager.default.copyItem(at: template, to: destination)
-                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destination.path)
-            }
-            if let editor = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.TextEdit") {
-                NSWorkspace.shared.open([destination], withApplicationAt: editor, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
-            } else { NSWorkspace.shared.open(destination) }
-            model.useConfig(destination)
-        } catch { model.notify(L10n.errorDescription(error), error: true) }
-    }
-}
-
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = WorkspaceModel()
     private var window: NSWindow!
     private var statusItem: NSStatusItem!
+    private var statusMenu: NSMenu?
+    private var popover: NSPopover?
     private let hotKey = SelectionHotKey()
     private var permissionTimer: Timer?
     private var terminationTask: Task<Void, Never>?
@@ -847,6 +793,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView = NSHostingView(rootView: WorkspaceView(model: model))
         window.center()
         model.showWindow = { [weak self] in self?.showWorkspace() }
+        model.onMenuBarModeChange = { enabled in
+            NSApp.setActivationPolicy(enabled ? .accessory : .regular)
+        }
+        buildPopover()
         buildMenu()
         model.onLanguageChange = { [weak self] in self?.buildMenu() }
         NSApp.servicesProvider = self
@@ -868,7 +818,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let index = CommandLine.arguments.firstIndex(of: "--config"), CommandLine.arguments.count > index + 1 {
             model.useConfig(URL(fileURLWithPath: CommandLine.arguments[index + 1]))
         } else { model.refresh() }
-        showWorkspace()
+        if !model.menuBarOnlyMode {
+            showWorkspace()
+        }
+    }
+
+    private func buildPopover() {
+        let controller = NSHostingController(rootView: MenuBarPopoverView(
+            model: model,
+            uiState: model.miniUIState,
+            onOpenStudio: { [weak self] in
+                self?.popover?.performClose(nil)
+                self?.showWorkspace()
+            },
+            onOpenSettings: { [weak self] in
+                self?.popover?.performClose(nil)
+                self?.showWorkspace()
+                self?.model.settingsVisible = true
+            },
+            onQuit: { NSApp.terminate(nil) }
+        ))
+        let pop = NSPopover()
+        pop.behavior = .transient
+        pop.animates = true
+        pop.contentViewController = controller
+        popover = pop
     }
 
     private func buildMenu() {
@@ -877,9 +851,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let item = NSMenuItem(title: title, action: selector, keyEquivalent: ""); item.target = self
             menu.addItem(item)
         }
+        statusMenu = menu
         if statusItem == nil { statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength) }
-        statusItem.button?.image = makeFinchMenuBarIcon()
-        statusItem.menu = menu
+        if let button = statusItem.button {
+            button.image = makeFinchMenuBarIcon()
+            button.target = self
+            button.action = #selector(statusItemClicked(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
+        statusItem.menu = nil
 
         let main = NSMenu()
         let appItem = NSMenuItem(); main.addItem(appItem)
@@ -893,6 +873,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             edit.addItem(NSMenuItem(title: title, action: Selector(action), keyEquivalent: key))
         }
         NSApp.mainMenu = main
+    }
+
+    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+        let event = NSApp.currentEvent
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+            popover?.performClose(nil)
+            statusItem.menu = statusMenu
+            statusItem.button?.performClick(nil)
+            statusItem.menu = nil
+            return
+        }
+        guard let popover else { return }
+        if popover.isShown {
+            popover.performClose(sender)
+        } else {
+            popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 
     @objc(generateEnglishPrompt:userData:error:)
@@ -958,7 +956,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct PromptSelectionApp {
     static func main() {
         let app = NSApplication.shared
-        app.setActivationPolicy(.regular)
+        let menuBarOnly = UserDefaults.standard.bool(forKey: "menuBarOnlyMode")
+        app.setActivationPolicy(menuBarOnly ? .accessory : .regular)
         let delegate = AppDelegate()
         app.delegate = delegate
         withExtendedLifetime(delegate) { app.run() }

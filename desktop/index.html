@@ -26,6 +26,7 @@
           <option value="zh-TW">繁體中文</option><option value="en">English</option>
           <option value="ja">日本語</option><option value="ko">한국어</option>
         </select>
+        <button id="mini-mode-button" class="secondary-button" type="button" aria-pressed="false" data-i18n="miniMode">迷你模式</button>
         <button id="settings-button" class="secondary-button" type="button" aria-expanded="false" aria-controls="settings-panel" data-i18n="settings">設定</button>
       </div>
     </header>
@@ -49,6 +50,8 @@
         <p id="selection-description"></p>
         <p id="watch-status"></p>
         <p id="shortcut-status"></p>
+        <label class="checkbox-row"><input id="redact-secrets" type="checkbox"><span data-i18n="redactSecrets">本機敏感遮罩（送出前自動遮蔽 API 金鑰與憑證）</span></label>
+        <p class="settings-help" data-i18n="redactSecretsHelp">在離線本機先遮蔽常見金鑰與私鑰，收到結果後再於本機原樣還原。</p>
         <p class="settings-help" data-i18n="selectionPrivacy">只有點選「轉為英文 Prompt」或工作台的生成按鈕才會傳送內容。右鍵本身不會呼叫模型，結果不會自動貼回其他軟體。</p>
       </section>
 

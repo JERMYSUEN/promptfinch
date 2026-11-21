@@ -147,7 +147,7 @@ try {
     const usesSDKProbe = readFileSync(join(source, 'scripts/build-macos.js'), 'utf8').includes('./macos-sdk.js');
     for (const required of [
       'package.json', 'package-lock.json', 'macos/Info.plist', 'macos/Icon.swift',
-      ...['Localization', 'Core', 'NativeOptimizer', 'Backend', 'Selection', 'Watcher', 'App'].map(name => `macos/Sources/${name}.swift`),
+      ...['Localization', 'Core', 'NativeOptimizer', 'Backend', 'Selection', 'Watcher', 'MiniUI', 'App'].map(name => `macos/Sources/${name}.swift`),
       'scripts/build-macos.js', 'scripts/package-macos.js', 'scripts/package-source.js', ...BACKEND_FILES,
       ...(usesSDKProbe ? ['scripts/macos-sdk.js'] : []),
     ]) assert.ok(manifest.sourceInputsSHA256[required], `Missing build input hash: ${required}`);

@@ -33,6 +33,7 @@ export const COPY = {
     connectionError: '無法與桌面主程序通訊，請重新開啟 PromptFinch。', genericError: '操作失敗，請稍後重試或檢查設定。',
     errorBusy: '正在處理另一個請求，請等待或先取消。', errorClipboard: '無法讀取或寫入剪貼簿，請稍後再試。', errorSelection: '無法讀取選取文字。請重新選取，或自行複製後讀取剪貼簿。',
     errorConfig: '模型設定無效或無法讀取。請檢查本機設定檔，再重新選擇。', errorModel: '模型請求失敗。請檢查模型名稱、金鑰、連線與額度。', errorTimeout: '模型回應逾時，請稍後重試。', errorNoResult: '尚無可複製的結果。',
+    miniMode: '迷你模式', fullMode: '標準視窗', redactSecrets: '本機敏感遮罩（送出前自動遮蔽 API 金鑰與憑證）', redactSecretsHelp: '在離線本機先遮蔽常見金鑰與私鑰，收到結果後再於本機原樣還原。',
   },
   en: {
     language: 'Interface language', settings: 'Settings', heading: 'Turn a request into an English prompt',
@@ -64,6 +65,7 @@ export const COPY = {
     connectionError: 'The desktop main process could not be reached. Reopen PromptFinch.', genericError: 'The action failed. Try again or check Settings.',
     errorBusy: 'Another request is running. Wait or cancel it first.', errorClipboard: 'The clipboard could not be read or written. Try again.', errorSelection: 'The selection could not be read. Select the text again, or copy it yourself and import the clipboard.',
     errorConfig: 'The model config is invalid or unreadable. Check your local file and choose it again.', errorModel: 'The model request failed. Check the model name, key, connection and quota.', errorTimeout: 'The model response timed out. Try again later.', errorNoResult: 'There is no result to copy yet.',
+    miniMode: 'Mini mode', fullMode: 'Full window', redactSecrets: 'Local Secret Shield (mask API keys & tokens before sending)', redactSecretsHelp: 'Masks common API keys, JWTs, and PEM blocks locally before transmission and restores them locally.',
   },
   ja: {
     language: '表示言語', settings: '設定', heading: '依頼を英語のプロンプトに整理',
@@ -95,6 +97,7 @@ export const COPY = {
     connectionError: 'デスクトップのメインプロセスに接続できません。PromptFinch を開き直してください。', genericError: '操作に失敗しました。再試行するか、設定を確認してください。',
     errorBusy: '別の処理を実行中です。完了を待つかキャンセルしてください。', errorClipboard: 'クリップボードの読み書きに失敗しました。再試行してください。', errorSelection: '選択文字を読み取れません。選択し直すか、自分でコピーしてクリップボードを取り込んでください。',
     errorConfig: 'モデル設定が無効か読み取れません。ローカルのファイルを確認し、再度選択してください。', errorModel: 'モデルへのリクエストに失敗しました。モデル名、キー、接続、利用枠を確認してください。', errorTimeout: 'モデルの応答がタイムアウトしました。後で再試行してください。', errorNoResult: 'コピーできる結果がまだありません。',
+    miniMode: 'ミニ表示', fullMode: '標準ウィンドウ', redactSecrets: 'ローカル機密マスク（送信前に API キー等を自動遮蔽）', redactSecretsHelp: 'API キーや JWT、PEM 鍵をローカルで一時置換してから送信し、応答後に元の値へ復元します。',
   },
   ko: {
     language: '화면 언어', settings: '설정', heading: '요청을 영어 프롬프트로 정리',
@@ -126,6 +129,7 @@ export const COPY = {
     connectionError: '데스크톱 메인 프로세스에 연결하지 못했습니다. PromptFinch를 다시 여세요.', genericError: '작업에 실패했습니다. 다시 시도하거나 설정을 확인하세요.',
     errorBusy: '다른 요청을 처리 중입니다. 기다리거나 먼저 취소하세요.', errorClipboard: '클립보드를 읽거나 쓸 수 없습니다. 다시 시도하세요.', errorSelection: '선택 글자를 읽을 수 없습니다. 다시 선택하거나 직접 복사한 뒤 클립보드를 가져오세요.',
     errorConfig: '모델 설정이 올바르지 않거나 읽을 수 없습니다. 로컬 파일을 확인하고 다시 선택하세요.', errorModel: '모델 요청에 실패했습니다. 모델 이름, 키, 연결 및 한도를 확인하세요.', errorTimeout: '모델 응답 시간이 초과됐습니다. 나중에 다시 시도하세요.', errorNoResult: '아직 복사할 결과가 없습니다.',
+    miniMode: '미니 모드', fullMode: '전체 창', redactSecrets: '로컬 민감 정보 차단 (전송 전 API 키·토큰 자동 마스킹)', redactSecretsHelp: 'API 키·JWT·PEM 키를 로컬에서 임시 치환한 뒤 전송하고 응답 후 로컬에서 복원합니다.',
   },
 };
 
