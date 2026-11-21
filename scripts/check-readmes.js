@@ -42,6 +42,7 @@ if (canonicalOrder.length !== 29) warn(`README.md: expected 29 nav entries, foun
 if (new Set(canonicalOrder).size !== canonicalOrder.length) warn("README.md: duplicate languages in nav");
 const set29 = new Set(canonicalOrder);
 if (!fs.readFileSync(path.join(root, "README.md"), "utf8").includes("logo.svg")) warn("README.md: missing header logo");
+if (!fs.existsSync(path.join(root, "docs/assets/logo.svg"))) warn("docs/assets/logo.svg: missing logo asset on disk");
 for (const e of base)
   if (e.target && !fs.existsSync(path.join(root, e.target))) warn(`README.md: nav target missing: ${e.target}`);
 

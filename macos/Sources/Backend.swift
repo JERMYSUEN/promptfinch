@@ -138,7 +138,7 @@ struct BackendStore {
         guard expected.range(of: #"^[a-f0-9]{64}$"#, options: .regularExpression) != nil else {
             throw ToolError.message(L10n.text(.invalidBackendID))
         }
-        for name in ["lib", "public"] { try requireDirectory(directory.appendingPathComponent(name)) }
+        for name in ["lib"] { try requireDirectory(directory.appendingPathComponent(name)) }
         var hash = SHA256()
         for relative in Self.files {
             let url = directory.appendingPathComponent(relative)

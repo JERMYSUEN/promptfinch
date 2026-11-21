@@ -31,6 +31,14 @@ final class WorkspaceModel: ObservableObject {
     @Published var isError = false
     @Published var config: ServiceConfig?
     @Published var settingsVisible = false
+    @Published var comparisonVisible = false
+    @Published var accessibilityGranted: Bool = TextSelection.authorized
+    @Published var watcherLeft: Bool = SelectionWatcher.leftTrigger {
+        didSet { if oldValue != watcherLeft { setWatcher(left: watcherLeft, right: watcherRight) } }
+    }
+    @Published var watcherRight: Bool = SelectionWatcher.rightTrigger {
+        didSet { if oldValue != watcherRight { setWatcher(left: watcherLeft, right: watcherRight) } }
+    }
     @Published var language = UILanguage.load() {
         didSet {
             language.save()
@@ -418,7 +426,6 @@ private let accent = Color(red: 0.14, green: 0.39, blue: 0.31)
 
 struct WorkspaceView: View {
     @ObservedObject var model: WorkspaceModel
-    @State private var comparisonVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -486,9 +493,9 @@ struct WorkspaceView: View {
                         .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
                     if let result = model.result {
-                        Button(L10n.text(.compareChanges)) { comparisonVisible = true }
+                        Button(L10n.text(.compareChanges)) { model.comparisonVisible = true }
                             .accessibilityIdentifier("compareChanges")
-                            .sheet(isPresented: $comparisonVisible) {
+                            .sheet(isPresented: $model.comparisonVisible) {
                                 PromptComparisonView(original: model.resultOriginal, optimized: result.prompt)
                             }
                         DisclosureGroup(L10n.text(.improvements)) {
@@ -521,13 +528,13 @@ struct WorkspaceView: View {
         }.padding(14).frame(minWidth: 680, minHeight: 480).background(Color(nsColor: .windowBackgroundColor))
             .sheet(isPresented: $model.settingsVisible) { SettingsView(model: model) }
             .environment(\.locale, Locale(identifier: model.language.rawValue))
-            .onChange(of: model.original) { _ in
+            .onReceive(model.$original.dropFirst().removeDuplicates()) { _ in
                 if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.originalChanged)) }
             }
-            .onChange(of: model.task) { _ in
+            .onReceive(model.$task.dropFirst().removeDuplicates()) { _ in
                 if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.purposeChanged)) }
             }
-            .onChange(of: model.targetModel) { _ in
+            .onReceive(model.$targetModel.dropFirst().removeDuplicates()) { _ in
                 if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.targetChanged)) }
             }
     }
@@ -595,9 +602,6 @@ struct PromptComparisonView: View {
 
 struct SettingsView: View {
     @ObservedObject var model: WorkspaceModel
-    @State private var permission = TextSelection.authorized
-    @State private var watcherLeft = SelectionWatcher.leftTrigger
-    @State private var watcherRight = SelectionWatcher.rightTrigger
 
     var body: some View {
         VStack(spacing: 0) {
@@ -627,7 +631,7 @@ struct SettingsView: View {
                     }.disabled(model.unavailable)
                     Divider()
                     Text(L10n.text(.globalShortcut)).font(.headline)
-                    Text(L10n.text(.permissionHelp, L10n.text(permission ? .permissionGranted : .permissionMissing)))
+                    Text(L10n.text(.permissionHelp, L10n.text(model.accessibilityGranted ? .permissionGranted : .permissionMissing)))
                         .font(.system(size: 12)).fixedSize(horizontal: false, vertical: true)
                     HStack {
                         Button(L10n.text(.openAccessibility)) {
@@ -635,16 +639,14 @@ struct SettingsView: View {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
                         }
                         Button(L10n.text(.recheckPermission)) {
-                            permission = TextSelection.authorized
+                            model.accessibilityGranted = TextSelection.authorized
                             model.watcher.start()
                         }
                     }
                     Divider()
                     Text(L10n.text(.selectionHeading)).font(.headline)
-                    Toggle(L10n.text(.showFloatingButton), isOn: $watcherLeft)
-                        .onChange(of: watcherLeft) { _ in model.setWatcher(left: watcherLeft, right: watcherRight) }
-                    Toggle(L10n.text(.showRightClickMenu), isOn: $watcherRight)
-                        .onChange(of: watcherRight) { _ in model.setWatcher(left: watcherLeft, right: watcherRight) }
+                    Toggle(L10n.text(.showFloatingButton), isOn: $model.watcherLeft)
+                    Toggle(L10n.text(.showRightClickMenu), isOn: $model.watcherRight)
                     Text(L10n.text(.explicitActionHelp))
                         .font(.caption).foregroundColor(.secondary)
                     Toggle(L10n.text(.autoPaste), isOn: $model.pasteBackEnabled)
@@ -721,9 +723,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminationTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 940, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 740, height: 540), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "PromptFinch"
-        window.minSize = NSSize(width: 800, height: 670)
+        window.minSize = NSSize(width: 680, height: 480)
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: WorkspaceView(model: model))
         window.center()
@@ -796,6 +798,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor [weak self] in
                 guard let self, TextSelection.authorized else { return }
                 self.permissionTimer?.invalidate(); self.permissionTimer = nil
+                self.model.accessibilityGranted = true
                 self.model.watcher.start()
                 self.model.notify(L10n.text(.permissionActive))
             }
