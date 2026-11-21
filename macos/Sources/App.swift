@@ -422,7 +422,51 @@ final class WorkspaceModel: ObservableObject {
 
 }
 
-private let accent = Color(red: 0.14, green: 0.39, blue: 0.31)
+private let accent = Color(red: 0.16, green: 0.43, blue: 0.90)
+
+func makeFinchMenuBarIcon() -> NSImage {
+    let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
+        NSColor.black.setFill()
+        NSColor.black.setStroke()
+        // Tail
+        let tail = NSBezierPath()
+        tail.move(to: NSPoint(x: 6.2, y: 10.6))
+        tail.curve(to: NSPoint(x: 1.8, y: 13.8), controlPoint1: NSPoint(x: 4.3, y: 11.1), controlPoint2: NSPoint(x: 2.6, y: 12.2))
+        tail.curve(to: NSPoint(x: 6.8, y: 12.2), controlPoint1: NSPoint(x: 3.8, y: 13.9), controlPoint2: NSPoint(x: 5.7, y: 13.2))
+        tail.close()
+        tail.fill()
+        // Body + head silhouette
+        NSBezierPath(ovalIn: NSRect(x: 5.0, y: 7.4, width: 7.6, height: 6.2)).fill()
+        NSBezierPath(ovalIn: NSRect(x: 7.2, y: 3.6, width: 5.4, height: 5.4)).fill()
+        // Crest
+        let crest = NSBezierPath()
+        crest.move(to: NSPoint(x: 8.6, y: 4.1))
+        crest.line(to: NSPoint(x: 8.3, y: 1.9))
+        crest.line(to: NSPoint(x: 10.1, y: 3.2))
+        crest.line(to: NSPoint(x: 10.7, y: 1.5))
+        crest.line(to: NSPoint(x: 11.4, y: 3.8))
+        crest.close()
+        crest.fill()
+        // Beak
+        let beak = NSBezierPath()
+        beak.move(to: NSPoint(x: 12.2, y: 5.1))
+        beak.line(to: NSPoint(x: 15.8, y: 6.3))
+        beak.line(to: NSPoint(x: 12.2, y: 7.5))
+        beak.close()
+        beak.fill()
+        // Prompt perch bar
+        let perch = NSBezierPath()
+        perch.lineWidth = 1.4
+        perch.lineCapStyle = .round
+        perch.move(to: NSPoint(x: 4.0, y: 15.6))
+        perch.line(to: NSPoint(x: 14.5, y: 15.6))
+        perch.stroke()
+        return true
+    }
+    image.isTemplate = true
+    image.accessibilityDescription = "PromptFinch"
+    return image
+}
 
 struct WorkspaceView: View {
     @ObservedObject var model: WorkspaceModel
@@ -761,7 +805,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(item)
         }
         if statusItem == nil { statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength) }
-        statusItem.button?.image = NSImage(systemSymbolName: "text.bubble", accessibilityDescription: "PromptFinch")
+        statusItem.button?.image = makeFinchMenuBarIcon()
         statusItem.menu = menu
 
         let main = NSMenu()

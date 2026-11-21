@@ -131,6 +131,9 @@ struct CoreTests {
                   "real context action buttons are localized")
             check(items.allSatisfy { $0.frame.width >= $0.intrinsicContentSize.width },
                   "context menu labels fit all supported languages")
+            let separators = localizedMenu.contentView!.subviews.compactMap { $0 as? NSBox }
+            check(separators.count == 1 && separators[0].frame.width == localizedMenu.frame.width - 20,
+                  "context menu separator resizes with localized menu width")
             localizedMenu.dismiss()
             check(!invoked, "changing or dismissing a localized menu never generates")
             let localizedBar = FloatingBarPanel()
@@ -371,6 +374,31 @@ struct CoreTests {
         check(clipboardBehavior[2], "consecutive pastes restore the original clipboard")
         for (value, message) in await testPasteBackFlow() { check(value, message) }
         for (value, message) in await testTerminalRightClickFlow() { check(value, message) }
+        let logDir = FileManager.default.temporaryDirectory.appendingPathComponent("PromptFinch-log-test-\(UUID().uuidString)", isDirectory: true)
+        let logFile = logDir.appendingPathComponent("debug.log")
+        defer { try? FileManager.default.removeItem(at: logDir) }
+        for index in 0..<40 {
+            DebugLog.write("entry-\(index) " + String(repeating: "a", count: 40), to: logFile, maxBytes: 512, retainBytes: 180)
+        }
+        let logData = (try? Data(contentsOf: logFile)) ?? Data()
+        let logText = String(data: logData, encoding: .utf8) ?? ""
+        check(logData.count <= 512 && logText.contains("entry-39") && !logText.contains("entry-0 "),
+              "debug log enforces size ceiling while retaining newest entries")
+
+        let panelLayoutTest = ResultPanel()
+        panelLayoutTest.finish(prompt: "Test prompt", status: "Ready", canPasteBack: false, error: false)
+        let panelButtons = panelLayoutTest.contentView!.subviews.compactMap { $0 as? NSButton }
+        if let copyBtn = panelButtons.first(where: { $0.title == L10n.text(.copy) }) {
+            check(copyBtn.frame.minX == 16, "copy button anchors to left margin when paste button is hidden")
+        }
+        panelLayoutTest.finish(prompt: "Test prompt", status: "Ready", canPasteBack: true, error: false)
+        if let pasteBtn = panelButtons.first(where: { $0.title == L10n.text(.pasteBack) }),
+           let copyBtn = panelButtons.first(where: { $0.title == L10n.text(.copy) }) {
+            check(!pasteBtn.isHidden && copyBtn.frame.minX == pasteBtn.frame.maxX + 8,
+                  "copy button follows paste button cleanly when paste-back is available")
+        }
+        panelLayoutTest.orderOut(nil)
+
         await checkWorkspacePasteFeedback(check: { value, message in check(value, message) })
         print("Swift 核心、本機 API、選取目標與剪貼簿競態：\(checks) 項檢查通過。")
     }

@@ -45,14 +45,21 @@ function dropCandidate() {
   }
 }
 function appIcon() {
+  // Unified PromptFinch blue finch badge bitmap (BGRA) for tray/window icon.
   const pixels = Buffer.alloc(32 * 32 * 4);
   for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-    const white = (x >= 9 && x < 14 && y >= 7 && y < 26)
-      || (x >= 14 && x < 23 && ((y >= 7 && y < 12) || (y >= 16 && y < 20)))
-      || (x >= 19 && x < 24 && y >= 11 && y < 17);
+    const dx = x - 15.5, dy = y - 15.5, dist = Math.hypot(dx, dy);
     const index = (y * 32 + x) * 4;
-    pixels[index] = white ? 255 : 103; pixels[index + 1] = white ? 255 : 134;
-    pixels[index + 2] = white ? 255 : 41; pixels[index + 3] = 255;
+    if (dist > 15.2) continue;
+    const isRing = dist >= 13.0;
+    const inBody = ((x - 15) ** 2) / 36 + ((y - 18) ** 2) / 25 <= 1;
+    const inHead = ((x - 15.5) ** 2) + ((y - 11.5) ** 2) <= 13;
+    const inBeak = x >= 19 && x <= 23 && Math.abs(y - 12) <= Math.max(0.5, (23 - x) * 0.5);
+    const inPerch = y >= 24 && y <= 25 && x >= 8 && x <= 24;
+    if (isRing) { pixels[index] = 240; pixels[index + 1] = 165; pixels[index + 2] = 42; pixels[index + 3] = 255; }
+    else if (inBeak || inPerch) { pixels[index] = 253; pixels[index + 1] = 242; pixels[index + 2] = 227; pixels[index + 3] = 255; }
+    else if (inHead || inBody) { pixels[index] = 250; pixels[index + 1] = 190; pixels[index + 2] = 85; pixels[index + 3] = 255; }
+    else { pixels[index] = 48; pixels[index + 1] = 30; pixels[index + 2] = 16; pixels[index + 3] = 255; }
   }
   return nativeImage.createFromBitmap(pixels, { width: 32, height: 32, scaleFactor: 1 });
 }

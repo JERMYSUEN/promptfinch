@@ -13,19 +13,41 @@ private let contextMenuDismissalMarker: Int64 = 0x50464D454E55
 
 // Flow tracing without content: statuses and counts only, never prompt text.
 enum DebugLog {
+    static let maxLogBytes = 1_048_576
+    static let retainedBytes = 262_144
     static let fileURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("PromptSelection/debug.log", isDirectory: false)
 
     static func write(_ line: String) {
+        write(line, to: fileURL, maxBytes: maxLogBytes, retainBytes: retainedBytes)
+    }
+
+    static func write(_ line: String, to targetURL: URL, maxBytes: Int = maxLogBytes, retainBytes: Int = retainedBytes) {
         let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
         let text = "[\(stamp)] \(line)\n"
-        try? FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if let handle = try? FileHandle(forWritingTo: fileURL) {
+        guard let payload = text.data(using: .utf8) else { return }
+        let manager = FileManager.default
+        try? manager.createDirectory(at: targetURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if let attrs = try? manager.attributesOfItem(atPath: targetURL.path),
+           let size = (attrs[.size] as? NSNumber)?.intValue,
+           size + payload.count > maxBytes,
+           let existing = try? Data(contentsOf: targetURL) {
+            let keep = min(existing.count, max(0, min(retainBytes, maxBytes - payload.count)))
+            var tail = keep > 0 ? existing.suffix(keep) : Data()
+            if let newline = tail.firstIndex(of: 0x0A), newline + 1 < tail.endIndex {
+                tail = tail.suffix(from: newline + 1)
+            }
+            var compacted = Data(tail)
+            compacted.append(payload)
+            try? compacted.write(to: targetURL, options: .atomic)
+            return
+        }
+        if let handle = try? FileHandle(forWritingTo: targetURL) {
             handle.seekToEndOfFile()
-            handle.write(text.data(using: .utf8)!)
+            handle.write(payload)
             handle.closeFile()
         } else {
-            try? text.data(using: .utf8)?.write(to: fileURL)
+            try? payload.write(to: targetURL)
         }
     }
 }
@@ -655,7 +677,9 @@ final class SelectionWatcher {
         let session = UUID()
         let offeredAt = now()
         barSessionID = session
-        let top = capture.bounds.map { TextSelection.topLeftPoint(from: $0) } ?? mouse
+        // Convert Quartz mouse coordinates to AppKit screen coordinates when AX bounds are unavailable.
+        let top = capture.bounds.map { TextSelection.topLeftPoint(from: $0) }
+            ?? TextSelection.appKitPoint(fromQuartz: mouse)
         panel.configure(text: capture.text) { [weak self] barTopLeft in
             guard let self, self.barSessionID == session else { return }
             let frontPID = self.frontmostPID()
@@ -725,6 +749,8 @@ final class SelectionWatcher {
 
 @MainActor
 final class SelectionActionMenu: NSPanel {
+    private let titleLabel = NSTextField(labelWithString: "PromptFinch")
+    private let separator = NSBox(frame: NSRect(x: 10, y: 59, width: 212, height: 1))
     private let convert = SelectionMenuButton(title: "", target: nil, action: nil)
     private let cancel = SelectionMenuButton(title: "", target: nil, action: nil)
     private var onConvert: ((CGPoint) -> Void)?
@@ -745,17 +771,15 @@ final class SelectionActionMenu: NSPanel {
         view.setAccessibilityRole(.menu)
         view.setAccessibilityLabel(L10n.text(.actionMenu))
 
-        let title = NSTextField(labelWithString: "PromptFinch")
-        title.font = .systemFont(ofSize: 11)
-        title.textColor = .secondaryLabelColor
-        title.frame = NSRect(x: 12, y: 7, width: 208, height: 16)
-        view.addSubview(title)
+        titleLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        titleLabel.textColor = .secondaryLabelColor
+        titleLabel.frame = NSRect(x: 12, y: 7, width: 208, height: 16)
+        view.addSubview(titleLabel)
         convert.title = "⇄  " + L10n.text(.convert)
         convert.target = self; convert.action = #selector(chooseConversion)
         convert.frame = NSRect(x: 5, y: 25, width: 222, height: 30)
         convert.toolTip = L10n.text(.convertTooltip)
         view.addSubview(convert)
-        let separator = NSBox(frame: NSRect(x: 10, y: 59, width: 212, height: 1))
         separator.boxType = .separator
         view.addSubview(separator)
         cancel.title = L10n.text(.cancel)
@@ -777,6 +801,8 @@ final class SelectionActionMenu: NSPanel {
         contentView?.setAccessibilityLabel(L10n.text(.actionMenu))
         let width = max(232, ceil(convert.intrinsicContentSize.width) + 30)
         setContentSize(NSSize(width: width, height: 94))
+        titleLabel.frame.size.width = width - 24
+        separator.frame.size.width = width - 20
         convert.frame.size.width = width - 10
         cancel.frame.size.width = width - 10
     }
@@ -872,19 +898,21 @@ final class FloatingBarPanel: NSPanel {
         isMovable = false; hasShadow = true
 
         let effect = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 158, height: 30))
-        effect.material = .hudWindow; effect.blendingMode = .behindWindow
+        effect.material = .popover; effect.blendingMode = .behindWindow
         effect.state = .active; effect.wantsLayer = true
         effect.autoresizingMask = [.width, .height]
-        effect.layer?.cornerRadius = 9; effect.layer?.masksToBounds = true
+        effect.layer?.cornerRadius = 15; effect.layer?.masksToBounds = true
+        effect.layer?.borderWidth = 0.5
+        effect.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.35).cgColor
         button.isBordered = false
-        button.contentTintColor = .white
+        button.contentTintColor = .labelColor
         button.font = NSFont.systemFont(ofSize: 12.5, weight: .medium)
         button.setButtonType(.momentaryChange)
-        button.frame = effect.bounds.insetBy(dx: 8, dy: 2)
+        button.frame = effect.bounds.insetBy(dx: 10, dy: 2)
         button.autoresizingMask = [.width, .height]
         button.target = self; button.action = #selector(fire)
         effect.addSubview(button)
-        noticeLabel.textColor = .white
+        noticeLabel.textColor = .labelColor
         noticeLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
         noticeLabel.alignment = .center
         noticeLabel.frame = effect.bounds.insetBy(dx: 12, dy: 5)
@@ -922,9 +950,9 @@ final class FloatingBarPanel: NSPanel {
 
     func placeNear(topLeft: CGPoint) {
         let wanted = NSRect(x: topLeft.x, y: topLeft.y + 6, width: frame.width, height: frame.height)
-        let visible = NSScreen.screens.first(where: { $0.visibleFrame.intersects(wanted) })?.visibleFrame ?? wanted
+        let visible = NSScreen.screens.first(where: { $0.frame.contains(topLeft) || $0.visibleFrame.intersects(wanted) })?.visibleFrame ?? wanted
         let x = min(max(wanted.minX, visible.minX + 4), visible.maxX - wanted.width - 4)
-        let y = min(wanted.maxY, visible.maxY - 4)
+        let y = min(max(wanted.maxY, visible.minY + wanted.height + 4), visible.maxY - 4)
         setFrameTopLeftPoint(NSPoint(x: x, y: y))
     }
 
@@ -972,19 +1000,21 @@ final class ResultPanel: NSPanel {
 
         let container = FlippedView(frame: NSRect(x: 0, y: 0, width: 470, height: 300))
         let effect = NSVisualEffectView(frame: container.bounds)
-        effect.material = .hudWindow; effect.blendingMode = .behindWindow
+        effect.material = .popover; effect.blendingMode = .behindWindow
         effect.state = .active; effect.wantsLayer = true
         effect.layer?.cornerRadius = 12; effect.layer?.masksToBounds = true
+        effect.layer?.borderWidth = 0.5
+        effect.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.35).cgColor
         effect.autoresizingMask = [.width, .height]
         container.addSubview(effect)
 
         header.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
-        header.textColor = .white
+        header.textColor = .labelColor
         header.frame = NSRect(x: 16, y: 12, width: 300, height: 22)
         container.addSubview(header)
 
         closeButton.isBordered = false
-        closeButton.contentTintColor = NSColor.white.withAlphaComponent(0.7)
+        closeButton.contentTintColor = .secondaryLabelColor
         closeButton.font = NSFont.systemFont(ofSize: 13)
         closeButton.frame = NSRect(x: 432, y: 10, width: 26, height: 22)
         closeButton.target = self; closeButton.action = #selector(closeTapped)
@@ -997,7 +1027,7 @@ final class ResultPanel: NSPanel {
         textView.isEditable = false; textView.isSelectable = true
         textView.drawsBackground = false; textView.backgroundColor = .clear
         textView.font = NSFont.systemFont(ofSize: 13)
-        textView.textColor = .white
+        textView.textColor = .labelColor
         textView.textContainerInset = NSSize(width: 6, height: 8)
         scroll.documentView = textView
         container.addSubview(scroll)
@@ -1007,13 +1037,13 @@ final class ResultPanel: NSPanel {
         spinner.isDisplayedWhenStopped = false
         container.addSubview(spinner)
         busyLabel.font = NSFont.systemFont(ofSize: 12)
-        busyLabel.textColor = NSColor.white.withAlphaComponent(0.8)
+        busyLabel.textColor = .secondaryLabelColor
         busyLabel.alignment = .center
         busyLabel.frame = NSRect(x: 16, y: 122, width: 438, height: 18)
         container.addSubview(busyLabel)
 
         statusLine.font = NSFont.systemFont(ofSize: 12)
-        statusLine.textColor = NSColor.white.withAlphaComponent(0.75)
+        statusLine.textColor = .secondaryLabelColor
         statusLine.frame = NSRect(x: 16, y: 204, width: 438, height: 36)
         container.addSubview(statusLine)
 
@@ -1023,10 +1053,20 @@ final class ResultPanel: NSPanel {
             button.target = self; button.action = action
             container.addSubview(button)
         }
-        pasteButton.frame = NSRect(x: 16, y: 248, width: 190, height: 30)
-        copyButton.frame = NSRect(x: 214, y: 248, width: 110, height: 30)
+        layoutActionButtons()
         contentView = container
         closeButton.setAccessibilityLabel(L10n.text(.close))
+    }
+
+    private func layoutActionButtons() {
+        let pasteWidth = max(130, ceil(pasteButton.intrinsicContentSize.width) + 22)
+        let copyWidth = max(92, ceil(copyButton.intrinsicContentSize.width) + 22)
+        if pasteButton.isHidden {
+            copyButton.frame = NSRect(x: 16, y: 248, width: copyWidth, height: 30)
+        } else {
+            pasteButton.frame = NSRect(x: 16, y: 248, width: min(220, pasteWidth), height: 30)
+            copyButton.frame = NSRect(x: pasteButton.frame.maxX + 8, y: 248, width: copyWidth, height: 30)
+        }
     }
 
     override var canBecomeKey: Bool { false }
@@ -1044,6 +1084,7 @@ final class ResultPanel: NSPanel {
         busyLabel.stringValue = L10n.text(.converting)
         closeButton.setAccessibilityLabel(L10n.text(.close))
         statusLine.stringValue = L10n.relocalize(statusLine.stringValue, from: previous)
+        layoutActionButtons()
     }
 
     func present(anchor: CGPoint, eventSequence: UInt64? = nil) {
@@ -1051,7 +1092,7 @@ final class ResultPanel: NSPanel {
         let matchingScreen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(wanted) })
         let visible = matchingScreen?.visibleFrame ?? wanted
         let x = min(max(wanted.minX, visible.minX + 4), visible.maxX - wanted.width - 4)
-        let y = min(wanted.maxY, visible.maxY - 4)
+        let y = min(max(wanted.maxY, visible.minY + wanted.height + 4), visible.maxY - 4)
         setFrameTopLeftPoint(NSPoint(x: x, y: y))
         textView.string = ""
         statusLine.stringValue = ""
@@ -1064,9 +1105,10 @@ final class ResultPanel: NSPanel {
         busy(false)
         textView.string = prompt
         statusLine.stringValue = status
-        statusLine.textColor = error ? NSColor.systemOrange : NSColor.white.withAlphaComponent(0.75)
+        statusLine.textColor = error ? NSColor.systemOrange : .secondaryLabelColor
         pasteButton.isHidden = !canPasteBack
         copyButton.isHidden = false
+        layoutActionButtons()
         orderFrontRegardless()
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") finished=true visible=\(isVisible) promptUTF16=\(prompt.utf16.count) pasteButton=\(!pasteButton.isHidden) error=\(error)")
     }
@@ -1077,6 +1119,7 @@ final class ResultPanel: NSPanel {
         statusLine.stringValue = status
         statusLine.textColor = .systemOrange
         pasteButton.isHidden = true; copyButton.isHidden = true
+        layoutActionButtons()
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") failed=true visible=\(isVisible)")
     }
 
@@ -1084,7 +1127,7 @@ final class ResultPanel: NSPanel {
     // reopen a closed panel or replace the generated text/action buttons.
     func updateStatus(_ status: String, error: Bool) {
         statusLine.stringValue = status
-        statusLine.textColor = error ? NSColor.systemOrange : NSColor.white.withAlphaComponent(0.75)
+        statusLine.textColor = error ? NSColor.systemOrange : .secondaryLabelColor
     }
 
     private func busy(_ running: Bool) {
