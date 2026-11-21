@@ -1,0 +1,9 @@
+/* PromptFinch content host anchor stays isolated inside Shadow DOM. */
+#promptfinch-ext-host {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}

@@ -1,0 +1,114 @@
+name: Release macOS Universal
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_dmg:
+        description: Build macOS DMG disk image alongside ZIP
+        required: false
+        default: true
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build-universal:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run checks and Swift regression suite
+        run: |
+          npm run check
+          npm run check:docs
+          npm test
+          npm run test:mac
+
+      - name: Build Universal macOS App (arm64 + x86_64)
+        env:
+          APPLE_CERT_P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          SDK=$(node -e "import('./scripts/macos-sdk.js').then(m => console.log(m.selectMacOSSDK('build/swift-cache')))")
+          SWIFT_FILES="macos/Sources/Localization.swift macos/Sources/Core.swift macos/Sources/NativeOptimizer.swift macos/Sources/Backend.swift macos/Sources/Selection.swift macos/Sources/Watcher.swift macos/Sources/MiniUI.swift macos/Sources/App.swift"
+
+          npm run build:mac
+          mkdir -p build/universal dist-release
+
+          xcrun swiftc -sdk "$SDK" -swift-version 5 -O -target arm64-apple-macosx13.0 \
+            -parse-as-library $SWIFT_FILES -o build/universal/PromptSelection-arm64
+          xcrun swiftc -sdk "$SDK" -swift-version 5 -O -target x86_64-apple-macosx13.0 \
+            -parse-as-library $SWIFT_FILES -o build/universal/PromptSelection-x86_64
+          lipo -create -output build/PromptFinch.app/Contents/MacOS/PromptSelection \
+            build/universal/PromptSelection-arm64 \
+            build/universal/PromptSelection-x86_64
+          lipo -info build/PromptFinch.app/Contents/MacOS/PromptSelection
+          xattr -cr build/PromptFinch.app
+
+          if [ -n "${APPLE_CERT_P12_BASE64:-}" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "Configuring Developer ID signing keychain..."
+            KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+            CERT_PATH="$RUNNER_TEMP/dev-id.p12"
+            echo "$APPLE_CERT_P12_BASE64" | base64 --decode > "$CERT_PATH"
+            security create-keychain -p "$APPLE_CERT_PASSWORD" "$KEYCHAIN_PATH"
+            security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+            security unlock-keychain -p "$APPLE_CERT_PASSWORD" "$KEYCHAIN_PATH"
+            security import "$CERT_PATH" -P "$APPLE_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+            security list-keychain -d user -s "$KEYCHAIN_PATH"
+            codesign --force --deep --options runtime --timestamp --sign "$APPLE_SIGNING_IDENTITY" build/PromptFinch.app
+          else
+            echo "Developer ID secrets not configured; applying ad-hoc signature for unsigned preview build."
+            codesign --force --deep --sign - build/PromptFinch.app
+          fi
+          codesign --verify --deep --strict build/PromptFinch.app
+
+          ZIP_PATH="dist-release/PromptFinch-${VERSION}-macos-universal.zip"
+          ditto --norsrc --noextattr -c -k --keepParent build/PromptFinch.app "$ZIP_PATH"
+
+          if [ -n "${APPLE_NOTARY_KEY_BASE64:-}" ] && [ -n "${APPLE_NOTARY_KEY_ID:-}" ] && [ -n "${APPLE_NOTARY_ISSUER_ID:-}" ]; then
+            echo "Submitting to Apple Notary Service..."
+            KEY_FILE="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+            echo "$APPLE_NOTARY_KEY_BASE64" | base64 --decode > "$KEY_FILE"
+            xcrun notarytool submit "$ZIP_PATH" \
+              --key "$KEY_FILE" \
+              --key-id "$APPLE_NOTARY_KEY_ID" \
+              --issuer "$APPLE_NOTARY_ISSUER_ID" \
+              --wait
+            xcrun stapler staple build/PromptFinch.app
+            rm -f "$ZIP_PATH"
+            ditto --norsrc --noextattr -c -k --keepParent build/PromptFinch.app "$ZIP_PATH"
+          fi
+
+          if [ "${{ inputs.create_dmg != false }}" = "true" ]; then
+            DMG_STAGE="$RUNNER_TEMP/dmg-stage"
+            rm -rf "$DMG_STAGE"
+            mkdir -p "$DMG_STAGE"
+            ditto --norsrc --noextattr build/PromptFinch.app "$DMG_STAGE/PromptFinch.app"
+            ln -s /Applications "$DMG_STAGE/Applications"
+            hdiutil create -volname "PromptFinch ${VERSION}" \
+              -srcfolder "$DMG_STAGE" -ov -format UDZO \
+              "dist-release/PromptFinch-${VERSION}-macos-universal.dmg"
+          fi
+
+          (cd dist-release && shasum -a 256 PromptFinch-* > SHA256SUMS)
+          cat dist-release/SHA256SUMS
+
+      - name: Upload macOS Universal Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: promptfinch-macos-universal
+          path: dist-release/*
+          if-no-files-found: error

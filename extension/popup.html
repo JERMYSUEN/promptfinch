@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PromptFinch</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="head">
+    <div class="brand"><span class="dot"></span><span>PromptFinch</span></div>
+    <button type="button" id="toggle-settings" class="ghost">Settings</button>
+  </header>
+
+  <section id="settings-view" class="settings" hidden>
+    <label>Provider Preset
+      <select id="preset">
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic Claude</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="ollama">Ollama (Local)</option>
+        <option value="local">Local PromptFinch Server (127.0.0.1:3210)</option>
+      </select>
+    </label>
+    <label>API Base URL
+      <input id="base-url" type="url" autocomplete="off" spellcheck="false">
+    </label>
+    <label>Model Name
+      <input id="model" type="text" autocomplete="off" spellcheck="false">
+    </label>
+    <label>API Key (stored locally in chrome.storage.local)
+      <input id="api-key" type="password" autocomplete="off" placeholder="Optional for Ollama / Local">
+    </label>
+    <label class="check">
+      <input id="redact-secrets" type="checkbox">
+      <span>Local Secret Shield (mask API keys &amp; tokens before sending)</span>
+    </label>
+    <div class="row">
+      <button type="button" id="save-settings" class="primary">Save</button>
+      <button type="button" id="test-settings" class="ghost">Test Connection</button>
+    </div>
+  </section>
+
+  <main id="studio-view">
+    <div class="controls">
+      <select id="task" aria-label="Task">
+        <option value="general">General</option>
+        <option value="coding">Coding</option>
+        <option value="writing">Writing</option>
+        <option value="analysis">Analysis</option>
+        <option value="summary">Summary</option>
+        <option value="marketing">Marketing</option>
+      </select>
+      <select id="prompt-language" aria-label="Prompt Language">
+        <option value="en">EN</option>
+        <option value="zh-Hant">繁體中文</option>
+      </select>
+    </div>
+    <textarea id="input" rows="4" placeholder="Paste or type a rough request in any language…"></textarea>
+    <div class="row">
+      <button type="button" id="refine" class="primary">Refine Prompt</button>
+      <button type="button" id="clear" class="ghost">Clear</button>
+    </div>
+    <div id="result-wrap" hidden>
+      <div class="result-head">
+        <span>Refined Prompt</span>
+        <button type="button" id="copy" class="ghost">Copy</button>
+      </div>
+      <textarea id="output" rows="5" readonly></textarea>
+      <details id="notes" hidden><summary id="notes-summary"></summary><ul id="notes-list"></ul></details>
+    </div>
+  </main>
+
+  <p id="status" class="status" role="status"></p>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

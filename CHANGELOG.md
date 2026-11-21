@@ -4,11 +4,22 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 
 ## [Unreleased]
 
+### Added
+
+- Native Swift direct multi-provider engine (`macos/Sources/NativeOptimizer.swift`) supporting DeepSeek, OpenAI, Anthropic Claude (with prompt caching `cache_control: ephemeral`), Google Gemini, Ollama local models, and Custom endpoints with macOS Keychain secret storage, connection testing, app-aware task presets, and opt-in Local Secret Shield — removing the external Node.js 22 runtime prerequisite for direct-mode macOS users while preserving legacy `.env` backend fallback.
+- Miniaturized UI across macOS (`macos/Sources/MiniUI.swift`, `macos/Sources/Watcher.swift`) and Electron desktop (`desktop/`): compact dynamic-height floating `ResultPanel` (`410pt` width) with inline collapsible editing-notes drawer, `360px` menu-bar popover with in-memory session history, Menu-Bar-Only (`.accessory`) mode toggle, compact 4-tab Settings (`General`, `Model`, `Triggers`, `Privacy`), and Electron always-on-top Mini Mode (`400×540`) + Local Secret Shield toggle.
+- Native Anthropic Messages API and Google Gemini `generateContent` adapters, opt-in `redactSecrets` masking/restoration, `POST /api/test-connection`, and `POST /api/optimize/stream` (SSE) in `lib/optimizer.js` and `server.js`.
+- Manifest V3 browser extension (`extension/`) for ChatGPT, Claude, Gemini, GitHub, Notion, and Perplexity with Shadow-DOM selection micro-pill, direct DOM text replacement, multi-provider/local-server popup, and Local Secret Shield.
+- Universal macOS (`arm64` + `x86_64`) release automation workflow (`.github/workflows/release-macos.yml`) supporting DMG/ZIP packaging and optional Developer ID signing & `xcrun notarytool` notarization.
+
 ### Removed
 
 - Remove the browser workspace. macOS keeps its local API, and the Windows/Linux preview keeps the Electron workspace. The server no longer serves HTML, scripts or stylesheets.
 
 ### Fixed
+
+- Remove stale `public` directory check from `BackendStore.files` verification in `macos/Sources/Backend.swift`, eliminate SwiftUI `@State` macro dependencies and macOS 14 `.onChange` deprecations, and isolate `scripts/build-macos.js` staging/signing inside a clean temp directory (`ditto --norsrc --noextattr`).
+- Fix Quartz→AppKit Y-flip when AX selection bounds are nil, clamp floating panels inside visible screen bounds, add bounded log compaction (`1 MB` ceiling) to `DebugLog`, fix Light Mode popover contrast and button layout gaps in `FloatingBarPanel`/`ResultPanel`, and unify the PromptFinch blue finch icon across macOS and Electron.
 
 - Clear stale macOS model readiness during configuration switches, restarts and health checks. Failed changes display a ready backend only after a successful, health-verified rollback; lifecycle regressions cover failure and recovery.
 - Preserve missing-versus-insufficient execution gates and no-question fallback handling in editing/revision. Treat reviewer feedback as fallible, and describe editing notes against the original request rather than an internal draft. Add eight synthetic branch/control cases; provider review remains optional and is not a correctness guarantee.
