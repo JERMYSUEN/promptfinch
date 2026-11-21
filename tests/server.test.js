@@ -680,3 +680,112 @@ test('使用者取消會中斷伺服器對模型的請求', { timeout: 3000 }, a
   await rejected;
   await closed;
 });
+
+test('原生 Anthropic Messages API 支援提示快取與格式正規化', async t => {
+  let received;
+  let apiKeyHeader;
+  let versionHeader;
+  let path;
+  const provider = await listen(createServer(async (request, response) => {
+    apiKeyHeader = request.headers['x-api-key'];
+    versionHeader = request.headers['anthropic-version'];
+    path = request.url;
+    let body = '';
+    for await (const chunk of request) body += chunk;
+    received = JSON.parse(body);
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({
+      stop_reason: 'end_turn',
+      content: [{ type: 'text', text: JSON.stringify(validResult) }],
+    }));
+  }), t);
+  const url = await app(t, {
+    OPTIMIZER_MODE: 'live', LLM_PROVIDER: 'anthropic',
+    LLM_API_KEY: 'ant-test-key', LLM_MODEL: 'claude-haiku-4-5', LLM_BASE_URL: `${provider}/v1`,
+  });
+  const result = await post(url, { prompt: '整理這段需求', promptLanguage: 'en' });
+  assert.equal(result.status, 200);
+  assert.equal(path, '/v1/messages');
+  assert.equal(apiKeyHeader, 'ant-test-key');
+  assert.equal(versionHeader, '2023-06-01');
+  assert.equal(received.system[0].cache_control.type, 'ephemeral');
+  assert.equal(result.data.prompt, validResult.prompt);
+});
+
+test('原生 Google Gemini generateContent API 支援結構化 JSON 回應', async t => {
+  let received;
+  let apiKeyHeader;
+  let path;
+  const provider = await listen(createServer(async (request, response) => {
+    apiKeyHeader = request.headers['x-goog-api-key'];
+    path = request.url;
+    let body = '';
+    for await (const chunk of request) body += chunk;
+    received = JSON.parse(body);
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({
+      candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(validResult) }] } }],
+    }));
+  }), t);
+  const url = await app(t, {
+    OPTIMIZER_MODE: 'live', LLM_PROVIDER: 'gemini',
+    LLM_API_KEY: 'gem-test-key', LLM_MODEL: 'gemini-2.5-flash-lite', LLM_BASE_URL: `${provider}/v1beta`,
+  });
+  const result = await post(url, { prompt: '整理這段需求', promptLanguage: 'en' });
+  assert.equal(result.status, 200);
+  assert.equal(path, '/v1beta/models/gemini-2.5-flash-lite:generateContent');
+  assert.equal(apiKeyHeader, 'gem-test-key');
+  assert.equal(received.generationConfig.responseMimeType, 'application/json');
+  assert.equal(result.data.prompt, validResult.prompt);
+});
+
+test('啟用本機敏感遮罩時，金鑰不外洩給模型且於本地原樣還原', async t => {
+  let upstreamPayload = '';
+  const fakeKey = 'sk-proj-TestSecretToken1234567890abcd';
+  const fakeGh = 'ghp_TestGitHubToken1234567890abcdef';
+  const url = await providerApp(t, async (request, response) => {
+    let body = '';
+    for await (const chunk of request) body += chunk;
+    upstreamPayload = body;
+    const sent = JSON.parse(JSON.parse(body).messages[1].content).originalPrompt;
+    sendCompletion(response, {
+      prompt: `Use credentials from: ${sent}`,
+      improvements: ['已整理指令。'],
+      assumptions: [],
+    });
+  });
+  const result = await post(url, {
+    prompt: `Debug auth with ${fakeKey} and ${fakeGh}`,
+    promptLanguage: 'en',
+    redactSecrets: true,
+  });
+  assert.equal(result.status, 200);
+  assert.ok(!upstreamPayload.includes(fakeKey), 'raw OpenAI key must never leave device');
+  assert.ok(!upstreamPayload.includes(fakeGh), 'raw GitHub token must never leave device');
+  assert.ok(upstreamPayload.includes('<<PF_SECRET_1>>'));
+  assert.ok(result.data.prompt.includes(fakeKey), 'key restored locally');
+  assert.ok(result.data.prompt.includes(fakeGh), 'GitHub token restored locally');
+  assert.equal(result.data.secretsRedacted, 2);
+});
+
+test('連線測試端點與 SSE 串流端點回報狀態與完整結果', async t => {
+  const mockUrl = await app(t);
+  const mockTest = await fetch(`${mockUrl}/api/test-connection`, { method: 'POST' });
+  assert.equal(mockTest.status, 200);
+  assert.equal((await mockTest.json()).mode, 'mock');
+
+  const streamResponse = await fetch(`${mockUrl}/api/optimize/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: '請寫一句問候語', promptLanguage: 'en' }),
+  });
+  assert.equal(streamResponse.status, 200);
+  assert.match(streamResponse.headers.get('content-type'), /text\/event-stream/);
+  const events = (await streamResponse.text())
+    .split('\n\n')
+    .filter(line => line.startsWith('data: '))
+    .map(line => JSON.parse(line.slice(6)));
+  assert.equal(events[0].type, 'phase');
+  assert.equal(events.at(-1).type, 'result');
+  assert.equal(events.at(-1).data.mode, 'mock');
+});

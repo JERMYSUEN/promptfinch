@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { isIP } from 'node:net';
-import { AppError, MAX_PROMPT_LENGTH, TASKS, NOTES_LANGUAGES, readConfig, validateInput, optimize } from './lib/optimizer.js';
+import { AppError, MAX_PROMPT_LENGTH, TASKS, NOTES_LANGUAGES, readConfig, validateInput, optimize, optimizeStream, testProviderConnection } from './lib/optimizer.js';
 
 const BODY_LIMIT = 98304;
 
@@ -134,11 +134,60 @@ export function createApp(config = readConfig()) {
           service: 'prompt-studio', apiVersion: 2,
           backendID: config.backendID || null,
           backendInstanceID: config.backendInstanceID || null,
-          mode: config.mode, ready: config.mode === 'mock' || Boolean(config.apiKey && config.model),
+          mode: config.mode, provider: config.provider || 'openai',
+          ready: config.mode === 'mock' || Boolean(config.apiKey && config.model),
           generationModel: config.mode === 'live' ? config.model || null : null,
           qualityReviewEnabled: config.mode === 'live' && config.qualityReview === true,
           maxPromptLength: MAX_PROMPT_LENGTH, tasks: TASKS, promptLanguages: ['zh-Hant', 'en'], notesLanguages: NOTES_LANGUAGES,
         });
+        return;
+      }
+      if (pathname === '/api/test-connection' && request.method === 'POST') {
+        if (activeRequests >= 4) throw new AppError(429, '目前正在處理其他優化，請稍後再試。');
+        activeRequests++;
+        const cancellation = new AbortController();
+        const cancel = () => cancellation.abort();
+        response.on('close', cancel);
+        try {
+          const outcome = await testProviderConnection(config, cancellation.signal);
+          if (!response.destroyed) sendJson(response, 200, outcome);
+        } finally {
+          response.off('close', cancel);
+          activeRequests--;
+        }
+        return;
+      }
+      if (pathname === '/api/optimize/stream' && request.method === 'POST') {
+        if (activeRequests >= 4) throw new AppError(429, '目前正在處理其他優化，請稍後再試。');
+        activeRequests++;
+        const cancellation = new AbortController();
+        const cancel = () => cancellation.abort();
+        response.on('close', cancel);
+        try {
+          const input = validateInput(await readJson(request));
+          response.writeHead(200, {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'Connection': 'keep-alive',
+          });
+          const emitEvent = payload => {
+            if (!response.destroyed) response.write(`data: ${JSON.stringify(payload)}\n\n`);
+          };
+          try {
+            await optimizeStream(input, config, emitEvent, cancellation.signal);
+          } catch (error) {
+            emitEvent({
+              type: 'error',
+              status: error instanceof AppError ? error.status : 500,
+              error: error instanceof AppError ? error.message : '服務暫時無法完成請求，請稍後再試。',
+            });
+          } finally {
+            if (!response.destroyed) response.end();
+          }
+        } finally {
+          response.off('close', cancel);
+          activeRequests--;
+        }
         return;
       }
       if (pathname === '/api/optimize' && request.method === 'POST') {
