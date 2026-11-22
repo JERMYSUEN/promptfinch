@@ -23,6 +23,7 @@ function collectSettings() {
     apiKey: $('api-key').value.trim(),
     redactSecrets: $('redact-secrets').checked,
     task: $('task').value,
+    style: $('style').value,
     promptLanguage: $('prompt-language').value,
   };
 }
@@ -35,6 +36,7 @@ async function loadState() {
     apiKey: '',
     redactSecrets: false,
     task: 'general',
+    style: 'balanced',
     promptLanguage: 'en',
   });
   $('preset').value = stored.preset;
@@ -43,6 +45,7 @@ async function loadState() {
   $('api-key').value = stored.apiKey;
   $('redact-secrets').checked = Boolean(stored.redactSecrets);
   $('task').value = stored.task;
+  $('style').value = stored.style;
   $('prompt-language').value = stored.promptLanguage;
 }
 
@@ -84,7 +87,7 @@ $('refine').addEventListener('click', async () => {
     return;
   }
   const settings = collectSettings();
-  await chrome.storage.local.set({ task: settings.task, promptLanguage: settings.promptLanguage });
+  await chrome.storage.local.set({ task: settings.task, style: settings.style, promptLanguage: settings.promptLanguage });
   $('refine').disabled = true;
   setStatus('Refining prompt…');
   chrome.runtime.sendMessage({
@@ -93,6 +96,7 @@ $('refine').addEventListener('click', async () => {
     payload: {
       prompt,
       task: settings.task,
+      style: settings.style,
       promptLanguage: settings.promptLanguage,
       redactSecrets: settings.redactSecrets,
     },

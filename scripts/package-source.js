@@ -29,6 +29,8 @@ const files = [
   '.github/workflows/desktop.yml', '.github/workflows/release-macos.yml', 'docs/desktop.md',
   'extension/manifest.json', 'extension/background.js', 'extension/content.js', 'extension/content.css',
   'extension/popup.html', 'extension/popup.css', 'extension/popup.js', 'extension/README.md',
+  'extension/icons/icon-16.png', 'extension/icons/icon-32.png', 'extension/icons/icon-48.png', 'extension/icons/icon-128.png',
+  'scripts/package-extension.js',
   'tests/extension.test.js',
   'tests/server.test.js', 'tests/backend-release.test.js', 'tests/app-install.test.js', 'tests/multilingual.test.js',
   'tests/fixtures/multilingual-inputs.json', 'tests/fixtures/multilingual-ko-ru.json',

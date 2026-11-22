@@ -78,6 +78,7 @@ async function readSettings() {
     apiKey: '',
     promptLanguage: 'en',
     task: 'general',
+    style: 'balanced',
     redactSecrets: false,
   });
   return stored;
@@ -90,6 +91,7 @@ async function callProvider(settings, payload) {
   const model = String(settings.model || presetInfo.model).trim();
   const apiKey = String(settings.apiKey || '').trim();
   const task = payload.task || settings.task || 'general';
+  const style = ['balanced', 'concise', 'structured'].includes(payload.style || settings.style) ? (payload.style || settings.style) : 'balanced';
   const promptLanguage = payload.promptLanguage || settings.promptLanguage || 'en';
   const useRedaction = Boolean(payload.redactSecrets ?? settings.redactSecrets);
 
@@ -104,6 +106,7 @@ async function callProvider(settings, payload) {
       body: JSON.stringify({
         prompt: original,
         task,
+        style,
         targetModel: payload.targetModel || '',
         promptLanguage,
         notesLanguage: 'zh-TW',
@@ -126,7 +129,12 @@ async function callProvider(settings, payload) {
 
   const redaction = useRedaction ? redactSecrets(original) : { masked: original, tokens: [] };
   const systemPrompt = buildSystemPrompt(promptLanguage);
-  const userMessage = `Task category: ${task}\n${payload.targetModel ? `Target model: ${payload.targetModel}\n` : ''}\nOriginal request:\n${redaction.masked}`;
+  const styleLine = style === 'concise'
+    ? 'Style: concise (tight wording, preserve all constraints and literals, drop filler).\n'
+    : style === 'structured'
+      ? 'Style: structured (clear scannable sections or numbered steps without inventing requirements).\n'
+      : '';
+  const userMessage = `Task category: ${task}\n${styleLine}${payload.targetModel ? `Target model: ${payload.targetModel}\n` : ''}\nOriginal request:\n${redaction.masked}`;
 
   let rawText = '';
   if (protocol === 'anthropic') {
