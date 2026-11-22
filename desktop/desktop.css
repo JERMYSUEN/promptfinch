@@ -65,6 +65,13 @@ body.companion #workspace-shell { display: none; }
 }
 .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--ink); cursor: pointer; }
 .checkbox-row input { accent-color: var(--blue); }
+.provider-setup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 12px 0; }
+.provider-field { display: flex; flex-direction: column; gap: 4px; }
+.provider-field-wide { grid-column: 1 / -1; }
+.provider-field label { font-size: 12px; color: var(--muted); }
+.provider-field input, .provider-field select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+.desktop-input-settings .style-field { min-width: 118px; }
+body.mini-mode .provider-setup-grid { grid-template-columns: 1fr; }
 body.mini-mode main { padding: 10px 12px 14px; }
 body.mini-mode .topbar { padding: 8px 12px; }
 body.mini-mode .intro p, body.mini-mode .pane-description, body.mini-mode .privacy-note, body.mini-mode .mode-notice { display: none; }

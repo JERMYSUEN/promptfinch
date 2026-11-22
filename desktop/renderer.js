@@ -17,18 +17,30 @@ const t = (key, values) => translate(state.language, key, values);
 document.body.classList.toggle('companion', companion);
 $('companion-menu').hidden = !companion;
 
+const PRESET_DEFAULTS = {
+  deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-flash' },
+  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4.1-mini' },
+  anthropic: { baseUrl: 'https://api.anthropic.com/v1', model: 'claude-haiku-4-5' },
+  gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.5-flash-lite' },
+  ollama: { baseUrl: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
+  custom: { baseUrl: 'https://api.openai.com/v1', model: '' },
+};
+let statusValues = {};
+
 function inputValue() {
   return {
     prompt: $('original-prompt').value,
     task: $('task-select').value,
+    style: $('style-select')?.value || 'balanced',
     targetModel: $('target-model').value,
     redactSecrets: Boolean($('redact-secrets')?.checked),
   };
 }
 
-function setStatus(key, kind = '') {
+function setStatus(key, kind = '', values = {}) {
   statusKey = key;
   statusKind = kind;
+  statusValues = values;
   lastError = null;
   renderStatus();
 }
@@ -53,7 +65,7 @@ function errorText(error) {
 
 function renderStatus() {
   const target = companion ? $('companion-status') : $('action-status');
-  target.textContent = lastError ? errorText(lastError) : (statusKey ? t(statusKey) : '');
+  target.textContent = lastError ? errorText(lastError) : (statusKey ? t(statusKey, statusValues) : '');
   if (!companion) target.className = `action-status ${lastError ? 'error' : statusKind}`;
 }
 
@@ -95,8 +107,8 @@ function renderResultLabels() {
 
 function renderBusy() {
   const busy = Boolean(state.busy || submitting || clearing);
-  for (const id of ['original-prompt', 'target-model', 'task-select', 'choose-config', 'create-config', 'use-demo', 'import-clipboard', 'capture-selection']) {
-    $(id).disabled = busy;
+  for (const id of ['original-prompt', 'target-model', 'task-select', 'style-select', 'choose-config', 'create-config', 'save-provider-config', 'test-provider-connection', 'use-demo', 'import-clipboard', 'capture-selection']) {
+    if ($(id)) $(id).disabled = busy;
   }
   $('capture-selection').disabled = busy || state.selectionSupport === 'clipboard-only';
   // Clicking this button would focus our own window before Windows UIA reads.
@@ -293,7 +305,34 @@ function registerEvents() {
     const reply = await call('copyResult');
     if (reply.ok) setStatus('copied');
   });
-  for (const id of ['original-prompt', 'target-model', 'task-select']) $(id).addEventListener('input', inputChanged);
+  for (const id of ['original-prompt', 'target-model', 'task-select', 'style-select']) $(id)?.addEventListener('input', inputChanged);
+  $('provider-preset')?.addEventListener('change', event => {
+    const preset = PRESET_DEFAULTS[event.target.value];
+    if (!preset) return;
+    $('provider-base-url').value = preset.baseUrl;
+    $('provider-model').value = preset.model;
+  });
+  $('save-provider-config')?.addEventListener('click', async () => {
+    const reply = await call('saveProviderConfig', {
+      preset: $('provider-preset').value,
+      baseUrl: $('provider-base-url').value,
+      model: $('provider-model').value,
+      apiKey: $('provider-api-key').value,
+    });
+    if (reply.ok) {
+      $('provider-api-key').value = '';
+      forgetResult();
+      setStatus('providerSaved');
+      renderState();
+    }
+  });
+  $('test-provider-connection')?.addEventListener('click', async () => {
+    setStatus('connectionTesting', 'neutral');
+    const reply = await call('testConnection');
+    if (reply.ok && reply.value) {
+      setStatus('connectionOk', '', { latency: reply.value.latencyMs ?? 0 });
+    }
+  });
   $('language-select').addEventListener('change', async event => {
     const previous = state.language;
     const language = event.target.value;

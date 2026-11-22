@@ -2,7 +2,7 @@ import { open, mkdir, rename, unlink, lstat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { parseEnv } from 'node:util';
-import { optimize, readConfig, validateInput, NOTES_LANGUAGES, AppError } from '../lib/optimizer.js';
+import { optimize, readConfig, validateInput, testProviderConnection, PROVIDER_PRESETS, NOTES_LANGUAGES, AppError } from '../lib/optimizer.js';
 
 const messages = Object.freeze({
   CLOSED: 'The desktop workspace has closed.',
@@ -141,7 +141,8 @@ export class DesktopController {
     try {
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid input');
       input = validateInput({ prompt: body.prompt, task: body.task, targetModel: body.targetModel,
-        promptLanguage: 'en', notesLanguage: this.#language, redactSecrets: Boolean(body.redactSecrets) });
+        promptLanguage: 'en', notesLanguage: this.#language, redactSecrets: Boolean(body.redactSecrets),
+        style: body.style });
     } catch { throw new DesktopError('INPUT'); }
     const active = { abort: new AbortController(), id: randomUUID() };
     this.#active = active; this.#error = null;
@@ -174,6 +175,74 @@ export class DesktopController {
       throw new DesktopError('TEMPLATE');
     }
     return this.#templatePath;
+  }
+
+  async saveProviderConfig(body) {
+    this.#assertIdle();
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new DesktopError('CONFIG_INVALID');
+    const preset = PROVIDER_PRESETS.find(item => item.id === body.preset) || PROVIDER_PRESETS[0];
+    const baseUrl = String(body.baseUrl ?? preset.baseUrl ?? '').trim();
+    const model = String(body.model ?? preset.defaultModel ?? '').trim();
+    const rawKey = String(body.apiKey ?? '').trim();
+    const apiKey = preset.requiresKey ? rawKey : (rawKey || 'local-only');
+    if (/[\r\n]/.test(baseUrl) || /[\r\n]/.test(model) || /[\r\n]/.test(apiKey)) {
+      throw new DesktopError('CONFIG_INVALID');
+    }
+    const envObj = {
+      OPTIMIZER_MODE: 'live',
+      LLM_PROVIDER: preset.provider,
+      LLM_BASE_URL: baseUrl,
+      LLM_MODEL: model,
+      LLM_API_KEY: apiKey,
+      LLM_JSON_MODE: preset.jsonMode ? 'true' : 'false',
+      LLM_THINKING_MODE: preset.thinkingMode || '',
+      LLM_QUALITY_REVIEW: 'false',
+      LLM_TIMEOUT_MS: '45000',
+    };
+    let validated;
+    try { validated = readConfig(envObj); } catch { throw new DesktopError('CONFIG_INVALID'); }
+    if (!validated.apiKey || !validated.model) throw new DesktopError('CONFIG_INCOMPLETE');
+    const lines = [
+      '# Managed by PromptFinch Desktop GUI setup. Stored with owner-only permissions (0600).',
+      ...Object.entries(envObj).map(([k, v]) => `${k}=${v}`),
+      '',
+    ].join('\n');
+    return this.#change(async () => {
+      const temporary = `${this.#templatePath}.${randomUUID()}.tmp`;
+      try {
+        await mkdir(dirname(this.#templatePath), { recursive: true, mode: 0o700 });
+        const file = await open(temporary, 'wx', 0o600);
+        try { await file.writeFile(lines); } finally { await file.close(); }
+        await rename(temporary, this.#templatePath);
+      } catch {
+        await unlink(temporary).catch(() => {});
+        this.#setError('SETTINGS_WRITE');
+        throw new DesktopError('SETTINGS_WRITE');
+      }
+      await this.#save(this.#language, this.#templatePath);
+      this.#configFilePath = this.#templatePath;
+      this.#config = validated;
+      this.#error = null;
+      return this.snapshot();
+    });
+  }
+
+  async testConnection() {
+    this.#assertIdle();
+    if (!this.#config) throw new DesktopError(this.#error?.code || 'CONFIG_INCOMPLETE');
+    const active = { abort: new AbortController(), id: randomUUID() };
+    this.#active = active;
+    try {
+      const result = await testProviderConnection(this.#config, active.abort.signal);
+      if (this.#closed || active.abort.signal.aborted || this.#active !== active) throw new DesktopError('CANCELLED');
+      return { ok: true, mode: result.mode, provider: result.provider, model: result.model || null, latencyMs: result.latencyMs };
+    } catch (error) {
+      const code = this.#closed || active.abort.signal.aborted ? 'CANCELLED'
+        : error instanceof DesktopError ? error.code
+          : error instanceof AppError && error.status === 429 ? 'RATE_LIMIT'
+            : error instanceof AppError && error.status === 504 ? 'TIMEOUT' : 'PROVIDER';
+      throw new DesktopError(code);
+    } finally { if (this.#active === active) this.#active = null; }
   }
 
   async #loadConfig(path) {

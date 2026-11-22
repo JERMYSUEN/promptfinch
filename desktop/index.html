@@ -38,12 +38,41 @@
 
       <section id="settings-panel" class="desktop-settings" hidden aria-labelledby="settings-heading">
         <h2 id="settings-heading" data-i18n="modelSettings">模型與桌面設定</h2>
+        <div class="provider-setup-grid">
+          <div class="provider-field">
+            <label for="provider-preset" data-i18n="providerPreset">服務商預設</label>
+            <select id="provider-preset">
+              <option value="deepseek">DeepSeek</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic Claude</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="ollama">Ollama (Local)</option>
+              <option value="custom">Custom OpenAI-Compatible</option>
+            </select>
+          </div>
+          <div class="provider-field">
+            <label for="provider-model" data-i18n="providerModel">模型名稱</label>
+            <input id="provider-model" type="text" autocomplete="off" spellcheck="false" value="deepseek-flash">
+          </div>
+          <div class="provider-field provider-field-wide">
+            <label for="provider-base-url" data-i18n="providerBaseUrl">API 網址</label>
+            <input id="provider-base-url" type="url" autocomplete="off" spellcheck="false" value="https://api.deepseek.com">
+          </div>
+          <div class="provider-field provider-field-wide">
+            <label for="provider-api-key" data-i18n="providerApiKey">API 金鑰（僅寫入本機 0600 私有設定檔）</label>
+            <input id="provider-api-key" type="password" autocomplete="off" spellcheck="false" data-i18n-placeholder="providerKeyPlaceholder" placeholder="輸入金鑰（本機 Ollama 可留空）">
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button id="save-provider-config" type="button" class="primary-button" data-i18n="saveAndActivate">儲存並啟用</button>
+          <button id="test-provider-connection" type="button" class="secondary-button" data-i18n="testConnection">測試連線</button>
+          <button id="use-demo" type="button" class="secondary-button" data-i18n="useDemo">使用示範模式</button>
+        </div>
         <p data-i18n="configHelp">選擇本機 .env 設定檔，或先建立範本並填入模型與金鑰。金鑰只由桌面主程序讀取。</p>
         <p id="config-name" class="config-name"></p>
         <div class="settings-actions">
           <button id="choose-config" type="button" class="secondary-button" data-i18n="chooseConfig">選擇設定檔</button>
           <button id="create-config" type="button" class="secondary-button" data-i18n="createConfig">建立設定範本</button>
-          <button id="use-demo" type="button" class="secondary-button" data-i18n="useDemo">使用示範模式</button>
         </div>
         <p class="settings-help" data-i18n="reloadConfig">修改檔案後，請再次選擇設定檔載入變更。示範模式不會呼叫模型。</p>
         <h3 data-i18n="selectionHeading">跨軟體取字</h3>
@@ -64,6 +93,13 @@
               <option value="general" data-i18n="taskGeneral">通用用途</option><option value="writing" data-i18n="taskWriting">寫作</option>
               <option value="analysis" data-i18n="taskAnalysis">分析</option><option value="coding" data-i18n="taskCoding">程式開發</option>
               <option value="summary" data-i18n="taskSummary">摘要</option><option value="marketing" data-i18n="taskMarketing">行銷</option>
+            </select>
+          </div>
+          <div class="language-field style-field"><label for="style-select" data-i18n="styleLabel">風格</label>
+            <select id="style-select" name="style">
+              <option value="balanced" data-i18n="styleBalanced">平衡</option>
+              <option value="concise" data-i18n="styleConcise">精簡</option>
+              <option value="structured" data-i18n="styleStructured">條列</option>
             </select>
           </div>
           <div class="model-field"><label for="target-model" data-i18n="targetModel">目標模型（選填）</label>

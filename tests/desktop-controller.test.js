@@ -127,7 +127,42 @@ test('desktop controller forwards opt-in local secret redaction flag cleanly', a
     captured.push(input);
     return { prompt: 'Refined.', mode: config.mode };
   });
-  await controller.generate({ prompt: 'Keep sk-proj-ExampleSecretKey1234567890 safe.', redactSecrets: true });
+  await controller.generate({ prompt: 'Keep sk-proj-ExampleSecretKey1234567890 safe.', redactSecrets: true, style: 'structured' });
   assert.equal(captured[0].redactSecrets, true);
+  assert.equal(captured[0].style, 'structured');
   assert.equal(captured[0].promptLanguage, 'en');
+});
+
+test('desktop GUI provider setup saves 0600 private config without leaking keys into preferences or snapshot', async t => {
+  const { preferencesPath, templatePath, controller } = await workspace(t);
+  await assert.rejects(controller.saveProviderConfig({ preset: 'deepseek', apiKey: '' }), { code: 'CONFIG_INCOMPLETE' });
+  await assert.rejects(controller.saveProviderConfig({ preset: 'openai', baseUrl: 'javascript:alert(1)', model: 'gpt-4.1-mini', apiKey: 'sk-test-123' }), { code: 'CONFIG_INVALID' });
+
+  const snap = await controller.saveProviderConfig({
+    preset: 'anthropic',
+    baseUrl: 'https://api.anthropic.com/v1',
+    model: 'claude-haiku-4-5',
+    apiKey: 'sk-ant-synthetic-gui-key-123456',
+  });
+  assert.equal(snap.mode, 'live');
+  assert.equal(snap.ready, true);
+  assert.equal(snap.model, 'claude-haiku-4-5');
+  assert.doesNotMatch(JSON.stringify(snap), /sk-ant-synthetic-gui-key-123456|anthropic\.com/);
+
+  const prefs = await readFile(preferencesPath, 'utf8');
+  assert.deepEqual(JSON.parse(prefs), { language: 'zh-TW', configFilePath: templatePath });
+  assert.doesNotMatch(prefs, /sk-ant-synthetic-gui-key-123456/);
+  const savedEnv = await readFile(templatePath, 'utf8');
+  assert.match(savedEnv, /^LLM_PROVIDER=anthropic$/m);
+  assert.match(savedEnv, /^LLM_MODEL=claude-haiku-4-5$/m);
+  if (process.platform !== 'win32') assert.equal((await stat(templatePath)).mode & 0o777, 0o600);
+
+  const ollamaSnap = await controller.saveProviderConfig({ preset: 'ollama', apiKey: '' });
+  assert.equal(ollamaSnap.mode, 'live');
+  assert.equal(ollamaSnap.model, 'qwen2.5:7b');
+
+  await controller.useDemo();
+  const conn = await controller.testConnection();
+  assert.equal(conn.ok, true);
+  assert.equal(conn.mode, 'mock');
 });
