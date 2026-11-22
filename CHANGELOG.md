@@ -12,7 +12,6 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 - Manifest V3 browser extension (`extension/`) for ChatGPT, Claude, Gemini, GitHub, Notion, and Perplexity with Shadow-DOM selection micro-pill, direct DOM text replacement, Chrome Web Store icons (`16/32/48/128` PNG), multi-provider/local-server popup, Local Secret Shield, refinement styles, and automated store packager (`npm run package:extension`).
 - Refinement style presets (`balanced`, `concise`, `structured`) across the optimizer core, macOS native studio/menu-bar popover, Electron desktop, and browser extension, plus macOS zero-Node built-in native demo mode and quick-setup onboarding strip.
 - Electron desktop GUI provider setup wizard (preset selector, Base URL, Model, owner-only `0600` `.env` save, and connection test) eliminating hand-edited `.env` files while keeping `preferences.json` secret-free.
-- Bilingual (`zh-TW` / `en`) zero-dependency product landing page (`site/`) with interactive Before → After prompt refinement showcase, miniaturized UI preview, platform download matrix, and transparent BYOK/Team roadmap.
 - Universal macOS (`arm64` + `x86_64`) release automation workflow (`.github/workflows/release-macos.yml`) supporting DMG/ZIP packaging and optional Developer ID signing & `xcrun notarytool` notarization.
 
 ### Removed
