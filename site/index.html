@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PromptFinch — Select. Refine. Paste.</title>
+  <meta name="description" content="PromptFinch turns rough multilingual requests into clear, faithful prompts right where you work — native macOS, Windows, Linux, and Chrome/Edge extension.">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="brand-link" aria-label="PromptFinch">
+        <img src="logo.svg" alt="PromptFinch" width="162" height="40">
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#workflow" data-i18n="navWorkflow">微型介面</a>
+        <a href="#downloads" data-i18n="navDownloads">下載安裝</a>
+        <a href="#plans" data-i18n="navPlans">版本方案</a>
+        <a href="https://github.com/JERMYSUEN/promptfinch" target="_blank" rel="noopener">GitHub</a>
+        <button id="lang-toggle" type="button" class="lang-toggle">English</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <h1 data-i18n="heroTitle">在你正在打字的地方，把隨手需求整理成精準 Prompt</h1>
+          <p class="hero-lead" data-i18n="heroLead">
+            支援任何語言輸入，嚴格保留識別字、數值界線、程式碼與指定回答語言。原生存放金鑰於系統鑰匙圈、可選本機敏感遮罩，而且絕不把原文存進硬碟或代你執行任務。
+          </p>
+          <div class="hero-actions">
+            <a href="#downloads" class="btn btn-primary" data-i18n="ctaDownload">下載桌面版與擴充套件</a>
+            <a href="#demo-sandbox" class="btn btn-secondary" data-i18n="ctaTryDemo">看實際轉換範例</a>
+          </div>
+          <ul class="hero-facts">
+            <li data-i18n="fact1">macOS 原生直連 DeepSeek / OpenAI / Claude / Gemini / Ollama，免安裝 Node.js</li>
+            <li data-i18n="fact2">三段式微型 UI：選字微膠囊、動態浮動結果卡與 360px 選單列迷你視窗</li>
+            <li data-i18n="fact3">內建本機敏感遮罩：API 金鑰與私鑰離線替換，回傳後本機還原</li>
+          </ul>
+        </div>
+
+        <aside id="demo-sandbox" class="demo-window" aria-label="Interactive PromptFinch preview">
+          <div class="demo-chrome">
+            <span class="traffic-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="demo-title">PromptFinch</span>
+            <span class="demo-pill" data-i18n="demoLivePreview">互動預覽</span>
+          </div>
+          <div class="demo-controls">
+            <div class="scenario-tabs" role="tablist" aria-label="Example scenarios">
+              <button type="button" role="tab" class="tab active" data-scenario="coding" aria-selected="true" data-i18n="tabCoding">程式除錯</button>
+              <button type="button" role="tab" class="tab" data-scenario="secret" aria-selected="false" data-i18n="tabSecret">敏感遮罩</button>
+              <button type="button" role="tab" class="tab" data-scenario="multilingual" aria-selected="false" data-i18n="tabMulti">多語保留</button>
+              <button type="button" role="tab" class="tab" data-scenario="writing" aria-selected="false" data-i18n="tabWriting">商業寫作</button>
+            </div>
+            <div class="style-pills" aria-label="Refinement style">
+              <button type="button" class="style-btn active" data-style="balanced" data-i18n="styleBalanced">平衡</button>
+              <button type="button" class="style-btn" data-style="concise" data-i18n="styleConcise">精簡</button>
+              <button type="button" class="style-btn" data-style="structured" data-i18n="styleStructured">條列</button>
+            </div>
+          </div>
+
+          <div class="demo-panes">
+            <div class="demo-box">
+              <div class="box-label" data-i18n="demoInputLabel">原始選取文字</div>
+              <pre id="demo-input" class="mono-block"></pre>
+            </div>
+            <div id="demo-shield-strip" class="shield-strip" hidden>
+              <span class="shield-dot" aria-hidden="true"></span>
+              <span id="demo-shield-text"></span>
+            </div>
+            <div class="demo-box demo-box-output">
+              <div class="box-label-row">
+                <span class="box-label" data-i18n="demoOutputLabel">可複製的優化 Prompt</span>
+                <button id="demo-copy" type="button" class="mini-action" data-i18n="copyBtn">複製</button>
+              </div>
+              <pre id="demo-output" class="mono-block"></pre>
+            </div>
+            <details class="demo-notes" open>
+              <summary id="demo-notes-summary"></summary>
+              <ul id="demo-notes-list"></ul>
+            </details>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="workflow" class="section section-tinted">
+      <div class="container">
+        <h2 data-i18n="workflowHeading">不打斷專注力的三層微型化介面</h2>
+        <p class="section-sub" data-i18n="workflowSub">只有在你主動點擊轉換時才送出文字；平時安靜常駐於選單列或系統匣，不搶佔視窗焦點。</p>
+
+        <div class="tier-grid">
+          <article class="tier-item">
+            <div class="tier-visual">
+              <div class="mock-pill"><span class="mock-dot"></span><span>Refine</span></div>
+            </div>
+            <h3 data-i18n="tier1Title">1. 選字微膠囊與右鍵選單</h3>
+            <p data-i18n="tier1Desc">反白文字後於游標附近輕量浮現，不劫持原軟體的右鍵功能表。瀏覽器版直接注入 ChatGPT、Claude、Gemini、GitHub 與 Notion。</p>
+          </article>
+
+          <article class="tier-item">
+            <div class="tier-visual">
+              <div class="mock-result">
+                <div class="mock-line w-80"></div>
+                <div class="mock-line w-65"></div>
+                <div class="mock-note-pill" data-i18n="tier2NoteMock">✦ 2 項優化說明 ▸</div>
+                <div class="mock-actions"><span>Paste back</span><span>Copy</span></div>
+              </div>
+            </div>
+            <h3 data-i18n="tier2Title">2. 動態高度浮動結果卡</h3>
+            <p data-i18n="tier2Desc">依文字長度自動縮放高度並夾緊於螢幕內，內建可展開的行內優化說明抽屜，不需切回主視窗即可核對後貼回或複製。</p>
+          </article>
+
+          <article class="tier-item">
+            <div class="tier-visual">
+              <div class="mock-popover">
+                <div class="mock-pop-head"><span>PromptFinch</span><span>DeepSeek</span></div>
+                <div class="mock-pop-input"></div>
+                <div class="mock-pop-cta" data-i18n="tier3CtaMock">生成 Prompt</div>
+              </div>
+            </div>
+            <h3 data-i18n="tier3Title">3. 360px 選單列面板與迷你模式</h3>
+            <p data-i18n="tier3Desc">macOS 支援純選單列常駐（隱藏 Dock 圖示）與記憶體暫存近 5 筆紀錄；Windows / Linux 桌面版一鍵切換 400×540 置頂迷你視窗。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="downloads" class="section">
+      <div class="container">
+        <h2 data-i18n="downloadsHeading">跨平台原生體驗，免繁瑣環境設定</h2>
+        <p class="section-sub" data-i18n="downloadsSub">支援自備 API 金鑰（DeepSeek、OpenAI、Anthropic Claude、Google Gemini）或全離線本機 Ollama。</p>
+
+        <div class="platform-table-wrap">
+          <table class="platform-table">
+            <thead>
+              <tr>
+                <th data-i18n="colPlatform">平台</th>
+                <th data-i18n="colHighlights">核心能力</th>
+                <th data-i18n="colRequirement">執行需求</th>
+                <th data-i18n="colAction">取得方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>macOS Native App</strong></td>
+                <td data-i18n="platMacDesc">Swift 原生直連引擎、Keychain 加密金鑰、選單列 Popover、全域 ⌥⌘P 與智慧貼回</td>
+                <td data-i18n="platMacReq">macOS 13+（原生直連免 Node.js）</td>
+                <td><a class="table-link" href="https://github.com/JERMYSUEN/promptfinch/releases" target="_blank" rel="noopener" data-i18n="linkRelease">前往 Releases</a></td>
+              </tr>
+              <tr>
+                <td><strong>Windows &amp; Linux Desktop</strong></td>
+                <td data-i18n="platWinDesc">圖形化服務商設定、400×540 置頂迷你模式、本機敏感遮罩與右鍵選取輔助</td>
+                <td data-i18n="platWinReq">Windows 10/11 x64 或 Linux x64（內建執行環境）</td>
+                <td><a class="table-link" href="https://github.com/JERMYSUEN/promptfinch/releases" target="_blank" rel="noopener" data-i18n="linkRelease">前往 Releases</a></td>
+              </tr>
+              <tr>
+                <td><strong>Chrome / Edge Extension</strong></td>
+                <td data-i18n="platExtDesc">零作業系統權限，在 ChatGPT / Claude / Gemini / GitHub / Notion 內直接選字替換</td>
+                <td data-i18n="platExtReq">Chromium 瀏覽器（Manifest V3）</td>
+                <td><a class="table-link" href="https://github.com/JERMYSUEN/promptfinch/tree/main/extension" target="_blank" rel="noopener" data-i18n="linkExt">查看安裝指南</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="plans" class="section section-tinted">
+      <div class="container">
+        <h2 data-i18n="plansHeading">透明授權與演進路線</h2>
+        <p class="section-sub" data-i18n="plansSub">核心桌面工具與瀏覽器擴充套件採 MIT 開源，自備 API 金鑰即可免費完整使用。</p>
+
+        <div class="plan-grid">
+          <div class="plan-card plan-card-featured">
+            <h3 data-i18n="planFreeTitle">Open Core BYOK</h3>
+            <p class="plan-price" data-i18n="planFreePrice">免費 · MIT 授權</p>
+            <ul>
+              <li data-i18n="planFree1">macOS / Windows / Linux 桌面版與瀏覽器擴充套件全功能</li>
+              <li data-i18n="planFree2">直連 DeepSeek、OpenAI、Claude（含提示快取）、Gemini 與本機 Ollama</li>
+              <li data-i18n="planFree3">系統 Keychain 加密儲存、本機敏感遮罩與零硬碟留存</li>
+              <li data-i18n="planFree4">不限次使用，直接由您的服務商帳戶計費</li>
+            </ul>
+            <a href="https://github.com/JERMYSUEN/promptfinch/releases" class="btn btn-primary" target="_blank" rel="noopener" data-i18n="planFreeCta">立即免費下載</a>
+          </div>
+
+          <div class="plan-card">
+            <h3 data-i18n="planProTitle">Pro Managed &amp; Team（規劃中）</h3>
+            <p class="plan-price" data-i18n="planProPrice">免自備金鑰 · 團隊協作</p>
+            <ul>
+              <li data-i18n="planPro1">開箱即用高速托管推論額度，免申請多平台 API Key</li>
+              <li data-i18n="planPro2">Apple Developer ID 正式簽章與公證自動更新頻道</li>
+              <li data-i18n="planPro3">團隊共用專案詞彙表、品牌語氣範本與嚴格稽核規則</li>
+              <li data-i18n="planPro4">保留零內容留存承諾與強制本機敏感資訊遮罩</li>
+            </ul>
+            <a href="https://github.com/JERMYSUEN/promptfinch/issues" class="btn btn-secondary" target="_blank" rel="noopener" data-i18n="planProCta">參與功能討論</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p data-i18n="footerNote">PromptFinch — 忠於原意的多語 Prompt 編輯工具。原始碼與驗證記錄公開於 GitHub。</p>
+      <div class="footer-links">
+        <a href="https://github.com/JERMYSUEN/promptfinch/blob/main/SECURITY.md" target="_blank" rel="noopener" data-i18n="footerSecurity">安全性說明</a>
+        <a href="https://github.com/JERMYSUEN/promptfinch/blob/main/CHANGELOG.md" target="_blank" rel="noopener" data-i18n="footerChangelog">更新日誌</a>
+        <a href="https://github.com/JERMYSUEN/promptfinch/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
