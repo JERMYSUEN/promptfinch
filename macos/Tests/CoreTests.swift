@@ -455,6 +455,21 @@ struct CoreTests {
         check(draft.baseURL == ProviderPreset.anthropic.defaultBaseURL && draft.apiKey == "test-key",
               "settings draft switches presets and loads matching Keychain secret")
 
+        // Refinement style validation and zero-Node built-in native demo tests.
+        let validConcise = PromptRequest(prompt: "Refine this", task: "coding", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "concise")
+        check((try? validConcise.validate()) != nil, "concise refinement style validates cleanly")
+        let invalidStyle = PromptRequest(prompt: "Refine this", task: "coding", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "poetic")
+        check((try? invalidStyle.validate()) == nil, "unsupported refinement style is rejected")
+        let nativeDemoResult = nativeEngine.demoOptimize(validConcise)
+        check(nativeDemoResult.mode == "mock" && nativeDemoResult.prompt.contains("Style: concise") && !nativeDemoResult.improvements.isEmpty,
+              "native built-in demo runs without Node.js and labels mock limitations clearly")
+        var demoConfig = NativeProviderConfig.default(preset: .deepseek)
+        demoConfig.enabled = true
+        demoConfig.demoMode = true
+        let demoServiceConfig = nativeEngine.serviceConfig(for: demoConfig)
+        check(demoServiceConfig.mode == "mock" && demoServiceConfig.ready,
+              "native demo service config reports ready mock mode without Node.js")
+
         await checkWorkspacePasteFeedback(check: { value, message in check(value, message) })
         print("Swift 核心、本機 API、選取目標與剪貼簿競態：\(checks) 項檢查通過。")
     }

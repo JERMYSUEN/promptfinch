@@ -130,6 +130,7 @@ struct NativeProviderConfig: Codable, Equatable {
     static let defaultsKey = "nativeProviderConfigV1"
 
     var enabled: Bool
+    var demoMode: Bool
     var preset: ProviderPreset
     var baseURL: String
     var model: String
@@ -137,9 +138,38 @@ struct NativeProviderConfig: Codable, Equatable {
     var thinkingMode: String
     var timeoutSeconds: Double
 
+    init(enabled: Bool, demoMode: Bool = false, preset: ProviderPreset, baseURL: String, model: String,
+         jsonMode: Bool, thinkingMode: String, timeoutSeconds: Double) {
+        self.enabled = enabled
+        self.demoMode = demoMode
+        self.preset = preset
+        self.baseURL = baseURL
+        self.model = model
+        self.jsonMode = jsonMode
+        self.thinkingMode = thinkingMode
+        self.timeoutSeconds = timeoutSeconds
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case enabled, demoMode, preset, baseURL, model, jsonMode, thinkingMode, timeoutSeconds
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        enabled = try c.decode(Bool.self, forKey: .enabled)
+        demoMode = try c.decodeIfPresent(Bool.self, forKey: .demoMode) ?? false
+        preset = try c.decode(ProviderPreset.self, forKey: .preset)
+        baseURL = try c.decode(String.self, forKey: .baseURL)
+        model = try c.decode(String.self, forKey: .model)
+        jsonMode = try c.decode(Bool.self, forKey: .jsonMode)
+        thinkingMode = try c.decode(String.self, forKey: .thinkingMode)
+        timeoutSeconds = try c.decode(Double.self, forKey: .timeoutSeconds)
+    }
+
     static func `default`(preset: ProviderPreset = .deepseek) -> NativeProviderConfig {
         NativeProviderConfig(
             enabled: false,
+            demoMode: false,
             preset: preset,
             baseURL: preset.defaultBaseURL,
             model: preset.defaultModel,
@@ -297,6 +327,18 @@ final class NativeOptimizerEngine {
     }
 
     func serviceConfig(for config: NativeProviderConfig) -> ServiceConfig {
+        if config.demoMode {
+            return ServiceConfig(
+                service: "prompt-studio",
+                apiVersion: 2,
+                backendID: "native-swift-demo",
+                backendInstanceID: "native-swift-demo",
+                mode: "mock",
+                ready: true,
+                generationModel: nil,
+                promptLanguages: ["zh-Hant", "en"]
+            )
+        }
         let ready = hasCredential(for: config)
         return ServiceConfig(
             service: "prompt-studio",
@@ -310,7 +352,52 @@ final class NativeOptimizerEngine {
         )
     }
 
+    func demoOptimize(_ input: PromptRequest) -> PromptResult {
+        let lang = UILanguage(rawValue: input.notesLanguage) ?? .traditionalChinese
+        let note: String
+        switch lang {
+        case .english:
+            note = "Built-in native demo mode (no Node.js required): fixed template only; configure a provider in Settings → Model for live refinement."
+        case .japanese:
+            note = "内蔵ネイティブデモモード（Node.js 不要）：固定テンプレートのみ。実際の改善には設定 → モデルでプロバイダーを設定してください。"
+        case .korean:
+            note = "내장 네이티브 데모 모드(Node.js 불필요): 고정 서식만 표시됩니다. 실제 최적화를 위해 설정 → 모델에서 공급자를 구성하세요."
+        case .traditionalChinese:
+            note = "內建原生示範模式（免 Node.js）：僅套用固定範本，未呼叫真實模型；請在「設定 → 模型」填入服務商金鑰以啟用真實優化。"
+        }
+        let promptText: String
+        if input.promptLanguage == "en" {
+            promptText = """
+            [PromptFinch Native Demo — original text has NOT been translated or semantically refined]
+
+            Task: \(input.task) | Style: \(input.style)
+            Original request:
+            \(input.prompt)
+            """
+        } else {
+            promptText = """
+            【PromptFinch 原生示範模式 — 原文尚未經過真實模型語意優化】
+
+            用途：\(input.task)｜風格：\(input.style)
+            原始需求：
+            \(input.prompt)
+            """
+        }
+        return PromptResult(
+            prompt: promptText,
+            improvements: [note],
+            assumptions: [],
+            mode: "mock",
+            generationModel: nil,
+            promptLanguage: input.promptLanguage,
+            notesLanguage: input.notesLanguage
+        )
+    }
+
     func testConnection(config: NativeProviderConfig) async throws -> NativeConnectionCheckResult {
+        if config.demoMode {
+            return NativeConnectionCheckResult(ok: true, latencyMs: 1, model: "native-demo")
+        }
         let baseURL = try config.validatedBaseURL()
         let model = config.model.trimmingCharacters(in: .whitespacesAndNewlines)
         let key = apiKey(for: config.preset).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -332,6 +419,9 @@ final class NativeOptimizerEngine {
 
     func optimize(_ input: PromptRequest, config: NativeProviderConfig, redactSecrets: Bool = false) async throws -> PromptResult {
         try input.validate()
+        if config.demoMode {
+            return demoOptimize(input)
+        }
         let baseURL = try config.validatedBaseURL()
         let model = config.model.trimmingCharacters(in: .whitespacesAndNewlines)
         let key = apiKey(for: config.preset).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -342,13 +432,24 @@ final class NativeOptimizerEngine {
         let redacted = redactSecrets ? LocalSecretRedactor.redact(input.prompt) : (masked: input.prompt, tokens: [])
         let deadline = ProcessInfo.processInfo.systemUptime + max(5, min(config.timeoutSeconds, 180))
         let system = Self.systemPrompt(promptLanguage: input.promptLanguage, notesLanguage: input.notesLanguage)
-        let payloadObject: [String: String] = [
+        var payloadObject: [String: String] = [
             "originalPrompt": redacted.masked,
             "task": input.task,
             "targetModel": input.targetModel,
             "promptInstructionLanguage": input.promptLanguage == "en" ? "English" : "Traditional Chinese",
             "uiNotesLanguage": Self.notesLanguageName(input.notesLanguage),
         ]
+        if input.style == "concise" {
+            payloadObject["style"] = "concise"
+            payloadObject["styleGuidance"] = input.promptLanguage == "en"
+                ? "Prefer tight, concise phrasing while preserving every constraint and exact literal."
+                : "優先精簡措辭，完整保留所有限制與原文符號，刪除多餘客套。"
+        } else if input.style == "structured" {
+            payloadObject["style"] = "structured"
+            payloadObject["styleGuidance"] = input.promptLanguage == "en"
+                ? "Organize multi-constraint tasks into clear, scannable sections or numbered steps without inventing extra requirements."
+                : "將多項條件整理為清晰分段或條列步驟，但不捏造額外要求。"
+        }
         let payloadData = try JSONSerialization.data(withJSONObject: payloadObject)
         let userContent = String(data: payloadData, encoding: .utf8) ?? "{}"
 

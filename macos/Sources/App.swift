@@ -54,6 +54,7 @@ final class WorkspaceModel: ObservableObject {
     let watcher = SelectionWatcher()
     let resultPanel = ResultPanel()
     @Published var promptLanguage: String
+    @Published var refinementStyle: String
     @Published var nativeConfig: NativeProviderConfig
     @Published var appAwarePresetsEnabled: Bool {
         didSet { preferences.set(appAwarePresetsEnabled, forKey: "appAwarePresetsEnabled") }
@@ -98,6 +99,8 @@ final class WorkspaceModel: ObservableObject {
         targetModel = preferences.string(forKey: "targetModel") ?? ""
         let storedLang = preferences.string(forKey: "promptLanguage") ?? "en"
         promptLanguage = ["en", "zh-Hant"].contains(storedLang) ? storedLang : "en"
+        let storedStyle = preferences.string(forKey: "refinementStyle") ?? "balanced"
+        refinementStyle = ["balanced", "concise", "structured"].contains(storedStyle) ? storedStyle : "balanced"
         nativeConfig = NativeProviderConfig.load(from: preferences)
         appAwarePresetsEnabled = preferences.object(forKey: "appAwarePresetsEnabled") as? Bool ?? true
         redactSecretsEnabled = preferences.object(forKey: "redactSecretsEnabled") as? Bool ?? false
@@ -147,6 +150,30 @@ final class WorkspaceModel: ObservableObject {
         } else {
             refresh()
         }
+    }
+
+    func enableNativeDemo() {
+        var updated = nativeConfig
+        updated.enabled = true
+        updated.demoMode = true
+        saveNativeProvider(updated, apiKey: nil)
+        notify(L10n.text(.mockNotice))
+    }
+
+    func openNativeModelSetup() {
+        settingsDraft.activeTab = .model
+        settingsDraft.preferNativeOnNextSync = true
+        settingsVisible = true
+    }
+
+    var shouldShowQuickSetupBanner: Bool {
+        if nativeConfig.enabled && !nativeConfig.demoMode && nativeEngine.hasCredential(for: nativeConfig) {
+            return false
+        }
+        if !nativeConfig.enabled && !backend.configurationPath.isEmpty && config?.ready == true && config?.mode == "live" {
+            return false
+        }
+        return true
     }
 
     func testNativeProviderConnection() {
@@ -264,7 +291,8 @@ final class WorkspaceModel: ObservableObject {
             resolvedTask = task
         }
         let input = PromptRequest(prompt: original, task: resolvedTask, targetModel: targetModel,
-                                  promptLanguage: promptLanguage, notesLanguage: language.rawValue)
+                                  promptLanguage: promptLanguage, notesLanguage: language.rawValue,
+                                  style: refinementStyle)
         let eventID = activeEventSequence.map(String.init) ?? "-"
         do { try input.validate() }
         catch {
@@ -292,6 +320,7 @@ final class WorkspaceModel: ObservableObject {
         preferences.set(task, forKey: "task")
         preferences.set(targetModel, forKey: "targetModel")
         preferences.set(promptLanguage, forKey: "promptLanguage")
+        preferences.set(refinementStyle, forKey: "refinementStyle")
         operation = Task {
             do {
                 let output: PromptResult
@@ -614,6 +643,23 @@ struct WorkspaceView: View {
             }
             Text(L10n.text(.privacy))
                 .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
+            if model.shouldShowQuickSetupBanner {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles").foregroundStyle(accent)
+                    Text(L10n.text(.quickSetupBanner))
+                        .font(.system(size: 11.5)).lineLimit(2)
+                    Spacer()
+                    Button(L10n.text(.connectNativeAI)) { model.openNativeModelSetup() }
+                        .buttonStyle(.borderedProminent).tint(accent).controlSize(.small)
+                    if !(model.nativeConfig.enabled && model.nativeConfig.demoMode) {
+                        Button(L10n.text(.useNativeDemo)) { model.enableNativeDemo() }
+                            .controlSize(.small)
+                    }
+                }
+                .padding(.horizontal, 10).padding(.vertical, 7)
+                .background(accent.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L10n.text(.original)).font(.headline)
@@ -627,11 +673,16 @@ struct WorkspaceView: View {
                         Picker(L10n.text(.purpose), selection: $model.task) {
                             Text(L10n.text(.general)).tag("general"); Text(L10n.text(.writing)).tag("writing"); Text(L10n.text(.analysis)).tag("analysis")
                             Text(L10n.text(.coding)).tag("coding"); Text(L10n.text(.summary)).tag("summary"); Text(L10n.text(.marketing)).tag("marketing")
-                        }.frame(maxWidth: 160)
+                        }.frame(maxWidth: 150)
+                        Picker("", selection: $model.refinementStyle) {
+                            Text(L10n.text(.styleBalanced)).tag("balanced")
+                            Text(L10n.text(.styleConcise)).tag("concise")
+                            Text(L10n.text(.styleStructured)).tag("structured")
+                        }.labelsHidden().pickerStyle(.menu).frame(maxWidth: 96)
                         Picker("", selection: $model.promptLanguage) {
                             Text("EN").tag("en")
                             Text("繁中").tag("zh-Hant")
-                        }.labelsHidden().pickerStyle(.segmented).frame(width: 88)
+                        }.labelsHidden().pickerStyle(.segmented).frame(width: 82)
                         Spacer()
                         Text("\(model.original.utf16.count) / 12,000").font(.system(size: 11)).foregroundStyle(.secondary)
                     }.disabled(model.unavailable)

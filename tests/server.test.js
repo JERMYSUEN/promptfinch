@@ -789,3 +789,20 @@ test('連線測試端點與 SSE 串流端點回報狀態與完整結果', async 
   assert.equal(events.at(-1).type, 'result');
   assert.equal(events.at(-1).data.mode, 'mock');
 });
+
+test('優化風格選項傳遞指引並拒絕無效風格', async t => {
+  let receivedPayload;
+  const url = await providerApp(t, async (request, response) => {
+    let body = '';
+    for await (const chunk of request) body += chunk;
+    receivedPayload = JSON.parse(JSON.parse(body).messages[1].content);
+    sendCompletion(response, validResult);
+  });
+  const bad = await post(url, { prompt: 'Test', style: 'poetic' });
+  assert.equal(bad.status, 400);
+
+  const ok = await post(url, { prompt: 'Test concise style', promptLanguage: 'en', style: 'concise' });
+  assert.equal(ok.status, 200);
+  assert.equal(receivedPayload.style, 'concise');
+  assert.match(receivedPayload.styleGuidance, /concise/i);
+});

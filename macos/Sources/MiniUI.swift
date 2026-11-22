@@ -49,9 +49,11 @@ final class SettingsDraftState: ObservableObject {
     @Published var baseURL: String = ProviderPreset.deepseek.defaultBaseURL
     @Published var modelName: String = ProviderPreset.deepseek.defaultModel
     @Published var apiKey: String = ""
+    var preferNativeOnNextSync = false
 
     func sync(from model: WorkspaceModel) {
-        nativeEnabled = model.nativeConfig.enabled
+        nativeEnabled = preferNativeOnNextSync ? true : model.nativeConfig.enabled
+        preferNativeOnNextSync = false
         selectedPreset = model.nativeConfig.preset
         baseURL = model.nativeConfig.baseURL
         modelName = model.nativeConfig.model
@@ -105,7 +107,7 @@ struct MenuBarPopoverView: View {
                 .help(L10n.text(.quit))
             }
 
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Picker("", selection: $model.task) {
                     Text(L10n.text(.general)).tag("general")
                     Text(L10n.text(.writing)).tag("writing")
@@ -115,7 +117,16 @@ struct MenuBarPopoverView: View {
                     Text(L10n.text(.marketing)).tag("marketing")
                 }
                 .labelsHidden()
-                .frame(maxWidth: 120)
+                .frame(maxWidth: 98)
+                .disabled(model.unavailable)
+
+                Picker("", selection: $model.refinementStyle) {
+                    Text(L10n.text(.styleBalanced)).tag("balanced")
+                    Text(L10n.text(.styleConcise)).tag("concise")
+                    Text(L10n.text(.styleStructured)).tag("structured")
+                }
+                .labelsHidden()
+                .frame(maxWidth: 82)
                 .disabled(model.unavailable)
 
                 Picker("", selection: $model.promptLanguage) {
@@ -124,7 +135,7 @@ struct MenuBarPopoverView: View {
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
-                .frame(width: 96)
+                .frame(width: 84)
                 .disabled(model.unavailable)
 
                 Spacer()
@@ -417,6 +428,7 @@ struct CompactSettingsView: View {
                     Button(L10n.text(.saveAndActivate)) {
                         let updated = NativeProviderConfig(
                             enabled: true,
+                            demoMode: false,
                             preset: draft.selectedPreset,
                             baseURL: draft.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
                             model: draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -434,6 +446,7 @@ struct CompactSettingsView: View {
                     Button(L10n.text(.testConnection)) {
                         let updated = NativeProviderConfig(
                             enabled: true,
+                            demoMode: false,
                             preset: draft.selectedPreset,
                             baseURL: draft.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
                             model: draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -443,6 +456,11 @@ struct CompactSettingsView: View {
                         )
                         model.saveNativeProvider(updated, apiKey: draft.apiKey)
                         model.testNativeProviderConnection()
+                    }
+                    .disabled(model.unavailable)
+
+                    Button(L10n.text(.useNativeDemo)) {
+                        model.enableNativeDemo()
                     }
                     .disabled(model.unavailable)
                 }

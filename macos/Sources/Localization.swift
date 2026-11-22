@@ -235,6 +235,13 @@ enum L10n {
         case recentSessionHistory
         case noRecentHistory
         case privacyZeroDiskHeading
+        case styleLabel
+        case styleBalanced
+        case styleConcise
+        case styleStructured
+        case quickSetupBanner
+        case connectNativeAI
+        case useNativeDemo
     }
 
     static var language: UILanguage { UILanguage.load() }
@@ -448,6 +455,13 @@ enum L10n {
         .recentSessionHistory: ["本次暫存紀錄（僅存記憶體）", "Recent session (memory only)", "今回の履歴（メモリ内のみ）", "최근 기록 (메모리 전용)"],
         .noRecentHistory: ["尚無本次紀錄。", "No recent items yet.", "まだ履歴はありません。", "최근 기록이 없습니다."],
         .privacyZeroDiskHeading: ["零硬碟留存保證", "Zero-disk-storage guarantee", "ディスク非保存の保証", "디스크 미저장 보장"],
+        .styleLabel: ["風格", "Style", "スタイル", "스타일"],
+        .styleBalanced: ["平衡", "Balanced", "標準", "균형"],
+        .styleConcise: ["精簡", "Concise", "簡潔", "간결"],
+        .styleStructured: ["條列", "Structured", "構造化", "구조화"],
+        .quickSetupBanner: ["尚未設定 AI 模型 — 可一鍵直連 DeepSeek / OpenAI / Claude / Gemini / Ollama（免安裝 Node.js）。", "No AI model configured yet — connect DeepSeek, OpenAI, Claude, Gemini, or Ollama directly (no Node.js needed).", "AI モデル未設定 — DeepSeek・OpenAI・Claude・Gemini・Ollama に直接接続できます（Node.js 不要）。", "AI 모델이 아직 설정되지 않았습니다 — DeepSeek·OpenAI·Claude·Gemini·Ollama에 바로 연결하세요 (Node.js 불필요)."],
+        .connectNativeAI: ["設定原生直連", "Connect AI", "ネイティブ接続設定", "네이티브 AI 연결"],
+        .useNativeDemo: ["內建示範（免 Node）", "Built-in Demo", "内蔵デモ（Node 不要）", "내장 데모 (Node 불필요)"],
     ]
 
     static func text(_ key: Key, _ arguments: CVarArg..., language: UILanguage? = nil) -> String {

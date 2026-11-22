@@ -38,13 +38,16 @@ struct PromptRequest: Encodable {
     let targetModel: String
     let promptLanguage: String
     let notesLanguage: String
+    let style: String
 
-    init(prompt: String, task: String, targetModel: String, promptLanguage: String = "en", notesLanguage: String = "zh-TW") {
+    init(prompt: String, task: String, targetModel: String, promptLanguage: String = "en",
+         notesLanguage: String = "zh-TW", style: String = "balanced") {
         self.prompt = prompt
         self.task = task
         self.targetModel = targetModel
         self.promptLanguage = promptLanguage
         self.notesLanguage = notesLanguage
+        self.style = style
     }
 
     func validate() throws {
@@ -57,6 +60,9 @@ struct PromptRequest: Encodable {
             throw ToolError.message(L10n.text(.invalidResult))
         }
         guard ["zh-TW", "en", "ja", "ko"].contains(notesLanguage) else {
+            throw ToolError.message(L10n.text(.invalidResult))
+        }
+        guard ["balanced", "concise", "structured"].contains(style) else {
             throw ToolError.message(L10n.text(.invalidResult))
         }
         if targetModel.utf16.count > 80 || targetModel.unicodeScalars.contains(where: { $0.value < 32 }) {
