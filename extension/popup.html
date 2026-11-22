@@ -26,8 +26,15 @@
     <label>API Base URL
       <input id="base-url" type="url" autocomplete="off" spellcheck="false">
     </label>
-    <label>Model Name
+    <label>Model Version
+      <div class="model-row">
+        <select id="model-preset"></select>
+        <button type="button" id="fetch-models" class="ghost compact">Fetch</button>
+      </div>
+    </label>
+    <label>Model ID (pick above or enter custom)
       <input id="model" type="text" autocomplete="off" spellcheck="false">
+      <span id="model-hint" class="model-hint"></span>
     </label>
     <label>API Key (stored locally in chrome.storage.local)
       <input id="api-key" type="password" autocomplete="off" placeholder="Optional for Ollama / Local">

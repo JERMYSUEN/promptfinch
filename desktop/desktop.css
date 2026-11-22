@@ -70,6 +70,10 @@ body.companion #workspace-shell { display: none; }
 .provider-field-wide { grid-column: 1 / -1; }
 .provider-field label { font-size: 12px; color: var(--muted); }
 .provider-field input, .provider-field select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+.model-picker-row { display: flex; gap: 6px; align-items: stretch; }
+.model-picker-row select { flex: 1; min-width: 0; }
+.model-picker-row button { flex-shrink: 0; font-size: 12px; padding: 6px 10px; }
+.model-hint { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
 .desktop-input-settings .style-field { min-width: 118px; }
 body.mini-mode .provider-setup-grid { grid-template-columns: 1fr; }
 body.mini-mode main { padding: 10px 12px 14px; }

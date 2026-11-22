@@ -1,6 +1,17 @@
 import Foundation
 import Security
 
+struct ProviderModelOption: Equatable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let note: String
+
+    var menuLabel: String {
+        if title.isEmpty || title == id { return id }
+        return "\(id) — \(title)"
+    }
+}
+
 enum ProviderProtocol: String, Codable, CaseIterable {
     case openai
     case anthropic
@@ -58,9 +69,67 @@ enum ProviderPreset: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    var suggestedModels: [ProviderModelOption] {
+        switch self {
+        case .deepseek:
+            return [
+                ProviderModelOption(id: "deepseek-flash", title: "DeepSeek-V4.1-Flash (快速・推薦)", note: "DeepSeek-V4.1-Flash 官方高速版（1M 上下文，支援非思考／思考模式）。"),
+                ProviderModelOption(id: "deepseek-v4-pro", title: "DeepSeek-V4-Pro (旗艦進階)", note: "DeepSeek-V4-Pro 進階旗艦版（1M 上下文，適合複雜長指令）。"),
+                ProviderModelOption(id: "deepseek-chat", title: "DeepSeek Chat (V3 通用相容)", note: "DeepSeek 通用對話別名（相容舊版 V3 介面）。"),
+                ProviderModelOption(id: "deepseek-reasoner", title: "DeepSeek Reasoner (深度推理)", note: "DeepSeek 深度推理模型（鏈式思考專用，回應時間較長）。"),
+            ]
+        case .openai:
+            return [
+                ProviderModelOption(id: "gpt-4.1-mini", title: "GPT-4.1 Mini (快速・推薦)", note: "高速且性價比高，適合日常即時 Prompt 潤飾。"),
+                ProviderModelOption(id: "gpt-4.1", title: "GPT-4.1 (精準指令遵循)", note: "強化長上下文與精細規格遵守。"),
+                ProviderModelOption(id: "gpt-4.1-nano", title: "GPT-4.1 Nano (極速輕量)", note: "最低延遲與成本的輕量版本。"),
+                ProviderModelOption(id: "gpt-5-mini", title: "GPT-5 Mini (輕量推理)", note: "GPT-5 輕量版，兼顧速度與推理解析。"),
+                ProviderModelOption(id: "gpt-5", title: "GPT-5 (旗艦統一模型)", note: "GPT-5 旗艦模型，處理複雜多步驟需求。"),
+                ProviderModelOption(id: "gpt-4o-mini", title: "GPT-4o Mini (經典輕量)", note: "經典低延遲輕量模型。"),
+            ]
+        case .anthropic:
+            return [
+                ProviderModelOption(id: "claude-haiku-4-5", title: "Claude Haiku 4.5 (極速・推薦)", note: "支援 Prompt 快取，速度最快且保留原文細節精準。"),
+                ProviderModelOption(id: "claude-sonnet-4-5", title: "Claude Sonnet 4.5 (均衡品質)", note: "寫作與程式指令潤飾的均衡主力。"),
+                ProviderModelOption(id: "claude-haiku-5-5", title: "Claude Haiku 5.5 (新一代極速)", note: "新一代高吞吐低延遲版本。"),
+                ProviderModelOption(id: "claude-sonnet-5-5", title: "Claude Sonnet 5.5 (新一代均衡)", note: "新一代速度與深度的最佳平衡。"),
+                ProviderModelOption(id: "claude-opus-5-5", title: "Claude Opus 5.5 (旗艦深度)", note: "最高階複雜規格與長篇任務專用。"),
+            ]
+        case .gemini:
+            return [
+                ProviderModelOption(id: "gemini-2.5-flash-lite", title: "Gemini 2.5 Flash-Lite (低延遲)", note: "輕量高速且成本極低，適合即時潤飾。"),
+                ProviderModelOption(id: "gemini-2.5-flash", title: "Gemini 2.5 Flash (穩定高速)", note: "穩定通用版本，支援原生 JSON 輸出。"),
+                ProviderModelOption(id: "gemini-2.5-pro", title: "Gemini 2.5 Pro (進階推理)", note: "高複雜度分析與程式任務適用。"),
+                ProviderModelOption(id: "gemini-3.5-flash-lite", title: "Gemini 3.5 Flash-Lite (新一代輕量)", note: "新一代高吞吐輕量版本。"),
+                ProviderModelOption(id: "gemini-3.6-flash", title: "Gemini 3.6 Flash (新一代均衡)", note: "新一代速度與理解力均衡版。"),
+            ]
+        case .ollama:
+            return [
+                ProviderModelOption(id: "qwen2.5:7b", title: "Qwen 2.5 7B (中英俱佳・預設)", note: "離線本機執行，中文與英文指令結構表現均衡。"),
+                ProviderModelOption(id: "qwen2.5:14b", title: "Qwen 2.5 14B (更高品質)", note: "離線本機執行，複雜條件與細節保留更佳。"),
+                ProviderModelOption(id: "llama3.2:latest", title: "Llama 3.2 (輕量快速)", note: "輕量快速通用本機模型。"),
+                ProviderModelOption(id: "deepseek-r1:8b", title: "DeepSeek-R1 8B (本機推理)", note: "本機輕量推理模型。"),
+                ProviderModelOption(id: "gemma3:4b", title: "Gemma 3 4B (極輕量)", note: "低記憶體佔用的輕巧本機模型。"),
+            ]
+        case .custom:
+            return []
+        }
+    }
+
+    func modelOption(for id: String) -> ProviderModelOption? {
+        let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+        return suggestedModels.first { $0.id == trimmed }
+    }
+
     var requiresAPIKey: Bool { self != .ollama }
     var defaultJSONMode: Bool { self != .anthropic }
     var defaultThinkingMode: String { self == .deepseek ? "disabled" : "" }
+
+    func resolvedThinkingMode(for model: String) -> String {
+        guard self == .deepseek else { return "" }
+        let normalized = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalized == "deepseek-flash" ? "disabled" : ""
+    }
 }
 
 protocol SecretStorage {
@@ -392,6 +461,72 @@ final class NativeOptimizerEngine {
             promptLanguage: input.promptLanguage,
             notesLanguage: input.notesLanguage
         )
+    }
+
+    func fetchModels(config: NativeProviderConfig, apiKeyOverride: String? = nil) async throws -> [ProviderModelOption] {
+        let baseURL = try config.validatedBaseURL()
+        let key = (apiKeyOverride ?? apiKey(for: config.preset)).trimmingCharacters(in: .whitespacesAndNewlines)
+        if config.preset.requiresAPIKey && key.isEmpty {
+            throw ToolError.message(L10n.text(.providerSetup))
+        }
+        let endpoint = baseURL.appendingPathComponent("models")
+        var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: min(config.timeoutSeconds, 15))
+        request.httpMethod = "GET"
+        switch config.preset.apiProtocol {
+        case .anthropic:
+            request.setValue(key, forHTTPHeaderField: "x-api-key")
+            request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        case .gemini:
+            request.setValue(key, forHTTPHeaderField: "x-goog-api-key")
+        case .openai:
+            if !key.isEmpty {
+                request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+            }
+        }
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch let urlError as URLError {
+            if urlError.code == .cancelled { throw CancellationError() }
+            if urlError.code == .timedOut { throw ToolError.message(L10n.text(.providerTimeout)) }
+            throw ToolError.message(L10n.text(.providerNetwork))
+        }
+        try validateHTTPResponse(response)
+        guard data.count <= 262_144 else { throw ToolError.message(L10n.text(.providerTooLong)) }
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw ToolError.message(L10n.text(.providerJSON))
+        }
+        var seen = Set<String>()
+        var options: [ProviderModelOption] = []
+        func appendOption(rawId: String?, rawTitle: String? = nil) {
+            guard let id = rawId?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !id.isEmpty, id.count <= 120, !id.contains("\n"), !id.contains("\r"),
+                  seen.insert(id).inserted else { return }
+            if let presetMatch = config.preset.modelOption(for: id) {
+                options.append(presetMatch)
+                return
+            }
+            let title = (rawTitle ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            options.append(ProviderModelOption(id: id, title: title == id ? "" : String(title.prefix(80)), note: ""))
+        }
+        if config.preset.apiProtocol == .gemini, let list = object["models"] as? [[String: Any]] {
+            for item in list {
+                let methods = item["supportedGenerationMethods"] as? [String] ?? []
+                if !methods.isEmpty && !methods.contains("generateContent") { continue }
+                let rawName = (item["name"] as? String ?? "").replacingOccurrences(of: "models/", with: "")
+                appendOption(rawId: rawName, rawTitle: item["displayName"] as? String)
+            }
+        } else if let list = object["data"] as? [[String: Any]] {
+            for item in list {
+                appendOption(rawId: item["id"] as? String, rawTitle: (item["display_name"] as? String) ?? (item["name"] as? String))
+            }
+        } else if let list = object["models"] as? [[String: Any]] {
+            for item in list {
+                appendOption(rawId: (item["name"] as? String) ?? (item["id"] as? String), rawTitle: item["displayName"] as? String)
+            }
+        }
+        options.sort { $0.id.localizedStandardCompare($1.id) == .orderedAscending }
+        return Array(options.prefix(200))
     }
 
     func testConnection(config: NativeProviderConfig) async throws -> NativeConnectionCheckResult {

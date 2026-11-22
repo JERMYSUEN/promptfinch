@@ -806,3 +806,33 @@ test('優化風格選項傳遞指引並拒絕無效風格', async t => {
   assert.equal(receivedPayload.style, 'concise');
   assert.match(receivedPayload.styleGuidance, /concise/i);
 });
+
+test('模型清單端點支援 OpenAI／DeepSeek、Anthropic 與 Gemini 格式且安全過濾', async t => {
+  const openaiProvider = await listen(createServer((request, response) => {
+    assert.equal(request.url, '/models');
+    assert.equal(request.headers.authorization, 'Bearer ds-key');
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ data: [{ id: 'deepseek-v4-pro' }, { id: 'deepseek-flash' }, { id: 'deepseek-flash' }] }));
+  }), t);
+  const dsUrl = await app(t, { OPTIMIZER_MODE: 'live', LLM_PROVIDER: 'openai', LLM_API_KEY: 'ds-key', LLM_MODEL: 'deepseek-flash', LLM_BASE_URL: openaiProvider });
+  const dsRes = await fetch(`${dsUrl}/api/models`);
+  assert.equal(dsRes.status, 200);
+  assert.deepEqual((await dsRes.json()).models.map(m => m.id), ['deepseek-flash', 'deepseek-v4-pro']);
+
+  const geminiProvider = await listen(createServer((request, response) => {
+    assert.equal(request.url, '/v1beta/models');
+    assert.equal(request.headers['x-goog-api-key'], 'gem-key');
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({
+      models: [
+        { name: 'models/gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', supportedGenerationMethods: ['generateContent'] },
+        { name: 'models/text-embedding-004', displayName: 'Embedding', supportedGenerationMethods: ['embedContent'] },
+      ],
+    }));
+  }), t);
+  const gemUrl = await app(t, { OPTIMIZER_MODE: 'live', LLM_PROVIDER: 'gemini', LLM_API_KEY: 'gem-key', LLM_MODEL: 'gemini-2.5-flash', LLM_BASE_URL: `${geminiProvider}/v1beta` });
+  const gemRes = await fetch(`${gemUrl}/api/models`);
+  assert.equal(gemRes.status, 200);
+  const gemData = await gemRes.json();
+  assert.deepEqual(gemData.models, [{ id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }]);
+});

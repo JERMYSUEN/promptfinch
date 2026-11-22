@@ -455,6 +455,56 @@ struct CoreTests {
         check(draft.baseURL == ProviderPreset.anthropic.defaultBaseURL && draft.apiKey == "test-key",
               "settings draft switches presets and loads matching Keychain secret")
 
+        // Curated model catalog, DeepSeek version hints, thinking-mode resolution, and live /models fetch.
+        check(ProviderPreset.deepseek.suggestedModels.map(\.id) == ["deepseek-flash", "deepseek-v4-pro", "deepseek-chat", "deepseek-reasoner"],
+              "DeepSeek preset exposes clear selectable model catalog")
+        check(ProviderPreset.deepseek.modelOption(for: "deepseek-flash")?.note.contains("DeepSeek-V4.1-Flash") == true,
+              "deepseek-flash displays exact DeepSeek-V4.1-Flash version description")
+        check(ProviderPreset.deepseek.resolvedThinkingMode(for: "deepseek-flash") == "disabled"
+              && ProviderPreset.deepseek.resolvedThinkingMode(for: "deepseek-reasoner") == ""
+              && ProviderPreset.openai.resolvedThinkingMode(for: "gpt-4.1-mini") == "",
+              "thinking mode resolves per provider and model")
+        draft.selectPreset(.deepseek, model: draftModel)
+        draft.fetchedModels = [
+            ProviderModelOption(id: "deepseek-flash", title: "", note: ""),
+            ProviderModelOption(id: "deepseek-custom-exp", title: "Experimental", note: ""),
+        ]
+        check(draft.availableModelOptions.filter { $0.id == "deepseek-flash" }.count == 1
+              && draft.availableModelOptions.contains { $0.id == "deepseek-custom-exp" },
+              "draft merges live fetched models with curated catalog without duplicates")
+
+        let modelMockPort = Int.random(in: 24000...44000)
+        let modelMockProcess = Process()
+        modelMockProcess.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+        modelMockProcess.arguments = ["-c", """
+        import http.server, json, socketserver
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = json.dumps({"data": [{"id": "deepseek-v4-pro"}, {"id": "deepseek-flash"}, {"id": "deepseek-chat"}]}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            def log_message(self, *args): pass
+        s = socketserver.TCPServer(("127.0.0.1", \(modelMockPort)), H)
+        s.handle_request()
+        s.server_close()
+        """]
+        try? modelMockProcess.run()
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        let fetchProbe = NativeProviderConfig(
+            enabled: true, demoMode: false, preset: .deepseek,
+            baseURL: "http://127.0.0.1:\(modelMockPort)", model: "deepseek-flash",
+            jsonMode: true, thinkingMode: "disabled", timeoutSeconds: 5
+        )
+        let fetchedList = (try? await nativeEngine.fetchModels(config: fetchProbe, apiKeyOverride: "sk-unit-test")) ?? []
+        if modelMockProcess.isRunning { modelMockProcess.terminate() }
+        check(fetchedList.map(\.id) == ["deepseek-chat", "deepseek-flash", "deepseek-v4-pro"],
+              "native engine fetches and sorts live available models from provider /models endpoint")
+        check(fetchedList.first { $0.id == "deepseek-flash" }?.note.contains("DeepSeek-V4.1-Flash") == true,
+              "fetched known model preserves curated version description")
+
         // Refinement style validation and zero-Node built-in native demo tests.
         let validConcise = PromptRequest(prompt: "Refine this", task: "coding", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "concise")
         check((try? validConcise.validate()) != nil, "concise refinement style validates cleanly")

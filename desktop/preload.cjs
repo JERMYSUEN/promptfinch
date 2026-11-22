@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('promptfinch', Object.freeze({
   chooseConfig: () => invoke('chooseConfig'),
   createConfig: () => invoke('createConfig'),
   saveProviderConfig: input => invoke('saveProviderConfig', input),
+  listModels: input => invoke('listModels', input),
   testConnection: () => invoke('testConnection'),
   useDemo: () => invoke('useDemo'),
   generate: input => invoke('generate', input),

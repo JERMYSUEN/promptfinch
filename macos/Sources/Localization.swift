@@ -219,7 +219,13 @@ enum L10n {
         case engineLegacy
         case providerPresetLabel
         case providerBaseURLLabel
+        case providerModelChoiceLabel
         case providerModelLabel
+        case customModelOption
+        case fetchModelsButton
+        case fetchingModels
+        case fetchedModelsCount
+        case customModelHint
         case providerAPIKeyLabel
         case providerAPIKeyPlaceholder
         case providerKeychainNote
@@ -442,7 +448,13 @@ enum L10n {
         .engineLegacy: ["本機 Node.js .env 後端", "Local Node.js .env backend", "ローカル Node.js .env バックエンド", "로컬 Node.js .env 백엔드"],
         .providerPresetLabel: ["服務商預設", "Provider preset", "プロバイダー", "서비스 제공자"],
         .providerBaseURLLabel: ["API 網址", "API Base URL", "API ベース URL", "API 기본 URL"],
-        .providerModelLabel: ["模型名稱", "Model name", "モデル名", "모델 이름"],
+        .providerModelChoiceLabel: ["模型版本選擇", "Model version", "モデル選択", "모델 버전 선택"],
+        .providerModelLabel: ["模型 ID（可自行輸入或由上方選擇）", "Model ID (pick above or enter custom)", "モデル ID（上から選択または直接入力）", "모델 ID (위에서 선택하거나 직접 입력)"],
+        .customModelOption: ["自訂模型 ID…", "Custom model ID…", "カスタムモデル ID…", "사용자 지정 모델 ID…"],
+        .fetchModelsButton: ["讀取可用模型", "Fetch models", "一覧を取得", "모델 불러오기"],
+        .fetchingModels: ["正在讀取服務商可用模型清單…", "Fetching available models…", "利用可能なモデル一覧を取得中…", "사용 가능한 모델 목록 불러오는 중…"],
+        .fetchedModelsCount: ["已從服務商載入 %@ 個可用模型。", "Loaded %@ available models from provider.", "プロバイダーから %@ 件のモデルを読み込みました。", "공급자에서 %@개의 모델을 불러왔습니다."],
+        .customModelHint: ["可從下拉選單切換常見版本、點「讀取可用模型」即時拉取，或直接輸入任意模型 ID。", "Switch curated models above, click Fetch models to query your API, or type any model ID.", "上の候補から選ぶか「一覧を取得」で API から読み込み、または任意のモデル ID を入力できます。", "위 목록에서 선택하거나 '모델 불러오기'로 조회하거나 원하는 모델 ID를 직접 입력하세요."],
         .providerAPIKeyLabel: ["API 金鑰", "API Key", "API キー", "API 키"],
         .providerAPIKeyPlaceholder: ["輸入金鑰（本機 Ollama 可留空）", "Enter API key (blank for local Ollama)", "キーを入力（ローカル Ollama は空欄可）", "API 키 입력 (로컬 Ollama는 비워 둠)"],
         .providerKeychainNote: ["金鑰加密存放在 macOS 鑰匙圈（Keychain），絕不寫入設定檔或傳輸給非指定主機。", "Keys are encrypted in macOS Keychain and never stored in plain preferences.", "キーは macOS キーチェーンに暗号化保存され、設定ファイルには書き出しません。", "키는 macOS 키체인에 암호화되어 저장되며 설정 파일에 기록되지 않습니다."],

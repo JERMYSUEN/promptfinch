@@ -163,6 +163,7 @@ function registerIPC() {
     },
     createConfig: async () => { const file = await controller.createTemplate(); const error = await shell.openPath(file); if (error) { shell.showItemInFolder(file); } return { created: true }; },
     saveProviderConfig: async input => { await controller.saveProviderConfig(input); result = null; return sendState(); },
+    listModels: input => controller.listModels(input),
     testConnection: () => controller.testConnection(),
     useDemo: async () => { await controller.useDemo(); result = null; return sendState(); },
     generate: input => generate(input), cancel: async () => { await controller.cancel(); return sendState(); },

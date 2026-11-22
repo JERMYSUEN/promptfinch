@@ -17,15 +17,104 @@ const t = (key, values) => translate(state.language, key, values);
 document.body.classList.toggle('companion', companion);
 $('companion-menu').hidden = !companion;
 
+const CUSTOM_MODEL_VALUE = '__custom__';
 const PRESET_DEFAULTS = {
-  deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-flash' },
-  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4.1-mini' },
-  anthropic: { baseUrl: 'https://api.anthropic.com/v1', model: 'claude-haiku-4-5' },
-  gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.5-flash-lite' },
-  ollama: { baseUrl: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
-  custom: { baseUrl: 'https://api.openai.com/v1', model: '' },
+  deepseek: {
+    baseUrl: 'https://api.deepseek.com',
+    model: 'deepseek-flash',
+    models: [
+      { id: 'deepseek-flash', label: 'deepseek-flash — DeepSeek-V4.1-Flash (快速・推薦)', note: 'DeepSeek-V4.1-Flash 官方高速版（1M 上下文，支援非思考／思考模式）。' },
+      { id: 'deepseek-v4-pro', label: 'deepseek-v4-pro — DeepSeek-V4-Pro (旗艦進階)', note: 'DeepSeek-V4-Pro 進階旗艦版（1M 上下文，適合複雜長指令）。' },
+      { id: 'deepseek-chat', label: 'deepseek-chat — DeepSeek Chat (V3 相容)', note: 'DeepSeek 通用對話別名（相容舊版 V3 介面）。' },
+      { id: 'deepseek-reasoner', label: 'deepseek-reasoner — DeepSeek Reasoner (深度推理)', note: 'DeepSeek 深度推理模型（鏈式思考專用，回應時間較長）。' },
+    ],
+  },
+  openai: {
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4.1-mini',
+    models: [
+      { id: 'gpt-4.1-mini', label: 'gpt-4.1-mini — GPT-4.1 Mini (快速・推薦)', note: '高速高性價比，適合日常即時 Prompt 潤飾。' },
+      { id: 'gpt-4.1', label: 'gpt-4.1 — GPT-4.1 (精準指令遵循)', note: '強化長上下文與精細規格遵守。' },
+      { id: 'gpt-4.1-nano', label: 'gpt-4.1-nano — GPT-4.1 Nano (極速輕量)', note: '最低延遲與成本的輕量版本。' },
+      { id: 'gpt-5-mini', label: 'gpt-5-mini — GPT-5 Mini (輕量推理)', note: 'GPT-5 輕量版，兼顧速度與推理解析。' },
+      { id: 'gpt-5', label: 'gpt-5 — GPT-5 (旗艦統一模型)', note: 'GPT-5 旗艦模型，處理複雜多步驟需求。' },
+      { id: 'gpt-4o-mini', label: 'gpt-4o-mini — GPT-4o Mini (經典輕量)', note: '經典低延遲輕量模型。' },
+    ],
+  },
+  anthropic: {
+    baseUrl: 'https://api.anthropic.com/v1',
+    model: 'claude-haiku-4-5',
+    models: [
+      { id: 'claude-haiku-4-5', label: 'claude-haiku-4-5 — Claude Haiku 4.5 (極速・推薦)', note: '支援 Prompt 快取，速度最快且保留原文細節精準。' },
+      { id: 'claude-sonnet-4-5', label: 'claude-sonnet-4-5 — Claude Sonnet 4.5 (均衡品質)', note: '寫作與程式指令潤飾的均衡主力。' },
+      { id: 'claude-haiku-5-5', label: 'claude-haiku-5-5 — Claude Haiku 5.5 (新一代極速)', note: '新一代高吞吐低延遲版本。' },
+      { id: 'claude-sonnet-5-5', label: 'claude-sonnet-5-5 — Claude Sonnet 5.5 (新一代均衡)', note: '新一代速度與深度的最佳平衡。' },
+      { id: 'claude-opus-5-5', label: 'claude-opus-5-5 — Claude Opus 5.5 (旗艦深度)', note: '最高階複雜規格與長篇任務專用。' },
+    ],
+  },
+  gemini: {
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    model: 'gemini-2.5-flash-lite',
+    models: [
+      { id: 'gemini-2.5-flash-lite', label: 'gemini-2.5-flash-lite — Gemini 2.5 Flash-Lite (低延遲)', note: '輕量高速且成本極低，適合即時潤飾。' },
+      { id: 'gemini-2.5-flash', label: 'gemini-2.5-flash — Gemini 2.5 Flash (穩定高速)', note: '穩定通用版本，支援原生 JSON 輸出。' },
+      { id: 'gemini-2.5-pro', label: 'gemini-2.5-pro — Gemini 2.5 Pro (進階推理)', note: '高複雜度分析與程式任務適用。' },
+      { id: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite — Gemini 3.5 Flash-Lite (新一代輕量)', note: '新一代高吞吐輕量版本。' },
+      { id: 'gemini-3.6-flash', label: 'gemini-3.6-flash — Gemini 3.6 Flash (新一代均衡)', note: '新一代速度與理解力均衡版。' },
+    ],
+  },
+  ollama: {
+    baseUrl: 'http://127.0.0.1:11434/v1',
+    model: 'qwen2.5:7b',
+    models: [
+      { id: 'qwen2.5:7b', label: 'qwen2.5:7b — Qwen 2.5 7B (中英俱佳・預設)', note: '離線本機執行，中文與英文指令結構表現均衡。' },
+      { id: 'qwen2.5:14b', label: 'qwen2.5:14b — Qwen 2.5 14B (更高品質)', note: '離線本機執行，複雜條件與細節保留更佳。' },
+      { id: 'llama3.2:latest', label: 'llama3.2:latest — Llama 3.2 (輕量快速)', note: '輕量快速通用本機模型。' },
+      { id: 'deepseek-r1:8b', label: 'deepseek-r1:8b — DeepSeek-R1 8B (本機推理)', note: '本機輕量推理模型。' },
+      { id: 'gemma3:4b', label: 'gemma3:4b — Gemma 3 4B (極輕量)', note: '低記憶體佔用的輕巧本機模型。' },
+    ],
+  },
+  custom: { baseUrl: 'https://api.openai.com/v1', model: '', models: [] },
 };
+let fetchedModelsByPreset = {};
 let statusValues = {};
+
+function mergedModelsForPreset(presetId) {
+  const curated = PRESET_DEFAULTS[presetId]?.models || [];
+  const fetched = fetchedModelsByPreset[presetId] || [];
+  const seen = new Set(curated.map(item => item.id));
+  const combined = [...curated];
+  for (const item of fetched) {
+    if (!item?.id || seen.has(item.id)) continue;
+    seen.add(item.id);
+    combined.push({ id: item.id, label: item.label && item.label !== item.id ? `${item.id} — ${item.label}` : item.id, note: '' });
+  }
+  return combined;
+}
+
+function renderProviderModels() {
+  const select = $('provider-model-preset');
+  const input = $('provider-model');
+  const hint = $('provider-model-hint');
+  if (!select || !input) return;
+  const presetId = $('provider-preset')?.value || 'deepseek';
+  const options = mergedModelsForPreset(presetId);
+  const current = input.value.trim();
+  select.replaceChildren();
+  for (const item of options) {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = item.label;
+    select.appendChild(opt);
+  }
+  const customOpt = document.createElement('option');
+  customOpt.value = CUSTOM_MODEL_VALUE;
+  customOpt.textContent = t('customModelOption');
+  select.appendChild(customOpt);
+  const matched = options.find(item => item.id === current);
+  select.value = matched ? matched.id : CUSTOM_MODEL_VALUE;
+  if (hint) hint.textContent = matched?.note || t('customModelHint');
+}
 
 function inputValue() {
   return {
@@ -158,6 +247,7 @@ function renderState() {
   $('shortcut-status').textContent = t(shortcutKey);
   $('selection-preview').textContent = typeof state.selectionPreview === 'string' ? state.selectionPreview : '';
   $('selection-preview').setAttribute('aria-label', `${t('original')}: ${$('selection-preview').textContent}`);
+  renderProviderModels();
   renderResultLabels();
   renderBusy();
   renderStatus();
@@ -311,6 +401,39 @@ function registerEvents() {
     if (!preset) return;
     $('provider-base-url').value = preset.baseUrl;
     $('provider-model').value = preset.model;
+    renderProviderModels();
+  });
+  $('provider-model-preset')?.addEventListener('change', event => {
+    if (event.target.value !== CUSTOM_MODEL_VALUE) {
+      $('provider-model').value = event.target.value;
+    } else {
+      $('provider-model').focus();
+    }
+    renderProviderModels();
+  });
+  $('provider-model')?.addEventListener('input', () => {
+    renderProviderModels();
+  });
+  $('fetch-provider-models')?.addEventListener('click', async () => {
+    const presetId = $('provider-preset').value;
+    setStatus('fetchingModels', 'neutral');
+    const button = $('fetch-provider-models');
+    button.disabled = true;
+    const reply = await call('listModels', {
+      preset: presetId,
+      baseUrl: $('provider-base-url').value,
+      model: $('provider-model').value,
+      apiKey: $('provider-api-key').value,
+    });
+    button.disabled = false;
+    if (reply.ok && reply.value && Array.isArray(reply.value.models)) {
+      fetchedModelsByPreset[presetId] = reply.value.models;
+      if (!$('provider-model').value.trim() && reply.value.models[0]?.id) {
+        $('provider-model').value = reply.value.models[0].id;
+      }
+      renderProviderModels();
+      setStatus('fetchedModelsOk', '', { count: reply.value.models.length });
+    }
   });
   $('save-provider-config')?.addEventListener('click', async () => {
     const reply = await call('saveProviderConfig', {

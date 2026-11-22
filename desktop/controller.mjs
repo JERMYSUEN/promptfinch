@@ -2,7 +2,7 @@ import { open, mkdir, rename, unlink, lstat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { parseEnv } from 'node:util';
-import { optimize, readConfig, validateInput, testProviderConnection, PROVIDER_PRESETS, NOTES_LANGUAGES, AppError } from '../lib/optimizer.js';
+import { optimize, readConfig, validateInput, testProviderConnection, listProviderModels, PROVIDER_PRESETS, NOTES_LANGUAGES, AppError } from '../lib/optimizer.js';
 
 const messages = Object.freeze({
   CLOSED: 'The desktop workspace has closed.',
@@ -195,7 +195,7 @@ export class DesktopController {
       LLM_MODEL: model,
       LLM_API_KEY: apiKey,
       LLM_JSON_MODE: preset.jsonMode ? 'true' : 'false',
-      LLM_THINKING_MODE: preset.thinkingMode || '',
+      LLM_THINKING_MODE: preset.id === 'deepseek' && model.toLowerCase() === 'deepseek-flash' ? 'disabled' : '',
       LLM_QUALITY_REVIEW: 'false',
       LLM_TIMEOUT_MS: '45000',
     };
@@ -225,6 +225,46 @@ export class DesktopController {
       this.#error = null;
       return this.snapshot();
     });
+  }
+
+  async listModels(body = null) {
+    this.#assertIdle();
+    let probeConfig = this.#config;
+    if (body && typeof body === 'object' && !Array.isArray(body)) {
+      const preset = PROVIDER_PRESETS.find(item => item.id === body.preset) || PROVIDER_PRESETS[0];
+      const baseUrl = String(body.baseUrl ?? preset.baseUrl ?? '').trim();
+      const rawKey = String(body.apiKey ?? '').trim();
+      const fallbackKey = this.#config?.mode === 'live' && this.#config?.baseUrl === baseUrl.replace(/\/+$/, '') ? (this.#config.apiKey || '') : '';
+      const apiKey = rawKey || fallbackKey || (preset.requiresKey ? '' : 'local-only');
+      if (/[\r\n]/.test(baseUrl) || /[\r\n]/.test(apiKey)) throw new DesktopError('CONFIG_INVALID');
+      try {
+        probeConfig = readConfig({
+          OPTIMIZER_MODE: 'live',
+          LLM_PROVIDER: preset.provider,
+          LLM_BASE_URL: baseUrl,
+          LLM_MODEL: String(body.model || preset.defaultModel || 'placeholder').trim(),
+          LLM_API_KEY: apiKey,
+          LLM_TIMEOUT_MS: '15000',
+        });
+      } catch {
+        throw new DesktopError('CONFIG_INVALID');
+      }
+      if (preset.requiresKey && !probeConfig.apiKey) throw new DesktopError('CONFIG_INCOMPLETE');
+    }
+    if (!probeConfig) throw new DesktopError(this.#error?.code || 'CONFIG_INCOMPLETE');
+    const active = { abort: new AbortController(), id: randomUUID() };
+    this.#active = active;
+    try {
+      const result = await listProviderModels(probeConfig, active.abort.signal);
+      if (this.#closed || active.abort.signal.aborted || this.#active !== active) throw new DesktopError('CANCELLED');
+      return { ok: true, mode: result.mode, provider: result.provider, models: result.models };
+    } catch (error) {
+      const code = this.#closed || active.abort.signal.aborted ? 'CANCELLED'
+        : error instanceof DesktopError ? error.code
+          : error instanceof AppError && error.status === 429 ? 'RATE_LIMIT'
+            : error instanceof AppError && error.status === 504 ? 'TIMEOUT' : 'PROVIDER';
+      throw new DesktopError(code);
+    } finally { if (this.#active === active) this.#active = null; }
   }
 
   async testConnection() {

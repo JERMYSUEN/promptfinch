@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { isIP } from 'node:net';
-import { AppError, MAX_PROMPT_LENGTH, TASKS, NOTES_LANGUAGES, readConfig, validateInput, optimize, optimizeStream, testProviderConnection } from './lib/optimizer.js';
+import { AppError, MAX_PROMPT_LENGTH, TASKS, NOTES_LANGUAGES, readConfig, validateInput, optimize, optimizeStream, testProviderConnection, listProviderModels } from './lib/optimizer.js';
 
 const BODY_LIMIT = 98304;
 
@@ -140,6 +140,21 @@ export function createApp(config = readConfig()) {
           qualityReviewEnabled: config.mode === 'live' && config.qualityReview === true,
           maxPromptLength: MAX_PROMPT_LENGTH, tasks: TASKS, promptLanguages: ['zh-Hant', 'en'], notesLanguages: NOTES_LANGUAGES,
         });
+        return;
+      }
+      if (pathname === '/api/models' && request.method === 'GET') {
+        if (activeRequests >= 4) throw new AppError(429, '目前正在處理其他優化，請稍後再試。');
+        activeRequests++;
+        const cancellation = new AbortController();
+        const cancel = () => cancellation.abort();
+        response.on('close', cancel);
+        try {
+          const outcome = await listProviderModels(config, cancellation.signal);
+          if (!response.destroyed) sendJson(response, 200, outcome);
+        } finally {
+          response.off('close', cancel);
+          activeRequests--;
+        }
         return;
       }
       if (pathname === '/api/test-connection' && request.method === 'POST') {

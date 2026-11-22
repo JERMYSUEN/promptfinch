@@ -1,8 +1,8 @@
 const PRESETS = Object.freeze({
-  deepseek: { protocol: 'openai', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
-  openai: { protocol: 'openai', baseUrl: 'https://api.openai.com', model: 'gpt-4.1-mini' },
-  anthropic: { protocol: 'anthropic', baseUrl: 'https://api.anthropic.com', model: 'claude-3-5-haiku-latest' },
-  gemini: { protocol: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com', model: 'gemini-2.5-flash' },
+  deepseek: { protocol: 'openai', baseUrl: 'https://api.deepseek.com', model: 'deepseek-flash' },
+  openai: { protocol: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4.1-mini' },
+  anthropic: { protocol: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: 'claude-haiku-4-5' },
+  gemini: { protocol: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.5-flash-lite' },
   ollama: { protocol: 'openai', baseUrl: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
   local: { protocol: 'local', baseUrl: 'http://127.0.0.1:3210', model: 'local-backend' },
 });
@@ -208,9 +208,73 @@ async function callProvider(settings, payload) {
   };
 }
 
+async function fetchModels(settings) {
+  const presetInfo = PRESETS[settings.preset] || PRESETS.deepseek;
+  const protocol = presetInfo.protocol;
+  const baseUrl = String(settings.baseUrl || presetInfo.baseUrl).replace(/\/+$/, '');
+  const apiKey = String(settings.apiKey || '').trim();
+  if (protocol === 'local') {
+    const res = await fetch(`${baseUrl}/api/models`, { method: 'GET' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || `Local backend error (${res.status})`);
+    return Array.isArray(data?.models) ? data.models : [];
+  }
+  if (settings.preset !== 'ollama' && !apiKey) {
+    throw new Error('Enter your API key first to fetch available models.');
+  }
+  let endpoint;
+  let headers = {};
+  if (protocol === 'anthropic') {
+    endpoint = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
+    headers = {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    };
+  } else if (protocol === 'gemini') {
+    const root = baseUrl.endsWith('/v1beta') ? baseUrl : `${baseUrl}/v1beta`;
+    endpoint = `${root}/models`;
+    headers = { 'x-goog-api-key': apiKey };
+  } else {
+    endpoint = `${baseUrl}/models`;
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  }
+  const res = await fetch(endpoint, { method: 'GET', headers });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || `Failed to fetch models (${res.status})`);
+  const seen = new Set();
+  const models = [];
+  const add = (id, label = '') => {
+    const clean = String(id || '').trim();
+    if (!clean || seen.has(clean)) return;
+    seen.add(clean);
+    const title = String(label || '').trim();
+    models.push({ id: clean, label: title && title !== clean ? title : clean });
+  };
+  if (protocol === 'gemini' && Array.isArray(data?.models)) {
+    for (const item of data.models) {
+      const methods = Array.isArray(item?.supportedGenerationMethods) ? item.supportedGenerationMethods : [];
+      if (methods.length && !methods.includes('generateContent')) continue;
+      add(String(item?.name || '').replace(/^models\//, ''), item?.displayName || '');
+    }
+  } else if (Array.isArray(data?.data)) {
+    for (const item of data.data) add(item?.id, item?.display_name || item?.name || '');
+  } else if (Array.isArray(data?.models)) {
+    for (const item of data.models) add(item?.name || item?.id, item?.displayName || '');
+  }
+  return models.sort((a, b) => a.id.localeCompare(b.id)).slice(0, 200);
+}
+
 if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!message || typeof message !== 'object') return false;
+    if (message.type === 'PROMPTFINCH_LIST_MODELS') {
+      readSettings()
+        .then(settings => fetchModels({ ...settings, ...(message.settings || {}) }))
+        .then(models => sendResponse({ ok: true, models }))
+        .catch(error => sendResponse({ ok: false, error: error?.message || 'Could not load models.' }));
+      return true;
+    }
     if (message.type === 'PROMPTFINCH_OPTIMIZE') {
       readSettings()
         .then(settings => callProvider({ ...settings, ...(message.settings || {}) }, message.payload || {}))

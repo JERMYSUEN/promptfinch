@@ -166,3 +166,32 @@ test('desktop GUI provider setup saves 0600 private config without leaking keys 
   assert.equal(conn.ok, true);
   assert.equal(conn.mode, 'mock');
 });
+
+test('desktop controller lists live models from provider API and resolves DeepSeek thinking mode per model', async t => {
+  const { createServer } = await import('node:http');
+  const provider = createServer((req, res) => {
+    if (req.url === '/models' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ data: [{ id: 'deepseek-reasoner' }, { id: 'deepseek-flash' }] }));
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+  await new Promise(accept => provider.listen(0, '127.0.0.1', accept));
+  t.after(() => new Promise(accept => provider.close(accept)));
+  const baseUrl = `http://127.0.0.1:${provider.address().port}`;
+
+  const { templatePath, controller } = await workspace(t);
+  const listed = await controller.listModels({ preset: 'deepseek', baseUrl, apiKey: 'sk-test-models' });
+  assert.equal(listed.ok, true);
+  assert.deepEqual(listed.models.map(m => m.id), ['deepseek-flash', 'deepseek-reasoner']);
+
+  await controller.saveProviderConfig({ preset: 'deepseek', baseUrl, model: 'deepseek-reasoner', apiKey: 'sk-test-models' });
+  const reasonerEnv = await readFile(templatePath, 'utf8');
+  assert.match(reasonerEnv, /^LLM_THINKING_MODE=$/m);
+
+  await controller.saveProviderConfig({ preset: 'deepseek', baseUrl, model: 'deepseek-flash', apiKey: 'sk-test-models' });
+  const flashEnv = await readFile(templatePath, 'utf8');
+  assert.match(flashEnv, /^LLM_THINKING_MODE=disabled$/m);
+});

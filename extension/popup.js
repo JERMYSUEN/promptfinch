@@ -1,13 +1,108 @@
+const CUSTOM_MODEL = '__custom__';
 const PRESET_DEFAULTS = {
-  deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
-  openai: { baseUrl: 'https://api.openai.com', model: 'gpt-4.1-mini' },
-  anthropic: { baseUrl: 'https://api.anthropic.com', model: 'claude-3-5-haiku-latest' },
-  gemini: { baseUrl: 'https://generativelanguage.googleapis.com', model: 'gemini-2.5-flash' },
-  ollama: { baseUrl: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
-  local: { baseUrl: 'http://127.0.0.1:3210', model: 'local-backend' },
+  deepseek: {
+    baseUrl: 'https://api.deepseek.com',
+    model: 'deepseek-flash',
+    models: [
+      { id: 'deepseek-flash', label: 'deepseek-flash — DeepSeek-V4.1-Flash (Fast)', note: 'DeepSeek-V4.1-Flash (1M context, fast default).' },
+      { id: 'deepseek-v4-pro', label: 'deepseek-v4-pro — DeepSeek-V4-Pro (Flagship)', note: 'DeepSeek-V4-Pro (1M context, complex prompts).' },
+      { id: 'deepseek-chat', label: 'deepseek-chat — DeepSeek Chat (V3 alias)', note: 'DeepSeek general chat alias.' },
+      { id: 'deepseek-reasoner', label: 'deepseek-reasoner — DeepSeek Reasoner', note: 'DeepSeek chain-of-thought reasoning model.' },
+    ],
+  },
+  openai: {
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4.1-mini',
+    models: [
+      { id: 'gpt-4.1-mini', label: 'gpt-4.1-mini — GPT-4.1 Mini (Fast)', note: 'Fast and cost-effective for prompt refinement.' },
+      { id: 'gpt-4.1', label: 'gpt-4.1 — GPT-4.1 (Precision)', note: 'Strong instruction following and long context.' },
+      { id: 'gpt-4.1-nano', label: 'gpt-4.1-nano — GPT-4.1 Nano (Ultra-fast)', note: 'Lowest-latency lightweight model.' },
+      { id: 'gpt-5-mini', label: 'gpt-5-mini — GPT-5 Mini', note: 'Lightweight GPT-5 reasoning model.' },
+      { id: 'gpt-5', label: 'gpt-5 — GPT-5 (Flagship)', note: 'Unified flagship GPT-5 model.' },
+      { id: 'gpt-4o-mini', label: 'gpt-4o-mini — GPT-4o Mini', note: 'Classic lightweight multimodal model.' },
+    ],
+  },
+  anthropic: {
+    baseUrl: 'https://api.anthropic.com/v1',
+    model: 'claude-haiku-4-5',
+    models: [
+      { id: 'claude-haiku-4-5', label: 'claude-haiku-4-5 — Claude Haiku 4.5 (Fast)', note: 'Fastest Claude with prompt caching.' },
+      { id: 'claude-sonnet-4-5', label: 'claude-sonnet-4-5 — Claude Sonnet 4.5', note: 'Balanced quality and speed.' },
+      { id: 'claude-haiku-5-5', label: 'claude-haiku-5-5 — Claude Haiku 5.5', note: 'Next-gen low-latency Claude.' },
+      { id: 'claude-sonnet-5-5', label: 'claude-sonnet-5-5 — Claude Sonnet 5.5', note: 'Next-gen balanced Claude.' },
+      { id: 'claude-opus-5-5', label: 'claude-opus-5-5 — Claude Opus 5.5', note: 'Flagship deep reasoning Claude.' },
+    ],
+  },
+  gemini: {
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    model: 'gemini-2.5-flash-lite',
+    models: [
+      { id: 'gemini-2.5-flash-lite', label: 'gemini-2.5-flash-lite — Flash-Lite', note: 'Ultra-low latency & cost-efficient.' },
+      { id: 'gemini-2.5-flash', label: 'gemini-2.5-flash — Gemini 2.5 Flash', note: 'Stable fast general model.' },
+      { id: 'gemini-2.5-pro', label: 'gemini-2.5-pro — Gemini 2.5 Pro', note: 'Advanced coding and reasoning.' },
+      { id: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite — 3.5 Flash-Lite', note: 'Next-gen lightweight high-throughput model.' },
+      { id: 'gemini-3.6-flash', label: 'gemini-3.6-flash — Gemini 3.6 Flash', note: 'Next-gen balanced fast model.' },
+    ],
+  },
+  ollama: {
+    baseUrl: 'http://127.0.0.1:11434/v1',
+    model: 'qwen2.5:7b',
+    models: [
+      { id: 'qwen2.5:7b', label: 'qwen2.5:7b — Qwen 2.5 7B (Local)', note: 'Strong bilingual offline local model.' },
+      { id: 'qwen2.5:14b', label: 'qwen2.5:14b — Qwen 2.5 14B (Local)', note: 'Higher fidelity offline local model.' },
+      { id: 'llama3.2:latest', label: 'llama3.2:latest — Llama 3.2 (Local)', note: 'Fast general local model.' },
+      { id: 'deepseek-r1:8b', label: 'deepseek-r1:8b — DeepSeek-R1 8B', note: 'Local reasoning model.' },
+      { id: 'gemma3:4b', label: 'gemma3:4b — Gemma 3 4B (Local)', note: 'Compact low-RAM local model.' },
+    ],
+  },
+  local: {
+    baseUrl: 'http://127.0.0.1:3210',
+    model: 'local-backend',
+    models: [
+      { id: 'local-backend', label: 'local-backend — Configured Server Model', note: 'Uses the model configured on your local PromptFinch server.' },
+    ],
+  },
 };
+const fetchedByPreset = {};
 
 const $ = id => document.getElementById(id);
+
+function mergedModels(presetId) {
+  const curated = PRESET_DEFAULTS[presetId]?.models || [];
+  const fetched = fetchedByPreset[presetId] || [];
+  const seen = new Set(curated.map(item => item.id));
+  const out = [...curated];
+  for (const item of fetched) {
+    if (!item?.id || seen.has(item.id)) continue;
+    seen.add(item.id);
+    out.push({ id: item.id, label: item.label && item.label !== item.id ? `${item.id} — ${item.label}` : item.id, note: '' });
+  }
+  return out;
+}
+
+function renderModelOptions() {
+  const select = $('model-preset');
+  const input = $('model');
+  const hint = $('model-hint');
+  if (!select || !input) return;
+  const presetId = $('preset').value;
+  const list = mergedModels(presetId);
+  const current = input.value.trim();
+  select.replaceChildren();
+  for (const item of list) {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = item.label;
+    select.appendChild(opt);
+  }
+  const customOpt = document.createElement('option');
+  customOpt.value = CUSTOM_MODEL;
+  customOpt.textContent = 'Custom model ID…';
+  select.appendChild(customOpt);
+  const match = list.find(item => item.id === current);
+  select.value = match ? match.id : CUSTOM_MODEL;
+  if (hint) hint.textContent = match?.note || 'Pick a version above, click Fetch, or type any model ID.';
+}
 
 function setStatus(text, isError = false) {
   const el = $('status');
@@ -47,6 +142,7 @@ async function loadState() {
   $('task').value = stored.task;
   $('style').value = stored.style;
   $('prompt-language').value = stored.promptLanguage;
+  renderModelOptions();
 }
 
 $('preset').addEventListener('change', () => {
@@ -55,6 +151,37 @@ $('preset').addEventListener('change', () => {
     $('base-url').value = defaults.baseUrl;
     $('model').value = defaults.model;
   }
+  renderModelOptions();
+});
+
+$('model-preset').addEventListener('change', () => {
+  if ($('model-preset').value !== CUSTOM_MODEL) {
+    $('model').value = $('model-preset').value;
+  } else {
+    $('model').focus();
+  }
+  renderModelOptions();
+});
+
+$('model').addEventListener('input', renderModelOptions);
+
+$('fetch-models').addEventListener('click', () => {
+  const settings = collectSettings();
+  $('fetch-models').disabled = true;
+  setStatus('Fetching available models…');
+  chrome.runtime.sendMessage({ type: 'PROMPTFINCH_LIST_MODELS', settings }, res => {
+    $('fetch-models').disabled = false;
+    if (chrome.runtime.lastError || !res?.ok) {
+      setStatus(res?.error || chrome.runtime.lastError?.message || 'Could not fetch models.', true);
+      return;
+    }
+    fetchedByPreset[settings.preset] = Array.isArray(res.models) ? res.models : [];
+    if (!$('model').value.trim() && fetchedByPreset[settings.preset][0]?.id) {
+      $('model').value = fetchedByPreset[settings.preset][0].id;
+    }
+    renderModelOptions();
+    setStatus(`Loaded ${fetchedByPreset[settings.preset].length} available models.`);
+  });
 });
 
 $('toggle-settings').addEventListener('click', () => {

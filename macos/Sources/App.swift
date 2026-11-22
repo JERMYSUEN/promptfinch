@@ -198,6 +198,41 @@ final class WorkspaceModel: ObservableObject {
         }
     }
 
+    func fetchNativeProviderModels(draft: SettingsDraftState) {
+        guard !unavailable, !draft.fetchingModels else { return }
+        let preset = draft.selectedPreset
+        let probeConfig = NativeProviderConfig(
+            enabled: true,
+            demoMode: false,
+            preset: preset,
+            baseURL: draft.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
+            model: draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines),
+            jsonMode: preset.defaultJSONMode,
+            thinkingMode: preset.defaultThinkingMode,
+            timeoutSeconds: nativeConfig.timeoutSeconds
+        )
+        let enteredKey = draft.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft.fetchingModels = true
+        notify(L10n.text(.fetchingModels))
+        Task {
+            defer { draft.fetchingModels = false }
+            do {
+                let models = try await nativeEngine.fetchModels(
+                    config: probeConfig,
+                    apiKeyOverride: enteredKey.isEmpty ? nil : enteredKey
+                )
+                guard draft.selectedPreset == preset else { return }
+                draft.fetchedModels = models
+                if draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let first = models.first {
+                    draft.modelName = first.id
+                }
+                notify(L10n.text(.fetchedModelsCount, String(models.count)))
+            } catch {
+                notify(L10n.errorDescription(error), error: true)
+            }
+        }
+    }
+
     var modeLabel: String {
         guard let config else { return L10n.text(.connecting) }
         if config.mode == "mock" { return L10n.text(.mockMode) }

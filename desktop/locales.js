@@ -34,7 +34,7 @@ export const COPY = {
     errorBusy: '正在處理另一個請求，請等待或先取消。', errorClipboard: '無法讀取或寫入剪貼簿，請稍後再試。', errorSelection: '無法讀取選取文字。請重新選取，或自行複製後讀取剪貼簿。',
     errorConfig: '模型設定無效或無法讀取。請檢查本機設定檔，再重新選擇。', errorModel: '模型請求失敗。請檢查模型名稱、金鑰、連線與額度。', errorTimeout: '模型回應逾時，請稍後重試。', errorNoResult: '尚無可複製的結果。',
     miniMode: '迷你模式', fullMode: '標準視窗', redactSecrets: '本機敏感遮罩（送出前自動遮蔽 API 金鑰與憑證）', redactSecretsHelp: '在離線本機先遮蔽常見金鑰與私鑰，收到結果後再於本機原樣還原。',
-    providerPreset: '服務商預設', providerModel: '模型名稱', providerBaseUrl: 'API 網址', providerApiKey: 'API 金鑰（僅寫入本機 0600 私有設定檔）', providerKeyPlaceholder: '輸入金鑰（本機 Ollama 可留空）', saveAndActivate: '儲存並啟用', testConnection: '測試連線', providerSaved: '已儲存並啟用模型設定。', connectionTesting: '正在測試連線…', connectionOk: '連線測試成功（{latency}ms）。',
+    providerPreset: '服務商預設', providerModelChoice: '模型版本選擇', providerModel: '模型 ID（可由上方選擇或自行輸入）', customModelOption: '自訂模型 ID…', fetchModels: '讀取清單', fetchingModels: '正在讀取服務商可用模型清單…', fetchedModelsOk: '已載入 {count} 個可用模型。', customModelHint: '可從下拉選單切換版本、點「讀取清單」即時取得，或直接輸入任意模型 ID。', providerBaseUrl: 'API 網址', providerApiKey: 'API 金鑰（僅寫入本機 0600 私有設定檔）', providerKeyPlaceholder: '輸入金鑰（本機 Ollama 可留空）', saveAndActivate: '儲存並啟用', testConnection: '測試連線', providerSaved: '已儲存並啟用模型設定。', connectionTesting: '正在測試連線…', connectionOk: '連線測試成功（{latency}ms）。',
     styleLabel: '風格', styleBalanced: '平衡', styleConcise: '精簡', styleStructured: '條列',
   },
   en: {
@@ -68,7 +68,7 @@ export const COPY = {
     errorBusy: 'Another request is running. Wait or cancel it first.', errorClipboard: 'The clipboard could not be read or written. Try again.', errorSelection: 'The selection could not be read. Select the text again, or copy it yourself and import the clipboard.',
     errorConfig: 'The model config is invalid or unreadable. Check your local file and choose it again.', errorModel: 'The model request failed. Check the model name, key, connection and quota.', errorTimeout: 'The model response timed out. Try again later.', errorNoResult: 'There is no result to copy yet.',
     miniMode: 'Mini mode', fullMode: 'Full window', redactSecrets: 'Local Secret Shield (mask API keys & tokens before sending)', redactSecretsHelp: 'Masks common API keys, JWTs, and PEM blocks locally before transmission and restores them locally.',
-    providerPreset: 'Provider preset', providerModel: 'Model name', providerBaseUrl: 'API Base URL', providerApiKey: 'API Key (saved locally with 0600 permissions)', providerKeyPlaceholder: 'Enter API key (optional for local Ollama)', saveAndActivate: 'Save & Activate', testConnection: 'Test connection', providerSaved: 'Provider settings saved and activated.', connectionTesting: 'Testing provider connection…', connectionOk: 'Connection verified ({latency}ms).',
+    providerPreset: 'Provider preset', providerModelChoice: 'Model version', providerModel: 'Model ID (pick above or enter custom)', customModelOption: 'Custom model ID…', fetchModels: 'Fetch list', fetchingModels: 'Fetching available models from provider…', fetchedModelsOk: 'Loaded {count} available models.', customModelHint: 'Pick a curated version above, click Fetch list to query your API, or enter any model ID.', providerBaseUrl: 'API Base URL', providerApiKey: 'API Key (saved locally with 0600 permissions)', providerKeyPlaceholder: 'Enter API key (optional for local Ollama)', saveAndActivate: 'Save & Activate', testConnection: 'Test connection', providerSaved: 'Provider settings saved and activated.', connectionTesting: 'Testing provider connection…', connectionOk: 'Connection verified ({latency}ms).',
     styleLabel: 'Style', styleBalanced: 'Balanced', styleConcise: 'Concise', styleStructured: 'Structured',
   },
   ja: {
@@ -102,7 +102,7 @@ export const COPY = {
     errorBusy: '別の処理を実行中です。完了を待つかキャンセルしてください。', errorClipboard: 'クリップボードの読み書きに失敗しました。再試行してください。', errorSelection: '選択文字を読み取れません。選択し直すか、自分でコピーしてクリップボードを取り込んでください。',
     errorConfig: 'モデル設定が無効か読み取れません。ローカルのファイルを確認し、再度選択してください。', errorModel: 'モデルへのリクエストに失敗しました。モデル名、キー、接続、利用枠を確認してください。', errorTimeout: 'モデルの応答がタイムアウトしました。後で再試行してください。', errorNoResult: 'コピーできる結果がまだありません。',
     miniMode: 'ミニ表示', fullMode: '標準ウィンドウ', redactSecrets: 'ローカル機密マスク（送信前に API キー等を自動遮蔽）', redactSecretsHelp: 'API キーや JWT、PEM 鍵をローカルで一時置換してから送信し、応答後に元の値へ復元します。',
-    providerPreset: 'プロバイダー', providerModel: 'モデル名', providerBaseUrl: 'API ベース URL', providerApiKey: 'API キー（0600 権限でローカル保存）', providerKeyPlaceholder: 'キーを入力（ローカル Ollama は空欄可）', saveAndActivate: '保存して有効化', testConnection: '接続テスト', providerSaved: 'モデル設定を保存して有効化しました。', connectionTesting: '接続テスト中…', connectionOk: '接続を確認しました（{latency}ms）。',
+    providerPreset: 'プロバイダー', providerModelChoice: 'モデル候補', providerModel: 'モデル ID（上から選択または直接入力）', customModelOption: 'カスタムモデル ID…', fetchModels: '一覧取得', fetchingModels: '利用可能なモデル一覧を取得中…', fetchedModelsOk: '{count} 件のモデルを読み込みました。', customModelHint: '上の候補から選ぶか「一覧取得」で API から読み込み、または任意のモデル ID を入力できます。', providerBaseUrl: 'API ベース URL', providerApiKey: 'API キー（0600 権限でローカル保存）', providerKeyPlaceholder: 'キーを入力（ローカル Ollama は空欄可）', saveAndActivate: '保存して有効化', testConnection: '接続テスト', providerSaved: 'モデル設定を保存して有効化しました。', connectionTesting: '接続テスト中…', connectionOk: '接続を確認しました（{latency}ms）。',
     styleLabel: 'スタイル', styleBalanced: '標準', styleConcise: '簡潔', styleStructured: '構造化',
   },
   ko: {
@@ -136,7 +136,7 @@ export const COPY = {
     errorBusy: '다른 요청을 처리 중입니다. 기다리거나 먼저 취소하세요.', errorClipboard: '클립보드를 읽거나 쓸 수 없습니다. 다시 시도하세요.', errorSelection: '선택 글자를 읽을 수 없습니다. 다시 선택하거나 직접 복사한 뒤 클립보드를 가져오세요.',
     errorConfig: '모델 설정이 올바르지 않거나 읽을 수 없습니다. 로컬 파일을 확인하고 다시 선택하세요.', errorModel: '모델 요청에 실패했습니다. 모델 이름, 키, 연결 및 한도를 확인하세요.', errorTimeout: '모델 응답 시간이 초과됐습니다. 나중에 다시 시도하세요.', errorNoResult: '아직 복사할 결과가 없습니다.',
     miniMode: '미니 모드', fullMode: '전체 창', redactSecrets: '로컬 민감 정보 차단 (전송 전 API 키·토큰 자동 마스킹)', redactSecretsHelp: 'API 키·JWT·PEM 키를 로컬에서 임시 치환한 뒤 전송하고 응답 후 로컬에서 복원합니다.',
-    providerPreset: '공급자 프리셋', providerModel: '모델 이름', providerBaseUrl: 'API 기본 URL', providerApiKey: 'API 키 (0600 권한으로 로컬 저장)', providerKeyPlaceholder: 'API 키 입력 (로컬 Ollama는 비워 둠)', saveAndActivate: '저장 및 활성화', testConnection: '연결 테스트', providerSaved: '모델 설정을 저장하고 활성화했습니다.', connectionTesting: '연결 테스트 중…', connectionOk: '연결 확인 완료 ({latency}ms).',
+    providerPreset: '공급자 프리셋', providerModelChoice: '모델 버전 선택', providerModel: '모델 ID (위에서 선택하거나 직접 입력)', customModelOption: '사용자 지정 모델 ID…', fetchModels: '목록 조회', fetchingModels: '사용 가능한 모델 목록을 불러오는 중…', fetchedModelsOk: '{count}개의 모델을 불러왔습니다.', customModelHint: '위 목록에서 선택하거나 목록 조회로 불러오거나 원하는 모델 ID를 직접 입력하세요.', providerBaseUrl: 'API 기본 URL', providerApiKey: 'API 키 (0600 권한으로 로컬 저장)', providerKeyPlaceholder: 'API 키 입력 (로컬 Ollama는 비워 둠)', saveAndActivate: '저장 및 활성화', testConnection: '연결 테스트', providerSaved: '모델 설정을 저장하고 활성화했습니다.', connectionTesting: '연결 테스트 중…', connectionOk: '연결 확인 완료 ({latency}ms).',
     styleLabel: '스타일', styleBalanced: '균형', styleConcise: '간결', styleStructured: '구조화',
   },
 };

@@ -51,8 +51,16 @@
             </select>
           </div>
           <div class="provider-field">
-            <label for="provider-model" data-i18n="providerModel">模型名稱</label>
+            <label for="provider-model-preset" data-i18n="providerModelChoice">模型版本選擇</label>
+            <div class="model-picker-row">
+              <select id="provider-model-preset"></select>
+              <button id="fetch-provider-models" type="button" class="secondary-button" data-i18n="fetchModels">讀取清單</button>
+            </div>
+          </div>
+          <div class="provider-field provider-field-wide">
+            <label for="provider-model" data-i18n="providerModel">模型 ID（可由上方選擇或自行輸入）</label>
             <input id="provider-model" type="text" autocomplete="off" spellcheck="false" value="deepseek-flash">
+            <span id="provider-model-hint" class="model-hint"></span>
           </div>
           <div class="provider-field provider-field-wide">
             <label for="provider-base-url" data-i18n="providerBaseUrl">API 網址</label>

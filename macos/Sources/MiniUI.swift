@@ -43,13 +43,30 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
 @MainActor
 final class SettingsDraftState: ObservableObject {
+    static let customModelTag = "__promptfinch_custom__"
     @Published var activeTab: SettingsTab = .model
     @Published var nativeEnabled: Bool = false
     @Published var selectedPreset: ProviderPreset = .deepseek
     @Published var baseURL: String = ProviderPreset.deepseek.defaultBaseURL
     @Published var modelName: String = ProviderPreset.deepseek.defaultModel
     @Published var apiKey: String = ""
+    @Published var fetchedModels: [ProviderModelOption] = []
+    @Published var fetchingModels: Bool = false
     var preferNativeOnNextSync = false
+
+    var availableModelOptions: [ProviderModelOption] {
+        var result = selectedPreset.suggestedModels
+        var seen = Set(result.map(\.id))
+        for item in fetchedModels where seen.insert(item.id).inserted {
+            result.append(item)
+        }
+        return result
+    }
+
+    var selectedModelOption: ProviderModelOption? {
+        let trimmed = modelName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return availableModelOptions.first { $0.id == trimmed }
+    }
 
     func sync(from model: WorkspaceModel) {
         nativeEnabled = preferNativeOnNextSync ? true : model.nativeConfig.enabled
@@ -58,10 +75,14 @@ final class SettingsDraftState: ObservableObject {
         baseURL = model.nativeConfig.baseURL
         modelName = model.nativeConfig.model
         apiKey = model.savedAPIKey(for: model.nativeConfig.preset)
+        fetchedModels = []
+        fetchingModels = false
     }
 
     func selectPreset(_ preset: ProviderPreset, model: WorkspaceModel) {
         selectedPreset = preset
+        fetchedModels = []
+        fetchingModels = false
         if preset != .custom {
             baseURL = preset.defaultBaseURL
             modelName = preset.defaultModel
@@ -360,7 +381,7 @@ struct CompactSettingsView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
         }
-        .frame(width: 520, height: min(460, (NSScreen.main?.visibleFrame.height ?? 760) - 120))
+        .frame(width: 540, height: min(520, (NSScreen.main?.visibleFrame.height ?? 760) - 100))
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { draft.sync(from: model) }
         .environment(\.locale, Locale(identifier: model.language.rawValue))
@@ -426,8 +447,59 @@ struct CompactSettingsView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.text(.providerModelChoiceLabel)).font(.caption).foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        Picker(L10n.text(.providerModelChoiceLabel), selection: Binding<String>(
+                            get: {
+                                let trimmed = draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                return draft.availableModelOptions.contains(where: { $0.id == trimmed })
+                                    ? trimmed
+                                    : SettingsDraftState.customModelTag
+                            },
+                            set: { picked in
+                                if picked != SettingsDraftState.customModelTag {
+                                    draft.modelName = picked
+                                }
+                            }
+                        )) {
+                            ForEach(draft.availableModelOptions) { option in
+                                Text(option.menuLabel).tag(option.id)
+                            }
+                            Divider()
+                            Text(L10n.text(.customModelOption)).tag(SettingsDraftState.customModelTag)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("providerModelPicker")
+
+                        Button {
+                            model.fetchNativeProviderModels(draft: draft)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if draft.fetchingModels {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Image(systemName: "arrow.clockwise")
+                                }
+                                Text(L10n.text(.fetchModelsButton))
+                            }
+                        }
+                        .fixedSize()
+                        .disabled(model.unavailable || draft.fetchingModels)
+                        .accessibilityIdentifier("fetchProviderModels")
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 5) {
                     Text(L10n.text(.providerModelLabel)).font(.caption).foregroundStyle(.secondary)
-                    TextField("deepseek-chat", text: $draft.modelName).textFieldStyle(.roundedBorder)
+                    TextField(draft.selectedPreset.defaultModel.isEmpty ? "model-id" : draft.selectedPreset.defaultModel, text: $draft.modelName)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityIdentifier("providerModelField")
+                    Text(draft.selectedModelOption?.note.isEmpty == false ? draft.selectedModelOption!.note : L10n.text(.customModelHint))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -437,14 +509,15 @@ struct CompactSettingsView: View {
 
                 HStack(spacing: 10) {
                     Button(L10n.text(.saveAndActivate)) {
+                        let cleanedModel = draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines)
                         let updated = NativeProviderConfig(
                             enabled: true,
                             demoMode: false,
                             preset: draft.selectedPreset,
                             baseURL: draft.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
-                            model: draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines),
-                            jsonMode: model.nativeConfig.jsonMode,
-                            thinkingMode: model.nativeConfig.thinkingMode,
+                            model: cleanedModel,
+                            jsonMode: draft.selectedPreset.defaultJSONMode,
+                            thinkingMode: draft.selectedPreset.resolvedThinkingMode(for: cleanedModel),
                             timeoutSeconds: model.nativeConfig.timeoutSeconds
                         )
                         model.saveNativeProvider(updated, apiKey: draft.apiKey)
@@ -455,14 +528,15 @@ struct CompactSettingsView: View {
                     .disabled(model.unavailable)
 
                     Button(L10n.text(.testConnection)) {
+                        let cleanedModel = draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines)
                         let updated = NativeProviderConfig(
                             enabled: true,
                             demoMode: false,
                             preset: draft.selectedPreset,
                             baseURL: draft.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
-                            model: draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines),
-                            jsonMode: model.nativeConfig.jsonMode,
-                            thinkingMode: model.nativeConfig.thinkingMode,
+                            model: cleanedModel,
+                            jsonMode: draft.selectedPreset.defaultJSONMode,
+                            thinkingMode: draft.selectedPreset.resolvedThinkingMode(for: cleanedModel),
                             timeoutSeconds: model.nativeConfig.timeoutSeconds
                         )
                         model.saveNativeProvider(updated, apiKey: draft.apiKey)
