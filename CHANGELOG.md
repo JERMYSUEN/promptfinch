@@ -13,6 +13,7 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 - Refinement style presets (`balanced`, `concise`, `structured`) across the optimizer core, macOS native studio/menu-bar popover, Electron desktop, and browser extension, plus macOS zero-Node built-in native demo mode and quick-setup onboarding strip.
 - Electron desktop GUI provider setup wizard (preset selector, Base URL, Model, owner-only `0600` `.env` save, and connection test) eliminating hand-edited `.env` files while keeping `preferences.json` secret-free.
 - Universal macOS (`arm64` + `x86_64`) release automation workflow (`.github/workflows/release-macos.yml`) supporting DMG/ZIP packaging and optional Developer ID signing & `xcrun notarytool` notarization.
+- Refreshed 16-second synthetic workflow demo (`docs/media/demo-selection.gif` and 1280×800 30 fps `docs/media/demo-selection.mp4`) showcasing the Selection Micro-Pill, dynamic Result Card with inline editing notes, one-click paste-back, and 356 px Menu-Bar Popover.
 
 ### Removed
 

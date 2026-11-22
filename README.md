@@ -16,9 +16,11 @@ PromptFinch edits instructions; it does not carry out the task described in them
 
 ## Demo
 
-![Using PromptFinch from the Codex desktop composer with synthetic sample text](docs/media/demo-selection.gif)
+![Using PromptFinch miniaturized UI from the Codex desktop composer with synthetic sample text](docs/media/demo-selection.gif)
 
-A 15-second recreation of the Codex desktop workflow: select a rough CSV bug-fix request, right-click, choose conversion in PromptFinch's companion action menu, review an English prompt with project-inspection steps, a focused fix and checks derived from the original requirements, then copy and paste it into Codex. The companion menu is provided by PromptFinch, not built into Codex. The interface, sample content and optimized result are synthetic, with no personal inputs; this is not a screen recording or a live model request.
+[Watch 1280×800 HD MP4 (30 fps)](docs/media/demo-selection.mp4)
+
+A 16-second walkthrough of PromptFinch's miniaturized macOS workflow: select a rough CSV bug-fix request in Codex, click the floating Selection Micro-Pill, review the English prompt and inline editing notes inside the dynamic Result Card, paste it back in one click (restoring your clipboard), and open the 356 px Menu-Bar Popover anytime for style presets and quick refills. The floating pill, result card, and popover are provided by PromptFinch, not built into Codex. The interface, sample content and optimized result are synthetic, with no personal inputs; this is not a screen recording or a live model request.
 
 ## Documentation languages
 

@@ -16,9 +16,11 @@ PromptFinch 會編輯指令，不會執行指令描述的任務。它以保留�
 
 ## 示範動圖
 
-![在 Codex 桌面輸入框使用 PromptFinch，使用合成示範文字](../media/demo-selection.gif)
+![在 Codex 桌面輸入框使用 PromptFinch 迷你化介面，使用合成示範文字](../media/demo-selection.gif)
 
-15 秒 Codex 桌面操作示意：選取粗略的 CSV 錯誤修正需求、按右鍵，在 PromptFinch 輔助操作選單選擇轉換，檢視補上專案檢查、聚焦修正與需求驗證步驟的英文 Prompt，再複製貼回 Codex。輔助選單由 PromptFinch 提供，並非 Codex 內建功能。介面、範例內容與優化結果皆為合成，未使用個人輸入；此動圖並非螢幕錄影或即時模型請求。
+[觀看 1280×800 高清 MP4 示範影片（30 fps）](../media/demo-selection.mp4)
+
+16 秒 PromptFinch macOS 迷你化流程示意：在 Codex 選取粗略的 CSV 錯誤修正需求、點擊浮動 Micro-Pill，在動態結果卡片中檢視英文 Prompt 與展開式內嵌優化說明，一鍵貼回原文（自動還原原本剪貼簿），並可隨時點擊選單列小鳥開啟 356 px 迷你 Popover 切換潤飾風格與快速潤飾。浮動按鈕、結果卡片與選單列面板皆由 PromptFinch 提供，並非 Codex 內建功能。介面、範例內容與優化結果皆為合成，未使用個人輸入；此示範並非螢幕錄影或即時模型請求。
 
 ## 文件語言
 
