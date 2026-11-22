@@ -473,37 +473,52 @@ struct CoreTests {
               && draft.availableModelOptions.contains { $0.id == "deepseek-custom-exp" },
               "draft merges live fetched models with curated catalog without duplicates")
 
-        let modelMockPort = Int.random(in: 24000...44000)
-        let modelMockProcess = Process()
-        modelMockProcess.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-        modelMockProcess.arguments = ["-c", """
-        import http.server, json, socketserver
-        class H(http.server.BaseHTTPRequestHandler):
-            def do_GET(self):
-                body = json.dumps({"data": [{"id": "deepseek-v4-pro"}, {"id": "deepseek-flash"}, {"id": "deepseek-chat"}]}).encode()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-            def log_message(self, *args): pass
-        s = socketserver.TCPServer(("127.0.0.1", \(modelMockPort)), H)
-        s.handle_request()
-        s.server_close()
-        """]
-        try? modelMockProcess.run()
-        try? await Task.sleep(nanoseconds: 250_000_000)
-        let fetchProbe = NativeProviderConfig(
-            enabled: true, demoMode: false, preset: .deepseek,
-            baseURL: "http://127.0.0.1:\(modelMockPort)", model: "deepseek-flash",
-            jsonMode: true, thinkingMode: "disabled", timeoutSeconds: 5
-        )
-        let fetchedList = (try? await nativeEngine.fetchModels(config: fetchProbe, apiKeyOverride: "sk-unit-test")) ?? []
-        if modelMockProcess.isRunning { modelMockProcess.terminate() }
-        check(fetchedList.map(\.id) == ["deepseek-chat", "deepseek-flash", "deepseek-v4-pro"],
+        final class MockModelsURLProtocol: URLProtocol {
+            override class func canInit(with request: URLRequest) -> Bool { true }
+            override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+            override func startLoading() {
+                guard let url = request.url else { return }
+                let body: Data
+                if url.host == "api.deepseek.com" && request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-unit-test" {
+                    body = Data(#"{"data":[{"id":"deepseek-v4-pro"},{"id":"deepseek-flash"},{"id":"deepseek-chat"}]}"#.utf8)
+                } else if url.host == "api.anthropic.com"
+                            && request.value(forHTTPHeaderField: "x-api-key") == "sk-ant-test"
+                            && request.value(forHTTPHeaderField: "anthropic-version") == "2023-06-01" {
+                    body = Data(#"{"data":[{"id":"claude-sonnet-5-5","display_name":"Claude Sonnet 5.5"},{"id":"claude-haiku-4-5","display_name":"Claude Haiku 4.5"}]}"#.utf8)
+                } else if url.host == "generativelanguage.googleapis.com"
+                            && request.value(forHTTPHeaderField: "x-goog-api-key") == "gem-test" {
+                    body = Data(#"{"models":[{"name":"models/gemini-2.5-flash","displayName":"Gemini 2.5 Flash","supportedGenerationMethods":["generateContent"]},{"name":"models/text-embedding-004","displayName":"Embed","supportedGenerationMethods":["embedContent"]}]}"#.utf8)
+                } else {
+                    let resp = HTTPURLResponse(url: url, statusCode: 401, httpVersion: nil, headerFields: nil)!
+                    client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocolDidFinishLoading(self)
+                    return
+                }
+                let resp = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: body)
+                client?.urlProtocolDidFinishLoading(self)
+            }
+            override func stopLoading() {}
+        }
+
+        let stubConfig = URLSessionConfiguration.ephemeral
+        stubConfig.protocolClasses = [MockModelsURLProtocol.self]
+        let stubEngine = NativeOptimizerEngine(session: URLSession(configuration: stubConfig), secrets: memorySecrets)
+
+        let dsFetched = (try? await stubEngine.fetchModels(config: NativeProviderConfig.default(preset: .deepseek), apiKeyOverride: "sk-unit-test")) ?? []
+        check(dsFetched.map(\.id) == ["deepseek-chat", "deepseek-flash", "deepseek-v4-pro"],
               "native engine fetches and sorts live available models from provider /models endpoint")
-        check(fetchedList.first { $0.id == "deepseek-flash" }?.note.contains("DeepSeek-V4.1-Flash") == true,
+        check(dsFetched.first { $0.id == "deepseek-flash" }?.note.contains("DeepSeek-V4.1-Flash") == true,
               "fetched known model preserves curated version description")
+
+        let antFetched = (try? await stubEngine.fetchModels(config: NativeProviderConfig.default(preset: .anthropic), apiKeyOverride: "sk-ant-test")) ?? []
+        check(antFetched.map(\.id) == ["claude-haiku-4-5", "claude-sonnet-5-5"],
+              "native engine fetches Anthropic /models with x-api-key and anthropic-version headers")
+
+        let gemFetched = (try? await stubEngine.fetchModels(config: NativeProviderConfig.default(preset: .gemini), apiKeyOverride: "gem-test")) ?? []
+        check(gemFetched.map(\.id) == ["gemini-2.5-flash"],
+              "native engine fetches Gemini /models and filters to generateContent models")
 
         // Refinement style validation and zero-Node built-in native demo tests.
         let validConcise = PromptRequest(prompt: "Refine this", task: "coding", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "concise")
