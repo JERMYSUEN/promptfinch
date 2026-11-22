@@ -242,6 +242,9 @@ enum L10n {
         case quickSetupBanner
         case connectNativeAI
         case useNativeDemo
+        case refineShort
+        case miniWindowToggle
+        case fullWindowToggle
     }
 
     static var language: UILanguage { UILanguage.load() }
@@ -462,6 +465,9 @@ enum L10n {
         .quickSetupBanner: ["尚未設定 AI 模型 — 可一鍵直連 DeepSeek / OpenAI / Claude / Gemini / Ollama（免安裝 Node.js）。", "No AI model configured yet — connect DeepSeek, OpenAI, Claude, Gemini, or Ollama directly (no Node.js needed).", "AI モデル未設定 — DeepSeek・OpenAI・Claude・Gemini・Ollama に直接接続できます（Node.js 不要）。", "AI 모델이 아직 설정되지 않았습니다 — DeepSeek·OpenAI·Claude·Gemini·Ollama에 바로 연결하세요 (Node.js 불필요)."],
         .connectNativeAI: ["設定原生直連", "Connect AI", "ネイティブ接続設定", "네이티브 AI 연결"],
         .useNativeDemo: ["內建示範（免 Node）", "Built-in Demo", "内蔵デモ（Node 不要）", "내장 데모 (Node 불필요)"],
+        .refineShort: ["優化 Prompt", "Refine", "プロンプト改善", "프롬프트 개선"],
+        .miniWindowToggle: ["迷你視窗", "Mini", "ミニ表示", "미니 창"],
+        .fullWindowToggle: ["完整視窗", "Studio", "フル表示", "전체 창"],
     ]
 
     static func text(_ key: Key, _ arguments: CVarArg..., language: UILanguage? = nil) -> String {

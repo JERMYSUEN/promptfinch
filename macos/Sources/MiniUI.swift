@@ -117,7 +117,8 @@ struct MenuBarPopoverView: View {
                     Text(L10n.text(.marketing)).tag("marketing")
                 }
                 .labelsHidden()
-                .frame(maxWidth: 98)
+                .controlSize(.small)
+                .frame(maxWidth: 88)
                 .disabled(model.unavailable)
 
                 Picker("", selection: $model.refinementStyle) {
@@ -126,7 +127,8 @@ struct MenuBarPopoverView: View {
                     Text(L10n.text(.styleStructured)).tag("structured")
                 }
                 .labelsHidden()
-                .frame(maxWidth: 82)
+                .controlSize(.small)
+                .frame(maxWidth: 74)
                 .disabled(model.unavailable)
 
                 Picker("", selection: $model.promptLanguage) {
@@ -134,11 +136,12 @@ struct MenuBarPopoverView: View {
                     Text("繁中").tag("zh-Hant")
                 }
                 .labelsHidden()
+                .controlSize(.small)
                 .pickerStyle(.segmented)
-                .frame(width: 84)
+                .frame(width: 76)
                 .disabled(model.unavailable)
 
-                Spacer()
+                Spacer(minLength: 4)
 
                 Button { model.clipboard(openStudio: false) } label: {
                     Image(systemName: "doc.on.clipboard")
@@ -154,13 +157,29 @@ struct MenuBarPopoverView: View {
                 .help(L10n.text(.clear))
             }
 
+            if model.shouldShowQuickSetupBanner {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles").font(.system(size: 11)).foregroundStyle(finchAccent)
+                    Text(L10n.text(.connectNativeAI))
+                        .font(.system(size: 11))
+                        .lineLimit(1)
+                    Spacer()
+                    Button(L10n.text(.settings)) { onOpenSettings() }
+                        .controlSize(.mini)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(finchAccent.opacity(0.10))
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+            }
+
             TextEditor(text: $model.original)
                 .font(.system(size: 13))
                 .padding(6)
                 .background(Color(nsColor: .textBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.18)))
-                .frame(height: 92)
+                .frame(height: 82)
                 .disabled(model.unavailable)
 
             HStack(spacing: 8) {
@@ -208,7 +227,7 @@ struct MenuBarPopoverView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(8)
                     }
-                    .frame(height: 116)
+                    .frame(height: 112)
                     .background(Color(nsColor: .textBackgroundColor))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.16)))
@@ -237,15 +256,6 @@ struct MenuBarPopoverView: View {
                         .font(.system(size: 11.5, weight: .medium))
                     }
                 }
-            } else {
-                Text(L10n.text(.resultPlaceholder))
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 84, alignment: .center)
-                    .multilineTextAlignment(.center)
-                    .padding(10)
-                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.45))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
             if !model.sessionHistory.isEmpty {
@@ -283,8 +293,8 @@ struct MenuBarPopoverView: View {
                 .foregroundStyle(model.isError ? Color.red : .secondary)
             }
         }
-        .padding(14)
-        .frame(width: 360)
+        .padding(12)
+        .frame(width: 356)
         .environment(\.locale, Locale(identifier: model.language.rawValue))
     }
 }
@@ -351,6 +361,7 @@ struct CompactSettingsView: View {
             .padding(.vertical, 10)
         }
         .frame(width: 520, height: min(460, (NSScreen.main?.visibleFrame.height ?? 760) - 120))
+        .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { draft.sync(from: model) }
         .environment(\.locale, Locale(identifier: model.language.rawValue))
     }

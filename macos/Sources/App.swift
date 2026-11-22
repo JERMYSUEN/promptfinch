@@ -68,6 +68,12 @@ final class WorkspaceModel: ObservableObject {
             onMenuBarModeChange?(menuBarOnlyMode)
         }
     }
+    @Published var miniWindowMode: Bool {
+        didSet {
+            preferences.set(miniWindowMode, forKey: "miniWindowMode")
+            onMiniWindowModeChange?(miniWindowMode)
+        }
+    }
     @Published private(set) var sessionHistory: [SessionHistoryEntry] = []
     @Published var pasteBackEnabled: Bool = SelectionWatcher.pasteBack {
         didSet { UserDefaults.standard.set(pasteBackEnabled, forKey: SelectionWatcher.pasteBackKey) }
@@ -75,6 +81,7 @@ final class WorkspaceModel: ObservableObject {
     let settingsDraft = SettingsDraftState()
     let miniUIState = MiniUIState()
     var onMenuBarModeChange: ((Bool) -> Void)?
+    var onMiniWindowModeChange: ((Bool) -> Void)?
     private var sourcePID: pid_t?
     private var sourceCapture: SelectionCapture?
     private var activeEventSequence: UInt64?
@@ -105,6 +112,7 @@ final class WorkspaceModel: ObservableObject {
         appAwarePresetsEnabled = preferences.object(forKey: "appAwarePresetsEnabled") as? Bool ?? true
         redactSecretsEnabled = preferences.object(forKey: "redactSecretsEnabled") as? Bool ?? false
         menuBarOnlyMode = preferences.object(forKey: "menuBarOnlyMode") as? Bool ?? false
+        miniWindowMode = preferences.object(forKey: "miniWindowMode") as? Bool ?? false
         resultPanel.onPasteBack = { [weak self] in self?.pasteBackFromPanel() }
         resultPanel.onCopy = { [weak self] in self?.copyFromPanel() }
         resultPanel.onClose = { [weak self] in self?.closeResultPanel() }
@@ -628,140 +636,252 @@ struct WorkspaceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center) {
-                Text(L10n.text(.workspaceTitle)).font(.system(size: 17, weight: .semibold))
-                    .help(L10n.text(.workspaceIntro))
-                Spacer()
-                Button { model.settingsVisible = true } label: { Label(L10n.text(.settings), systemImage: "gearshape") }
-                    .accessibilityIdentifier("settings")
-            }
-            HStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 Circle().fill(model.config?.mode == "live" && model.config?.ready == true ? accent : .orange).frame(width: 7, height: 7)
-                Text(model.modeLabel).font(.system(size: 12, weight: .medium))
-                Spacer()
-                Text(L10n.text(.memoryOnly)).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(model.miniWindowMode ? "PromptFinch" : L10n.text(.workspaceTitle))
+                    .font(.system(size: model.miniWindowMode ? 14 : 16, weight: .semibold))
+                    .fixedSize(horizontal: model.miniWindowMode, vertical: false)
+                    .lineLimit(1)
+                    .help(L10n.text(.workspaceIntro))
+                Text(model.miniWindowMode ? model.compactStatusLabel : model.modeLabel)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.10))
+                    .clipShape(Capsule())
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if model.miniWindowMode {
+                    Button { model.miniWindowMode = false } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(L10n.text(.fullWindowToggle))
+                    .accessibilityIdentifier("toggleMiniWindow")
+                    Button { model.settingsVisible = true } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(L10n.text(.settings))
+                    .accessibilityIdentifier("settings")
+                } else {
+                    Button { model.miniWindowMode = true } label: {
+                        Label(L10n.text(.miniWindowToggle), systemImage: "rectangle.compress.vertical")
+                            .font(.system(size: 12))
+                    }
+                    .controlSize(.small)
+                    .accessibilityIdentifier("toggleMiniWindow")
+                    Button { model.settingsVisible = true } label: {
+                        Label(L10n.text(.settings), systemImage: "gearshape").font(.system(size: 12))
+                    }
+                    .controlSize(.small)
+                    .accessibilityIdentifier("settings")
+                }
             }
-            Text(L10n.text(.privacy))
-                .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
+
             if model.shouldShowQuickSetupBanner {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles").foregroundStyle(accent)
-                    Text(L10n.text(.quickSetupBanner))
-                        .font(.system(size: 11.5)).lineLimit(2)
+                    Text(model.miniWindowMode ? L10n.text(.connectNativeAI) : L10n.text(.quickSetupBanner))
+                        .font(.system(size: 11.5)).lineLimit(1)
                     Spacer()
                     Button(L10n.text(.connectNativeAI)) { model.openNativeModelSetup() }
                         .buttonStyle(.borderedProminent).tint(accent).controlSize(.small)
-                    if !(model.nativeConfig.enabled && model.nativeConfig.demoMode) {
+                    if !model.miniWindowMode && !(model.nativeConfig.enabled && model.nativeConfig.demoMode) {
                         Button(L10n.text(.useNativeDemo)) { model.enableNativeDemo() }
                             .controlSize(.small)
                     }
                 }
-                .padding(.horizontal, 10).padding(.vertical, 7)
+                .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(accent.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(L10n.text(.original)).font(.headline)
-                    TextEditor(text: $model.original).font(.system(size: 14))
-                        .padding(8).background(Color(nsColor: .textBackgroundColor))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
-                        .frame(minHeight: 140)
-                        .disabled(model.unavailable).accessibilityIdentifier("originalPrompt")
-                    HStack(spacing: 8) {
-                        Picker(L10n.text(.purpose), selection: $model.task) {
-                            Text(L10n.text(.general)).tag("general"); Text(L10n.text(.writing)).tag("writing"); Text(L10n.text(.analysis)).tag("analysis")
-                            Text(L10n.text(.coding)).tag("coding"); Text(L10n.text(.summary)).tag("summary"); Text(L10n.text(.marketing)).tag("marketing")
-                        }.frame(maxWidth: 150)
-                        Picker("", selection: $model.refinementStyle) {
-                            Text(L10n.text(.styleBalanced)).tag("balanced")
-                            Text(L10n.text(.styleConcise)).tag("concise")
-                            Text(L10n.text(.styleStructured)).tag("structured")
-                        }.labelsHidden().pickerStyle(.menu).frame(maxWidth: 96)
-                        Picker("", selection: $model.promptLanguage) {
-                            Text("EN").tag("en")
-                            Text("繁中").tag("zh-Hant")
-                        }.labelsHidden().pickerStyle(.segmented).frame(width: 82)
-                        Spacer()
-                        Text("\(model.original.utf16.count) / 12,000").font(.system(size: 11)).foregroundStyle(.secondary)
-                    }.disabled(model.unavailable)
-                    TextField(L10n.text(.targetPlaceholder), text: $model.targetModel).textFieldStyle(.roundedBorder).disabled(model.unavailable)
-                    HStack {
-                        Button { model.clipboard() } label: { Label(L10n.text(.readClipboard), systemImage: "doc.on.clipboard") }.disabled(model.unavailable)
-                        Spacer()
-                        Button(L10n.text(.clear)) { model.clear() }.accessibilityIdentifier("clear")
-                    }
-                    Button { model.generate() } label: {
-                        HStack { if model.busy { ProgressView().controlSize(.small) }; Text(model.busy ? L10n.text(.generating) : L10n.text(.generate)).fontWeight(.semibold) }
-                            .frame(maxWidth: .infinity).padding(.vertical, 5)
-                    }.buttonStyle(.borderedProminent).tint(accent).disabled(model.unavailable)
-                        .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("generate")
-                }.frame(minWidth: 260, maxWidth: .infinity)
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(L10n.text(.copyablePrompt)).font(.headline)
-                        Spacer()
-                        Button { model.copy() } label: { Label(L10n.text(.copy), systemImage: "doc.on.doc") }
-                            .disabled(model.result == nil).accessibilityIdentifier("copyPrompt")
-                    }
-                    if let result = model.result {
-                        Text(result.mode == "mock" ? L10n.text(.mockResult) : L10n.text(.generatedBy, result.generationModel ?? L10n.text(.modelService)))
-                            .font(.system(size: 11)).foregroundStyle(result.mode == "mock" ? Color.orange : .secondary)
-                    }
-                    ScrollView {
-                        Text(model.result?.prompt ?? L10n.text(.resultPlaceholder))
-                            .font(.system(size: 14)).foregroundStyle(model.result == nil ? .secondary : .primary)
-                            .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(14)
-                            .accessibilityIdentifier("resultPrompt")
-                    }.frame(minHeight: 160, maxHeight: .infinity)
-                        .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
-                    if let result = model.result {
-                        Button(L10n.text(.compareChanges)) { model.comparisonVisible = true }
-                            .accessibilityIdentifier("compareChanges")
-                            .sheet(isPresented: $model.comparisonVisible) {
-                                PromptComparisonView(original: model.resultOriginal, optimized: result.prompt)
-                            }
-                        DisclosureGroup(L10n.text(.improvements)) {
-                            ScrollView {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    if result.improvements.isEmpty {
-                                        Text(L10n.text(.noImprovement, language: UILanguage(rawValue: result.notesLanguage ?? "") ?? model.language))
-                                            .accessibilityIdentifier("noImprovement")
-                                    } else {
-                                        ForEach(Array(result.improvements.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
-                                    }
-                                    if !result.assumptions.isEmpty {
-                                        Text(L10n.text(.assumptions)).fontWeight(.semibold).padding(.top, 6)
-                                        ForEach(Array(result.assumptions.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
-                                    }
-                                }.font(.system(size: 12)).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 6)
-                            }.frame(maxHeight: 125)
-                        }.font(.system(size: 12))
-                    }
-                }.frame(minWidth: 330, maxWidth: .infinity)
+
+            if model.miniWindowMode {
+                miniBody
+            } else {
+                fullBody
             }
+
             HStack(spacing: 10) {
                 if !model.message.isEmpty {
-                    Image(systemName: model.isError ? "exclamationmark.circle" : "info.circle")
-                    Text(model.message).font(.system(size: 12)).textSelection(.enabled).accessibilityIdentifier("statusMessage")
+                    Image(systemName: model.isError ? "exclamationmark.circle" : "info.circle").font(.system(size: 11))
+                    Text(model.message).font(.system(size: 11.5)).textSelection(.enabled).accessibilityIdentifier("statusMessage")
+                } else if !model.miniWindowMode {
+                    Text(L10n.text(.memoryOnly) + " · " + L10n.text(.privacy))
+                        .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
-                if model.busy { Button(L10n.text(.cancel)) { model.cancel(); model.notify(L10n.text(.cancelled)) } }
-            }.foregroundStyle(model.isError ? Color.red : .secondary).frame(minHeight: 30)
-        }.padding(14).frame(minWidth: 680, minHeight: 480).background(Color(nsColor: .windowBackgroundColor))
-            .sheet(isPresented: $model.settingsVisible) { CompactSettingsView(model: model, draft: model.settingsDraft) }
-            .environment(\.locale, Locale(identifier: model.language.rawValue))
-            .onReceive(model.$original.dropFirst().removeDuplicates()) { _ in
-                if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.originalChanged)) }
+                if model.busy { Button(L10n.text(.cancel)) { model.cancel(); model.notify(L10n.text(.cancelled)) }.controlSize(.small) }
+            }.foregroundStyle(model.isError ? Color.red : .secondary).frame(minHeight: 22)
+        }
+        .padding(model.miniWindowMode ? 12 : 14)
+        .frame(minWidth: model.miniWindowMode ? 356 : 660, minHeight: model.miniWindowMode ? 360 : 460)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .sheet(isPresented: $model.settingsVisible) { CompactSettingsView(model: model, draft: model.settingsDraft) }
+        .environment(\.locale, Locale(identifier: model.language.rawValue))
+        .onReceive(model.$original.dropFirst().removeDuplicates()) { _ in
+            if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.originalChanged)) }
+        }
+        .onReceive(model.$task.dropFirst().removeDuplicates()) { _ in
+            if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.purposeChanged)) }
+        }
+        .onReceive(model.$targetModel.dropFirst().removeDuplicates()) { _ in
+            if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.targetChanged)) }
+        }
+    }
+
+    private var miniBody: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Picker("", selection: $model.task) {
+                    Text(L10n.text(.general)).tag("general"); Text(L10n.text(.writing)).tag("writing"); Text(L10n.text(.analysis)).tag("analysis")
+                    Text(L10n.text(.coding)).tag("coding"); Text(L10n.text(.summary)).tag("summary"); Text(L10n.text(.marketing)).tag("marketing")
+                }.labelsHidden().controlSize(.small).frame(maxWidth: 92)
+                Picker("", selection: $model.refinementStyle) {
+                    Text(L10n.text(.styleBalanced)).tag("balanced")
+                    Text(L10n.text(.styleConcise)).tag("concise")
+                    Text(L10n.text(.styleStructured)).tag("structured")
+                }.labelsHidden().controlSize(.small).frame(maxWidth: 76)
+                Picker("", selection: $model.promptLanguage) {
+                    Text("EN").tag("en")
+                    Text("繁中").tag("zh-Hant")
+                }.labelsHidden().controlSize(.small).pickerStyle(.segmented).frame(width: 76)
+                Spacer(minLength: 4)
+                Button { model.clipboard(openStudio: false) } label: { Image(systemName: "doc.on.clipboard") }
+                    .buttonStyle(.borderless).help(L10n.text(.readClipboard))
+                Button { model.clear() } label: { Image(systemName: "trash") }
+                    .buttonStyle(.borderless).help(L10n.text(.clear)).accessibilityIdentifier("clear")
+            }.disabled(model.unavailable)
+
+            TextEditor(text: $model.original).font(.system(size: 13))
+                .padding(6).background(Color(nsColor: .textBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.18)))
+                .frame(minHeight: 84, maxHeight: 112)
+                .disabled(model.unavailable).accessibilityIdentifier("originalPrompt")
+
+            Button { model.generate() } label: {
+                HStack(spacing: 6) {
+                    if model.busy { ProgressView().controlSize(.small) }
+                    Text(model.busy ? L10n.text(.generating) : L10n.text(.generate)).font(.system(size: 12.5, weight: .semibold))
+                }.frame(maxWidth: .infinity).padding(.vertical, 3)
+            }.buttonStyle(.borderedProminent).tint(accent).disabled(model.unavailable)
+                .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("generate")
+
+            if let result = model.result {
+                HStack {
+                    Text(L10n.text(.copyablePrompt)).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+                    Spacer()
+                    Button { model.copy() } label: { Label(L10n.text(.copy), systemImage: "doc.on.doc").font(.system(size: 11.5)) }
+                        .controlSize(.small).accessibilityIdentifier("copyPrompt")
+                }
+                ScrollView {
+                    Text(result.prompt)
+                        .font(.system(size: 13))
+                        .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(10)
+                        .accessibilityIdentifier("resultPrompt")
+                }.frame(minHeight: 100, maxHeight: .infinity)
+                    .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.16)))
+                let notesCount = result.improvements.count + result.assumptions.count
+                if notesCount > 0 {
+                    DisclosureGroup(L10n.text(.notesSummary, String(notesCount))) {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(Array(result.improvements.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
+                                ForEach(Array(result.assumptions.enumerated()), id: \.offset) { _, item in Text("ⓘ \(item)").foregroundStyle(.secondary) }
+                            }.font(.system(size: 11.5)).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
+                        }.frame(maxHeight: 72)
+                    }.font(.system(size: 11.5, weight: .medium))
+                }
             }
-            .onReceive(model.$task.dropFirst().removeDuplicates()) { _ in
-                if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.purposeChanged)) }
-            }
-            .onReceive(model.$targetModel.dropFirst().removeDuplicates()) { _ in
-                if model.result != nil { model.invalidatePendingPasteFeedback(); model.notify(L10n.text(.targetChanged)) }
-            }
+        }
+    }
+
+    private var fullBody: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.text(.original)).font(.headline)
+                TextEditor(text: $model.original).font(.system(size: 14))
+                    .padding(8).background(Color(nsColor: .textBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
+                    .frame(minHeight: 140)
+                    .disabled(model.unavailable).accessibilityIdentifier("originalPrompt")
+                HStack(spacing: 6) {
+                    Picker("", selection: $model.task) {
+                        Text(L10n.text(.general)).tag("general"); Text(L10n.text(.writing)).tag("writing"); Text(L10n.text(.analysis)).tag("analysis")
+                        Text(L10n.text(.coding)).tag("coding"); Text(L10n.text(.summary)).tag("summary"); Text(L10n.text(.marketing)).tag("marketing")
+                    }.labelsHidden().pickerStyle(.menu).frame(minWidth: 92, maxWidth: 110)
+                    Picker("", selection: $model.refinementStyle) {
+                        Text(L10n.text(.styleBalanced)).tag("balanced")
+                        Text(L10n.text(.styleConcise)).tag("concise")
+                        Text(L10n.text(.styleStructured)).tag("structured")
+                    }.labelsHidden().pickerStyle(.menu).frame(minWidth: 70, maxWidth: 84)
+                    Picker("", selection: $model.promptLanguage) {
+                        Text("EN").tag("en")
+                        Text("繁中").tag("zh-Hant")
+                    }.labelsHidden().pickerStyle(.segmented).frame(width: 78)
+                    Spacer(minLength: 4)
+                    Text("\(model.original.utf16.count) / 12,000").font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                }.disabled(model.unavailable)
+                TextField(L10n.text(.targetPlaceholder), text: $model.targetModel).textFieldStyle(.roundedBorder).disabled(model.unavailable)
+                HStack {
+                    Button { model.clipboard() } label: { Label(L10n.text(.readClipboard), systemImage: "doc.on.clipboard") }.disabled(model.unavailable)
+                    Spacer()
+                    Button(L10n.text(.clear)) { model.clear() }.accessibilityIdentifier("clear")
+                }
+                Button { model.generate() } label: {
+                    HStack { if model.busy { ProgressView().controlSize(.small) }; Text(model.busy ? L10n.text(.generating) : L10n.text(.generate)).fontWeight(.semibold) }
+                        .frame(maxWidth: .infinity).padding(.vertical, 5)
+                }.buttonStyle(.borderedProminent).tint(accent).disabled(model.unavailable)
+                    .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("generate")
+            }.frame(minWidth: 260, maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(L10n.text(.copyablePrompt)).font(.headline)
+                    Spacer()
+                    Button { model.copy() } label: { Label(L10n.text(.copy), systemImage: "doc.on.doc") }
+                        .disabled(model.result == nil).accessibilityIdentifier("copyPrompt")
+                }
+                if let result = model.result {
+                    Text(result.mode == "mock" ? L10n.text(.mockResult) : L10n.text(.generatedBy, result.generationModel ?? L10n.text(.modelService)))
+                        .font(.system(size: 11)).foregroundStyle(result.mode == "mock" ? Color.orange : .secondary)
+                }
+                ScrollView {
+                    Text(model.result?.prompt ?? L10n.text(.resultPlaceholder))
+                        .font(.system(size: 14)).foregroundStyle(model.result == nil ? .secondary : .primary)
+                        .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(14)
+                        .accessibilityIdentifier("resultPrompt")
+                }.frame(minHeight: 160, maxHeight: .infinity)
+                    .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
+                if let result = model.result {
+                    Button(L10n.text(.compareChanges)) { model.comparisonVisible = true }
+                        .accessibilityIdentifier("compareChanges")
+                        .sheet(isPresented: $model.comparisonVisible) {
+                            PromptComparisonView(original: model.resultOriginal, optimized: result.prompt)
+                        }
+                    DisclosureGroup(L10n.text(.improvements)) {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 6) {
+                                if result.improvements.isEmpty {
+                                    Text(L10n.text(.noImprovement, language: UILanguage(rawValue: result.notesLanguage ?? "") ?? model.language))
+                                        .accessibilityIdentifier("noImprovement")
+                                } else {
+                                    ForEach(Array(result.improvements.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
+                                }
+                                if !result.assumptions.isEmpty {
+                                    Text(L10n.text(.assumptions)).fontWeight(.semibold).padding(.top, 6)
+                                    ForEach(Array(result.assumptions.enumerated()), id: \.offset) { _, item in Text("• \(item)") }
+                                }
+                            }.font(.system(size: 12)).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 6)
+                        }.frame(maxHeight: 125)
+                    }.font(.system(size: 12))
+                }
+            }.frame(minWidth: 320, maxWidth: .infinity)
+        }
     }
 }
 
@@ -837,15 +957,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminationTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 740, height: 540), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        let initialMini = model.miniWindowMode
+        let initialRect = initialMini ? NSRect(x: 0, y: 0, width: 376, height: 470) : NSRect(x: 0, y: 0, width: 720, height: 520)
+        window = NSWindow(contentRect: initialRect, styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "PromptFinch"
-        window.minSize = NSSize(width: 680, height: 480)
+        window.minSize = initialMini ? NSSize(width: 356, height: 360) : NSSize(width: 660, height: 460)
+        window.level = initialMini ? .floating : .normal
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: WorkspaceView(model: model))
         window.center()
         model.showWindow = { [weak self] in self?.showWorkspace() }
         model.onMenuBarModeChange = { enabled in
             NSApp.setActivationPolicy(enabled ? .accessory : .regular)
+        }
+        model.onMiniWindowModeChange = { [weak self] mini in
+            self?.applyWindowMode(mini: mini, animated: true)
         }
         buildPopover()
         buildMenu()
@@ -957,6 +1083,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func showWorkspace() { window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
+
+    private func applyWindowMode(mini: Bool, animated: Bool) {
+        let targetSize = mini ? NSSize(width: 376, height: 470) : NSSize(width: 720, height: 520)
+        window.minSize = mini ? NSSize(width: 356, height: 360) : NSSize(width: 660, height: 460)
+        window.level = mini ? .floating : .normal
+        let currentFrame = window.frame
+        let contentFrame = window.frameRect(forContentRect: NSRect(origin: .zero, size: targetSize))
+        let newOrigin = NSPoint(x: currentFrame.minX, y: currentFrame.maxY - contentFrame.height)
+        window.setFrame(NSRect(origin: newOrigin, size: contentFrame.size), display: true, animate: animated)
+    }
 
     private func watchPermission() {
         permissionTimer?.invalidate()

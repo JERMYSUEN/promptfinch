@@ -885,31 +885,60 @@ private final class SelectionMenuButton: NSButton {
 }
 
 @MainActor
+private final class MicroPillButton: NSButton {
+    private var hoverArea: NSTrackingArea?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverArea { removeTrackingArea(hoverArea) }
+        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        hoverArea = area
+        addTrackingArea(area)
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        contentTintColor = NSColor(calibratedRed: 0.16, green: 0.43, blue: 0.90, alpha: 1)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        contentTintColor = .labelColor
+    }
+}
+
+@MainActor
 final class FloatingBarPanel: NSPanel {
     private var action: ((CGPoint) -> Void)?
-    private let button = NSButton(title: "⇄ " + L10n.text(.convert), target: nil, action: nil)
+    private let dot = NSView(frame: NSRect(x: 10, y: 10, width: 8, height: 8))
+    private let button = MicroPillButton(title: L10n.text(.refineShort), target: nil, action: nil)
     private let noticeLabel = NSTextField(wrappingLabelWithString: "")
 
     init() {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: 158, height: 30),
+        super.init(contentRect: NSRect(x: 0, y: 0, width: 112, height: 28),
                    styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false; backgroundColor = .clear
         level = .popUpMenu
         isMovable = false; hasShadow = true
 
-        let effect = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 158, height: 30))
+        let effect = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 112, height: 28))
         effect.material = .popover; effect.blendingMode = .behindWindow
         effect.state = .active; effect.wantsLayer = true
         effect.autoresizingMask = [.width, .height]
-        effect.layer?.cornerRadius = 15; effect.layer?.masksToBounds = true
-        effect.layer?.borderWidth = 0.5
-        effect.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.35).cgColor
+        effect.layer?.cornerRadius = 14; effect.layer?.masksToBounds = true
+        effect.layer?.borderWidth = 0.75
+        effect.layer?.borderColor = NSColor(calibratedRed: 0.16, green: 0.43, blue: 0.90, alpha: 0.38).cgColor
+
+        dot.wantsLayer = true
+        dot.layer?.cornerRadius = 4
+        dot.layer?.backgroundColor = NSColor(calibratedRed: 0.16, green: 0.43, blue: 0.90, alpha: 1).cgColor
+        effect.addSubview(dot)
+
         button.isBordered = false
         button.contentTintColor = .labelColor
-        button.font = NSFont.systemFont(ofSize: 12.5, weight: .medium)
+        button.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+        button.alignment = .left
         button.setButtonType(.momentaryChange)
-        button.frame = effect.bounds.insetBy(dx: 10, dy: 2)
-        button.autoresizingMask = [.width, .height]
+        button.frame = NSRect(x: 23, y: 2, width: 80, height: 24)
         button.target = self; button.action = #selector(fire)
         effect.addSubview(button)
         noticeLabel.textColor = .labelColor
@@ -927,17 +956,22 @@ final class FloatingBarPanel: NSPanel {
 
     func configure(text: String, action: @escaping (CGPoint) -> Void) {
         self.action = action
-        button.title = "⇄ " + L10n.text(.convert)
-        setContentSize(NSSize(width: max(158, ceil(button.intrinsicContentSize.width) + 20), height: 30))
+        button.title = L10n.text(.refineShort)
+        let labelWidth = ceil(button.intrinsicContentSize.width) + 4
+        let totalWidth = max(92, 23 + labelWidth + 11)
+        setContentSize(NSSize(width: totalWidth, height: 28))
+        dot.isHidden = false
+        button.frame = NSRect(x: 23, y: 2, width: totalWidth - 33, height: 24)
         button.isEnabled = true
         button.isHidden = false
         noticeLabel.isHidden = true
-        button.toolTip = text.count > 40 ? String(text.prefix(40)) + "…" : text
+        button.toolTip = L10n.text(.convertTooltip)
     }
 
     func showNotice(_ message: String) {
         action = nil
-        setContentSize(NSSize(width: 360, height: 72))
+        setContentSize(NSSize(width: 340, height: 64))
+        dot.isHidden = true
         button.isHidden = true
         noticeLabel.stringValue = message
         noticeLabel.isHidden = false
@@ -1044,8 +1078,12 @@ final class ResultPanel: NSPanel {
 
         notesToggle.isBordered = false
         notesToggle.alignment = .left
-        notesToggle.font = NSFont.systemFont(ofSize: 11.5, weight: .medium)
-        notesToggle.contentTintColor = .controlAccentColor
+        notesToggle.font = NSFont.systemFont(ofSize: 11.5, weight: .semibold)
+        notesToggle.contentTintColor = NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? NSColor(calibratedRed: 0.45, green: 0.67, blue: 1.0, alpha: 1)
+                : NSColor(calibratedRed: 0.14, green: 0.40, blue: 0.88, alpha: 1)
+        }
         notesToggle.target = self; notesToggle.action = #selector(toggleNotes)
         notesToggle.isHidden = true
         container.addSubview(notesToggle)
@@ -1053,14 +1091,18 @@ final class ResultPanel: NSPanel {
         notesScroll.hasVerticalScroller = true
         notesScroll.borderType = .noBorder
         notesScroll.drawsBackground = true
-        notesScroll.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.55)
+        notesScroll.backgroundColor = NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? NSColor(white: 1.0, alpha: 0.06)
+                : NSColor(white: 0.0, alpha: 0.045)
+        }
         notesScroll.wantsLayer = true
         notesScroll.layer?.cornerRadius = 7
         notesScroll.isHidden = true
         notesView.isEditable = false; notesView.isSelectable = true
         notesView.drawsBackground = false; notesView.backgroundColor = .clear
         notesView.font = NSFont.systemFont(ofSize: 11.5)
-        notesView.textColor = .secondaryLabelColor
+        notesView.textColor = .labelColor
         notesView.textContainerInset = NSSize(width: 6, height: 6)
         notesView.isVerticallyResizable = true
         notesView.isHorizontallyResizable = false
