@@ -4,6 +4,8 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-23
+
 ### Added
 
 - Native Swift direct multi-provider engine (`macos/Sources/NativeOptimizer.swift`) supporting DeepSeek, OpenAI, Anthropic Claude (with prompt caching `cache_control: ephemeral`), Google Gemini, Ollama local models, and Custom endpoints with macOS Keychain secret storage, connection testing, app-aware task presets, and opt-in Local Secret Shield — removing the external Node.js 22 runtime prerequisite for direct-mode macOS users while preserving legacy `.env` backend fallback.
@@ -129,7 +131,8 @@ First public release, corresponding to [tag v1.0.0](https://github.com/JERMYSUEN
 - Historical pre-release records report 55 Node tests and 190 native checks; these are dated evidence, not a claim that those counts cover current `main` or every host/model. See the [reliability record](docs/reliability-verification.md) and [release notes](docs/releases/v1.0.0.md).
 - Source installation requires `npm run build:mac` **before** `npm run install:mac`. Follow the [current macOS guide](docs/macos.md) for prerequisites, permissions and configuration.
 
-[Unreleased]: https://github.com/JERMYSUEN/promptfinch/compare/v1.3.0...main
+[Unreleased]: https://github.com/JERMYSUEN/promptfinch/compare/v1.4.0...main
+[1.4.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.4.0
 [1.3.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0
 [1.2.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.2.0
 [1.1.0]: https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.1.0

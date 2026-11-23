@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PromptFinch — Multilingual Prompt Refiner",
   "short_name": "PromptFinch",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Turn rough requests in any language into crisp, faithful prompts right inside ChatGPT, Claude, Gemini, GitHub, and Notion — with zero OS permissions.",
   "icons": {
     "16": "icons/icon-16.png",

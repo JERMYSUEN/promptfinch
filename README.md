@@ -10,9 +10,11 @@
 
 A prompt editor and optimizer for writing, coding, research, summarization, and planning. Turn a rough request in your preferred language into clearer, actionable instructions for the model you plan to use. The optimizer is instructed to clarify the objective, inputs and constraints, arrange useful steps, address critical information gaps and derive checks from your requirements. Already-clear requests should receive minimal edits; added structure should help the task, without inventing new requirements.
 
-Use the **macOS app** as a manual workspace or a selection assistant: select text in a compatible app, right-click, choose **Convert to English prompt** in the companion action menu, and review the result nearby. Right-clicking alone does not send text to a model. The **Windows and Linux desktop preview** adds the same workspace and an experimental companion menu on Windows UI Automation and Linux X11. Linux Wayland supports manual input and clipboard import, without a global right-click menu. The macOS app calls that optimizer through its own local API. See the [desktop support guide](docs/desktop.md).
+Use the **macOS native app** as a menu-bar mini workspace, floating studio, or cross-app selection assistant: select text in a compatible app, click the floating Selection Micro-Pill or right-click companion action menu, stream the refined prompt live inside a compact Result Card (with inline editing notes, quick style rerun, and one-click paste-back), or switch models directly from the 356 px Menu-Bar Popover. In **Native Direct mode** (default), the macOS app connects straight to DeepSeek, OpenAI, Anthropic Claude, Google Gemini, Ollama, or custom OpenAI-compatible APIs using macOS Keychain credentials — **no Node.js runtime required** (the legacy local Node.js `.env` backend remains available as a fallback). Right-clicking alone never sends text to a model.
 
-PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API configuration. Without a key, a clearly labeled mock mode lets you try the workflow without translating or optimizing the text.
+The **Windows and Linux desktop preview** provides the same workspace, GUI provider setup wizard, always-on-top Mini Mode, Local Secret Shield, and an experimental companion menu on Windows UI Automation and Linux X11 (Wayland supports manual input and clipboard import). See the [desktop support guide](docs/desktop.md). A **Manifest V3 browser extension** (`extension/`) also brings the selection micro-pill and direct DOM replacement right into ChatGPT, Claude, Gemini, GitHub, Notion, and Perplexity with zero OS Accessibility permissions; see the [extension guide](extension/README.md).
+
+PromptFinch edits instructions; it does not carry out the task described in them. It is designed to retain your requirements, requested answer language and exact strings. Real optimization requires your own model API key (or a local Ollama model). Without a key, an explicitly labeled built-in demo/mock mode lets you inspect the workflow without translating or optimizing the text.
 
 ## Demo
 
@@ -38,45 +40,47 @@ The desktop apps generate English prompt instructions. API clients use `promptLa
 
 ### What it does
 
-- Accept a rough prompt, choose a task type, and optionally name the model that will receive the result.
+- Accept a rough prompt, choose a task type, refinement style (`balanced`, `concise`, `structured`), and optionally name the downstream target model.
 - Ask the model to improve task clarity and execution guidance while preserving intent, constraints and exact strings, rather than merely changing the language.
-- Produce a copyable prompt with improvements and assumptions shown separately. Copy and paste-back use the prompt field alone. Compare the captured source and result with whole-line change highlights before reuse.
-- Use one macOS app for manual input, selection actions, result panels, model settings, four interface languages, and optional paste-back.
-- Handle blank input, size limits, loading, cancellation, and understandable errors.
-- Run without a model key in clearly labeled mock mode, or call a configured OpenAI-compatible model from the Node.js backend.
+- Produce a copyable prompt with improvements and assumptions shown separately. Copy and paste-back use the prompt field alone. Stream live prompt previews over SSE and compare the captured source and result with whole-line change highlights before reuse.
+- Connect natively to **DeepSeek** (`deepseek-flash` = DeepSeek-V4.1-Flash, `deepseek-v4-pro`, `deepseek-chat`, `deepseek-reasoner`), **OpenAI**, **Anthropic Claude** (with prompt caching), **Google Gemini**, **Ollama (local)**, or custom OpenAI-compatible gateways — with curated model version selectors, live `/models` discovery, connection testing, and opt-in Local Secret Shield.
+- Use one native macOS app for selection Micro-Pill, dynamic floating Result Card (with quick style rerun & one-click paste-back), 356 px Menu-Bar Popover (with 1-click model switching & in-memory session history), Menu-Bar-Only mode, Keychain credentials, and four interface languages (`zh-TW`, `en`, `ja`, `ko`).
+- Run on Windows/Linux via the Electron desktop preview (with GUI setup wizard & always-on-top Mini Mode) or inside web AI apps via the Manifest V3 browser extension, or test offline in clearly labeled built-in demo/mock mode.
 
-The task choices are general, writing, analysis, coding, summary, and marketing. Research and planning requests fit the analysis or general workflow. The optional **target model** is a prompt-editing hint, not a switch for the backend generation model; the latter is configured with `LLM_MODEL`.
+The task choices are general, writing, analysis, coding, summary, and marketing, paired with `balanced`, `concise`, or `structured` styles. The optional **target model** is a prompt-editing hint, not a switch for the active generation model.
 
 ### Requirements
 
 | Use | Requirements |
 | --- | --- |
-| Native macOS app | macOS 13 or newer as the compilation target, plus an installed Node.js 22+ runtime. Node is not bundled with the app. The app starts its own local API. |
+| Native macOS app (Direct mode) | macOS 13 or newer. Connects directly to your configured provider using macOS Keychain — **no Node.js required**. |
+| Native macOS app (Legacy `.env` backend) | macOS 13 or newer plus an installed Node.js 22+ runtime when switching to the local Node.js backend option. |
 | Windows / Linux desktop preview | Windows 10/11 x64, or Linux x64 with a supported Electron desktop runtime. Node is bundled. Global selection is experimental on Windows UIA / Linux X11; Wayland uses clipboard import. |
-| Build the macOS app | Apple Xcode Command Line Tools, including Swift and Apple's signing tools. Full Xcode is not required. |
-| Development | Node.js 22.12+; `npm ci` installs the development dependencies. Playwright is used by the desktop smoke check. |
+| Browser extension (Chrome / Edge / Brave / Arc) | Chromium browser supporting Manifest V3; requires zero macOS/Windows OS accessibility permissions. |
+| Build from source / Development | macOS Xcode Command Line Tools for Swift builds; Node.js 22.12+ (`npm ci`) for backend/desktop development and tests. |
 
-Native builds target `arm64` when the build's Node process is ARM64, otherwise `x86_64`; they are not Universal Binaries. Recorded native checks were on Apple Silicon. Intel and the minimum macOS 13 target have not been validated on physical machines.
+Release builds include a Universal macOS binary (`arm64` + `x86_64`) alongside the Apple Silicon snapshot. Recorded native acceptance checks were on Apple Silicon; Intel and the minimum macOS 13 target have not been validated on physical machines.
 
 Run the following commands from the project root. The examples use a POSIX shell, as provided by macOS and common Linux environments.
 
 ### Quick start
 
 <!-- current-release-downloads:start -->
-**Install the app:** pick a package from [v1.3.0 Releases](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) and check its published checksum.
+**Install the app:** pick a package from [v1.4.0 Releases](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.4.0) and check its published checksum.
 
 | Platform | What to do |
 | --- | --- |
-| macOS (Apple Silicon) | Install Node.js 22+, unzip `PromptFinch-1.3.0-macos-arm64.zip`, move PromptFinch to Applications, and open it. |
-| Windows x64 (preview) | Run `PromptFinch-1.3.0-windows-x64-setup.exe`, or extract `PromptFinch-1.3.0-windows-x64.zip` and open `PromptFinch.exe`. |
-| Linux x64 (preview) | Make `PromptFinch-1.3.0-linux-x64.AppImage` executable and run it, or extract `PromptFinch-1.3.0-linux-x64.tar.gz` and run `promptfinch`. |
+| macOS Universal (Apple Silicon & Intel) | Open `PromptFinch-1.4.0-macos-universal.dmg` (or unzip `PromptFinch-1.4.0-macos-universal.zip`), drag PromptFinch to Applications, and configure a provider in **Settings → Model** (no Node.js needed in Direct mode). Apple Silicon archive with manifest: `PromptFinch-1.4.0-macos-arm64.zip`. |
+| Windows x64 (preview) | Run `PromptFinch-1.4.0-windows-x64-setup.exe`, or extract `PromptFinch-1.4.0-windows-x64.zip` and open `PromptFinch.exe`. |
+| Linux x64 (preview) | Make `PromptFinch-1.4.0-linux-x64.AppImage` executable and run it, or extract `PromptFinch-1.4.0-linux-x64.tar.gz` and run `promptfinch`. |
+| Browser Extension (MV3) | Extract `PromptFinch-extension-v1.4.0.zip` and load unpacked in `chrome://extensions` (or `edge://extensions`), then configure a provider in the popup. |
 
-Windows and Linux packages include Node. See the [release guide](docs/releases/v1.3.0.md) for checksums, signing and platform requirements, and the [Linux launch commands](docs/desktop.md#linux) for AppImage setup. On macOS, allow Accessibility in System Settings to enable cross-app selection. When upgrading, choose **Settings → Use this app’s bundled backend** to adopt the packaged optimizer while keeping your model configuration.
+Windows and Linux packages include Node; macOS Direct mode needs no Node. See the [v1.4.0 release guide](docs/releases/v1.4.0.md) for checksums, signing and platform requirements, and the [Linux launch commands](docs/desktop.md#linux) for AppImage setup. On macOS, allow Accessibility in System Settings to enable cross-app selection. When upgrading legacy `.env` backend installs, choose **Settings → Model → Local Node.js .env backend → Use this app’s bundled backend** to adopt the packaged optimizer while keeping your model configuration.
 <!-- current-release-downloads:end -->
 
-The desktop apps start in demo mode without a key. To optimize real prompts, create or select a private configuration file in Settings, add your [model settings](#model-configuration), then reload it.
+The desktop apps include a clearly labeled demo mode without a key. To optimize real prompts, open **Settings → Model**, pick a provider preset (DeepSeek, OpenAI, Anthropic Claude, Google Gemini, Ollama, or Custom), choose a curated model or click **Fetch models**, enter your API key, and click **Save & Activate**.
 
-**Build from source:** clone the repository or extract `PromptFinch-source-v1.3.0.zip` from the same release. Run the commands below from the project directory.
+**Build from source:** clone the repository or extract `PromptFinch-source-v1.4.0.zip` from the same release. Run the commands below from the project directory.
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
@@ -109,14 +113,15 @@ To create packages on the matching x64 host, run `npm run build:desktop`. Select
 
 ### Model configuration
 
-Live generation uses an **OpenAI-compatible Chat Completions** endpoint. The backend appends `/chat/completions` to `LLM_BASE_URL`. Each user provides their own provider access and pays any charges on that account.
+PromptFinch natively supports **OpenAI-compatible Chat Completions** (DeepSeek, OpenAI, Ollama, and custom gateways), **Anthropic Messages API** (with ephemeral prompt caching), and **Google Gemini `generateContent` / SSE streaming**. In the macOS app, Electron desktop GUI setup wizard, and browser extension, choose a provider preset, pick a curated model version (or click **Fetch models** to query `/models`), and enter your own API key (stored in macOS Keychain, owner-only `0600` `.env`, or local browser storage respectively). Each user provides their own provider access and pays any charges on that account.
 
-No language model is bundled or downloaded by PromptFinch. `LLM_MODEL` chooses the API model that edits prompts; the optional target-model field only describes the model you plan to paste into. Provider model names and account access must match your provider's current API configuration.
+No language model is bundled or downloaded by PromptFinch. `LLM_MODEL` chooses the API model that edits prompts (for example, `deepseek-flash` maps to DeepSeek-V4.1-Flash, alongside `deepseek-v4-pro`, `deepseek-chat`, and `deepseek-reasoner`); the optional target-model field only describes the downstream model you plan to paste into. Provider model names and account access must match your provider's current API configuration.
 
-For a new configuration, [.env.deepseek.example](.env.deepseek.example) provides this concrete example:
+For a standalone `.env` server or legacy backend configuration, [.env.deepseek.example](.env.deepseek.example) provides this concrete example:
 
 ```dotenv
 OPTIMIZER_MODE=live
+LLM_PROVIDER=openai
 LLM_API_KEY=YOUR_MODEL_API_KEY
 LLM_BASE_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-flash
@@ -128,15 +133,16 @@ HOST=127.0.0.1
 PORT=3000
 ```
 
-Replace `YOUR_MODEL_API_KEY` with your own key in your private local configuration. Edit an existing `.env` rather than overwriting it. Restart the browser server after configuration changes; in the Mac app, reload the selected configuration.
+Replace `YOUR_MODEL_API_KEY` with your own key in your private local configuration. Edit an existing `.env` rather than overwriting it. Restart the standalone server after configuration changes; in the Mac app's legacy backend mode, reload the selected configuration.
 
-Other compatible providers can replace the base URL, key, and model identifier. Keep `LLM_THINKING_MODE` blank for providers that do not accept the DeepSeek thinking parameter. If a provider does not accept JSON mode, set `LLM_JSON_MODE=false`; it must still return the valid JSON requested by the optimizer. Native Claude or Gemini endpoints require an adapter or a compatible gateway and cannot simply be entered as Chat Completions URLs.
+Set `LLM_PROVIDER=anthropic` (with `https://api.anthropic.com/v1`) for native Claude Messages API or `LLM_PROVIDER=gemini` (with `https://generativelanguage.googleapis.com/v1beta`) for native Gemini API. Keep `LLM_THINKING_MODE` blank for models other than `deepseek-flash` (including `deepseek-reasoner`, OpenAI, Claude, and Gemini). If an OpenAI-compatible gateway does not accept JSON mode, set `LLM_JSON_MODE=false`; it must still return the valid JSON requested by the optimizer.
 
-A local compatible service that does not require authentication can use `LLM_API_KEY=local-only` as a non-secret placeholder, together with that service's actual base URL and loaded model identifier. This does not start or bundle a local model.
+A local Ollama or compatible service that does not require authentication can use `LLM_API_KEY=local-only` as a non-secret placeholder (or leave the key blank in the Ollama GUI preset), together with that service's actual base URL and loaded model identifier. This does not start or bundle a local model.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `OPTIMIZER_MODE` | `mock` | `mock` for templates; `live` for model requests. |
+| `LLM_PROVIDER` | `openai` | Protocol adapter: `openai` (OpenAI/DeepSeek/Ollama/compatible), `anthropic`, or `gemini`. |
 | `LLM_API_KEY` | Empty | Backend-only Bearer credential; required in live configuration. |
 | `LLM_BASE_URL` | `https://api.openai.com/v1` | Compatible API base URL; no embedded credentials, query, or fragment. |
 | `LLM_MODEL` | Empty | Provider model identifier; required in live configuration. |

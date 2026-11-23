@@ -32,7 +32,7 @@ test('a stale release link, unknown current package, or missing release guide fa
   const file = currentDownloadFiles[0];
   const staleLink = source[file].replace(`releases/tag/v${version}`, 'releases/tag/v0.0.1');
   assert.ok(releaseDocumentationErrors(version, { ...source, [file]: staleLink }).some(error => error.includes('must link')));
-  const unknownPackage = source[file].replace('macos-arm64.zip', 'macos-universal.zip');
+  const unknownPackage = source[file].replace('macos-arm64.zip', 'macos-nonexistent.zip');
   assert.ok(releaseDocumentationErrors(version, { ...source, [file]: unknownPackage }).some(error => error.includes('package missing')));
   assert.ok(releaseDocumentationErrors(version, { ...source, [guide]: '' }).some(error => error.includes('missing current release guide')));
 });

@@ -8,11 +8,11 @@
 
 PromptFinch 是適用於寫作、程式開發、研究、摘要與規劃的 Prompt 編輯與優化工具。將以你慣用語言寫下的粗略需求，整理成讓目標模型更容易執行的指令。優化器會要求模型釐清目標、輸入與限制，按需要安排步驟、處理關鍵資訊缺口，並從原始需求推導檢查方式。已經清楚的需求應保持精簡；新增結構應有助於任務，不應擅自添加新要求。
 
-**macOS App** 可作為手動工作台或選取助手：在相容應用程式中選取文字、按右鍵，在輔助操作選單選擇 **轉為英文 Prompt**，再於附近面板檢視結果。只按右鍵不會將文字傳送給模型。macOS App 透過自己的本機 API 呼叫同一個優化器。
+**macOS 原生 App** 可作為選單列迷你工作面板、浮動工作台或跨軟體選取助手：在相容應用程式中選取文字，點擊浮動 Micro-Pill 或右鍵輔助選單，即可在動態結果卡片即時串流檢視英文／繁中 Prompt、展開優化說明、一鍵切換風格重潤飾並貼回原文，也可直接從 356 px 選單列 Popover 一鍵切換模型。**原生直連模式**（預設）透過 macOS 鑰匙圈直接連線 DeepSeek、OpenAI、Anthropic Claude、Google Gemini、本機 Ollama 或自訂相容端點，**完全免安裝 Node.js**（仍保留傳統本機 Node.js `.env` 後端作為相容選項）。只按右鍵不會將文字傳送給模型。
 
-Windows／Linux 桌面預覽版新增相同工作台，以及 Windows UI Automation／Linux X11 的實驗性右鍵附加選單。Wayland 可使用手動輸入及剪貼簿匯入，沒有全域右鍵選單。詳見[桌面版支援指引（英文）](../desktop.md)。
+Windows／Linux 桌面預覽版提供相同工作台、圖形化模型設定精靈、置頂迷你模式、本機敏感遮罩，以及 Windows UI Automation／Linux X11 的實驗性右鍵附加選單（Wayland 使用手動輸入及剪貼簿匯入），詳見[桌面版支援指引（英文）](../desktop.md)。另有 **Manifest V3 瀏覽器擴充功能**（`extension/`），免作業系統輔助使用權限即可在 ChatGPT、Claude、Gemini、GitHub、Notion 與 Perplexity 網頁內嵌微膠囊一鍵潤飾並直接替換輸入框內容，詳見[擴充功能指南](../../extension/README.md)。
 
-PromptFinch 會編輯指令，不會執行指令描述的任務。它以保留需求、指定的答案語言與固定字串為設計目標。真正優化需要自行設定模型 API；沒有金鑰時，可用明確標示的 mock 模式試用操作流程，但不會翻譯或優化文字。
+PromptFinch 會編輯指令，不會執行指令描述的任務。它以保留需求、指定的答案語言與固定字串為設計目標。真正優化需要自行設定模型 API 金鑰（或本機 Ollama 模型）；沒有金鑰時，可用明確標示的內建示範／mock 模式試用操作流程，但不會翻譯或優化文字。
 
 ## 示範動圖
 
@@ -34,31 +34,32 @@ macOS App 的**設定 → 介面語言**可選繁體中文（預設）、英文�
 
 ## 功能
 
-- 接受原始 Prompt、任務類型，以及可選的下游目標模型名稱。
+- 接受原始 Prompt、任務類型、潤飾風格（`平衡`／`精簡`／`條列`），以及可選的下游目標模型名稱。
 - 要求模型在保留任務意圖、限制與固定字串的前提下，改善需求清晰度與執行指引，而非只轉換語言。
-- 產生可複製的 Prompt，並將優化說明與假設分開呈現；複製及貼回只會使用 Prompt 欄位。
-- macOS App 提供手動輸入、選取操作、結果面板、模型設定、四種介面語言及可選的貼回功能。
-- 處理空白輸入、長度限制、載入、取消與易懂的錯誤訊息。
-- 可在明確標示的 mock 模式下免金鑰檢查流程，或由 Node.js 後端呼叫已設定的 OpenAI 相容模型。
+- 產生可複製的 Prompt，支援 SSE 即時串流預覽，並將優化說明與假設分開呈現；複製及貼回只會使用 Prompt 欄位。
+- 原生直連 **DeepSeek**（`deepseek-flash` 即 DeepSeek-V4.1-Flash、`deepseek-v4-pro`、`deepseek-chat`、`deepseek-reasoner`）、**OpenAI**、**Anthropic Claude**（支援 Prompt 快取）、**Google Gemini**、**本機 Ollama** 及自訂 OpenAI 相容端點，內建模型版本選擇器、即時 `/models` 清單拉取、連線測試與本機敏感遮罩。
+- 單一 macOS 原生 App 整合選取 Micro-Pill、動態結果卡片（含風格快切重跑與一鍵貼回）、356 px 選單列 Popover（含一鍵快速切換模型與記憶體暫存紀錄）、純選單列常駐模式、macOS 鑰匙圈金鑰保護與四種介面語言。
+- 另提供 Windows／Linux 桌面版（含圖形設定精靈與置頂迷你模式）、Manifest V3 瀏覽器擴充功能，以及免金鑰的內建示範模式。
 
-任務類型包括通用、寫作、分析、程式開發、摘要與行銷；研究與規劃可選分析或通用。可選的**目標模型**只作為編輯 Prompt 的提示，不會切換後端生成模型；後端模型由 `LLM_MODEL` 設定。
+任務類型包括通用、寫作、分析、程式開發、摘要與行銷，搭配平衡、精簡或條列風格。可選的**目標模型**只作為編輯 Prompt 的提示，不會切換實際呼叫的生成模型。
 
 ## 系統需求
 
 | 用途 | 需求 |
 | --- | --- |
-| macOS 原生 App | macOS 13 或更新版本作為編譯目標，並安裝 Node.js 22+ 執行階段。App 不內含 Node，會自行啟動本機 API。 |
+| macOS 原生 App（原生直連模式） | macOS 13 或更新版本；直接透過 macOS 鑰匙圈連線各服務商，**免安裝 Node.js**。 |
+| macOS 原生 App（傳統 `.env` 後端） | macOS 13 或更新版本，並另行安裝 Node.js 22+ 執行階段。 |
 | Windows／Linux 桌面預覽版 | Windows 10/11 x64，或可執行 Electron 的 Linux x64 桌面環境。內含 Node；Windows UIA／Linux X11 的全域選取仍屬實驗功能，Wayland 使用剪貼簿匯入。 |
-| 建置 macOS App | Apple Xcode Command Line Tools，包含 Swift 與 Apple 簽署工具；不需要完整 Xcode。 |
-| 開發 | Node.js 22.12+；`npm ci` 安裝開發依賴。Playwright 用於桌面冒煙檢查。 |
+| 瀏覽器擴充功能（MV3） | Chrome／Edge／Brave／Arc 等 Chromium 瀏覽器，無需任何作業系統輔助使用權限。 |
+| 原始碼建置與開發 | 建置 macOS App 需 Apple Xcode Command Line Tools；後端／桌面開發需 Node.js 22.12+（`npm ci`）。 |
 
-原生建置會依 Node 程序架構產生 `arm64` 或 `x86_64`，不是 Universal Binary。已記錄的原生檢查是在 Apple Silicon 上執行；尚未在實體 Intel 裝置或最低 macOS 13 版本上驗證。
+發行版提供 Universal macOS 套件（`arm64` + `x86_64`）與 Apple Silicon 建置快照；已記錄的實機驗收於 Apple Silicon 執行，尚未於實體 Intel 裝置或最低 macOS 13 驗證。
 
 以下指令請在專案根目錄、macOS 或常見 Linux 環境提供的 POSIX shell 執行。
 
 ## 快速開始
 
-取得原始碼以建置桌面版。現成桌面安裝包請使用下方發行下載：
+取得原始碼以建置桌面版。現成桌面安裝包與擴充套件請使用下方發行下載：
 
 ```sh
 git clone https://github.com/JERMYSUEN/promptfinch.git
@@ -66,18 +67,19 @@ cd promptfinch
 ```
 
 <!-- current-release-downloads:start -->
-目前的 [v1.3.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) 提供以下下載：
+目前的 [v1.4.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.4.0) 提供以下下載：
 
 | 系統 | 安裝包 | 執行環境 |
 | --- | --- | --- |
-| macOS Apple Silicon | `PromptFinch-1.3.0-macos-arm64.zip` | 另裝 Node.js 22+ |
-| Windows x64 預覽版 | `PromptFinch-1.3.0-windows-x64-setup.exe` 或 `PromptFinch-1.3.0-windows-x64.zip` | 已內含 |
-| Linux x64 預覽版 | `PromptFinch-1.3.0-linux-x64.AppImage` 或 `PromptFinch-1.3.0-linux-x64.tar.gz` | 已內含；仍需相容的系統函式庫 |
-| 原始碼 | `PromptFinch-source-v1.3.0.zip` | 見上方系統需求 |
+| macOS Universal（Apple Silicon & Intel） | `PromptFinch-1.4.0-macos-universal.dmg` 或 `PromptFinch-1.4.0-macos-universal.zip`（Apple Silicon 驗證包：`PromptFinch-1.4.0-macos-arm64.zip`） | 原生直連模式免裝 Node.js（傳統 `.env` 後端才需 Node 22+） |
+| Windows x64 預覽版 | `PromptFinch-1.4.0-windows-x64-setup.exe` 或 `PromptFinch-1.4.0-windows-x64.zip` | 已內含 |
+| Linux x64 預覽版 | `PromptFinch-1.4.0-linux-x64.AppImage` 或 `PromptFinch-1.4.0-linux-x64.tar.gz` | 已內含；仍需相容的系統函式庫 |
+| 瀏覽器擴充功能（MV3） | `PromptFinch-extension-v1.4.0.zip` | Chrome／Edge／Brave／Arc 開發人員模式載入 |
+| 原始碼 | `PromptFinch-source-v1.4.0.zip` | 見上方系統需求 |
 
-請使用同一發行版的校驗碼及驗證檔案。設定、平台限制與驗證範圍見[發行指引（英文）](../releases/v1.3.0.md)。macOS 請解壓縮後將 App 移至應用程式資料夾；App 採 ad-hoc 簽章、未經公證，沒有 Intel／Universal Binary 下載。Windows／Linux 安裝包未簽章，仍屬實驗預覽版。
+請使用同一發行版的校驗碼及驗證檔案。設定、平台限制與驗證範圍見[v1.4.0 發行指引（英文）](../releases/v1.4.0.md)。macOS 請打開 DMG 或解壓縮將 App 拖移至應用程式資料夾；公開下載採 ad-hoc 簽章、未經 Apple 公證。Windows／Linux 安裝包未簽章，仍屬預覽版。
 
-升級 macOS 時，替換 App 會保留既有外部後端。請在新 App 選擇**設定 → 使用此 App 隨附後端**，才會採用內附優化器；這個操作保留私人模型設定，啟動失敗時會嘗試回復。沒有自動更新器。[變更紀錄](../../CHANGELOG.md)區分先前快照；更新 `main` 不會重新建置已發布下載。
+升級傳統 `.env` 後端安裝時，替換 App 會保留既有外部後端；如需採用新版隨附後端，請在**設定 → 模型 → 本機 Node.js .env 後端 → 使用此 App 隨附後端**切換。沒有自動更新器。[變更紀錄](../../CHANGELOG.md)區分先前快照；更新 `main` 不會重新建置已發布下載。
 <!-- current-release-downloads:end -->
 
 ### 建置並安裝 macOS App
@@ -123,14 +125,15 @@ Windows x64 上可建置安裝程式及 ZIP；Linux x64 上可建置 AppImage �
 
 ## 模型設定
 
-即時生成使用 **OpenAI 相容的 Chat Completions** 端點。後端會在 `LLM_BASE_URL` 後附加 `/chat/completions`。使用者需自行提供模型供應商帳號並負擔該帳號產生的費用。
+PromptFinch 原生支援 **OpenAI 相容 Chat Completions**（DeepSeek、OpenAI、Ollama 與自訂閘道）、**Anthropic Messages API**（支援 Prompt 快取）及 **Google Gemini `generateContent`／SSE 串流**。在 macOS App、Electron 桌面版設定精靈與瀏覽器擴充功能中，直接選服務商預設、從常用清單選擇模型（或點擊「讀取清單」即時查詢 `/models`）並輸入金鑰即可啟用。使用者需自行提供模型供應商帳號並負擔該帳號產生的費用。
 
-PromptFinch 不內含或下載語言模型。`LLM_MODEL` 選擇透過 API 編輯 Prompt 的模型；可選的目標模型欄位只描述你打算貼上結果的模型。供應商模型名稱與帳號權限必須符合該供應商目前的 API 設定。
+PromptFinch 不內含或下載語言模型。`LLM_MODEL` 選擇透過 API 編輯 Prompt 的模型（例如 `deepseek-flash` 對應 DeepSeek-V4.1-Flash，另有 `deepseek-v4-pro`、`deepseek-chat`、`deepseek-reasoner`）；可選的目標模型欄位只描述你打算貼上結果的模型。供應商模型名稱與帳號權限必須符合該供應商目前的 API 設定。
 
-新設定可參考 [.env.deepseek.example](../../.env.deepseek.example)：
+獨立伺服器或傳統 `.env` 後端設定可參考 [.env.deepseek.example](../../.env.deepseek.example)：
 
 ```dotenv
 OPTIMIZER_MODE=live
+LLM_PROVIDER=openai
 LLM_API_KEY=YOUR_MODEL_API_KEY
 LLM_BASE_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-flash
@@ -142,15 +145,16 @@ HOST=127.0.0.1
 PORT=3000
 ```
 
-請在私人本機設定中以自己的金鑰取代 `YOUR_MODEL_API_KEY`。修改既有 `.env`，不要覆寫它。瀏覽器伺服器的設定變更後需重新啟動；Mac App 則需重新載入所選設定。
+請在私人本機設定中以自己的金鑰取代 `YOUR_MODEL_API_KEY`。修改既有 `.env`，不要覆寫它。獨立伺服器的設定變更後需重新啟動；Mac App 傳統後端模式則需重新載入所選設定。
 
-其他相容供應商可替換基本 URL、金鑰與模型識別碼。若供應商不接受 DeepSeek 思考參數，請將 `LLM_THINKING_MODE` 留空。若供應商不接受 JSON 模式，請設定 `LLM_JSON_MODE=false`；但它仍必須回傳優化器要求的有效 JSON。原生 Claude 或 Gemini 端點需要介接器或相容閘道，不能直接填入 Chat Completions URL。
+使用原生 Anthropic Claude 時設 `LLM_PROVIDER=anthropic`（搭配 `https://api.anthropic.com/v1`），使用原生 Google Gemini 時設 `LLM_PROVIDER=gemini`（搭配 `https://generativelanguage.googleapis.com/v1beta`）。使用非 `deepseek-flash` 的其他模型（包含 `deepseek-reasoner`、OpenAI、Claude、Gemini）請將 `LLM_THINKING_MODE` 留空。若 OpenAI 相容供應商不接受 JSON 模式，請設定 `LLM_JSON_MODE=false`；但它仍必須回傳優化器要求的有效 JSON。
 
-不需驗證的本機相容服務可以 `LLM_API_KEY=local-only` 作為非機密佔位值，並設定該服務實際的基本 URL 與已載入模型名稱。這不會啟動或隨附本機模型。
+不需驗證的本機 Ollama 或相容服務可以 `LLM_API_KEY=local-only` 作為非機密佔位值（或在 GUI 的 Ollama 預設直接留空金鑰），並設定該服務實際的基本 URL 與已載入模型名稱。這不會啟動或隨附本機模型。
 
 | 變數 | 預設值 | 說明 |
 | --- | --- | --- |
 | `OPTIMIZER_MODE` | `mock` | `mock` 使用範本；`live` 呼叫模型。 |
+| `LLM_PROVIDER` | `openai` | API 協定：`openai`（OpenAI／DeepSeek／Ollama／相容）、`anthropic` 或 `gemini`。 |
 | `LLM_API_KEY` | 空白 | 僅供後端使用的 Bearer 認證；即時模式必填。 |
 | `LLM_BASE_URL` | `https://api.openai.com/v1` | 相容 API 基本 URL；不得含內嵌認證、查詢或片段。 |
 | `LLM_MODEL` | 空白 | 供應商模型識別碼；即時模式必填。 |

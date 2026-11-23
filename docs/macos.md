@@ -6,12 +6,12 @@
 
 ## 安裝與建置
 
-編譯目標為 **macOS 13 以上**，另需安裝 **Node.js 22 以上**。最低 macOS 13 與實體 Intel 裝置尚未完成驗證。從原始碼建置還需要 Apple 的 Xcode Command Line Tools；不必安裝完整 Xcode，也沒有第三方 Swift 套件。
+編譯目標為 **macOS 13 以上**。**原生直連模式（預設）完全免安裝 Node.js**，直接透過 macOS 鑰匙圈連線 DeepSeek、OpenAI、Anthropic Claude、Google Gemini、Ollama 或自訂相容端點；只有切換回傳統「本機 Node.js `.env` 後端」模式時才需安裝 **Node.js 22 以上**。最低 macOS 13 與實體 Intel 裝置尚未完成驗證。從原始碼建置需要 Apple 的 Xcode Command Line Tools；不必安裝完整 Xcode，也沒有第三方 Swift 套件。
 
 <!-- current-release-downloads:start -->
-目前的 [v1.3.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.3.0) 提供 Apple Silicon 專用 `PromptFinch-1.3.0-macos-arm64.zip`、`PromptFinch-source-v1.3.0.zip`、`SHA256SUMS` 及公開輸入雜湊 manifest；Windows／Linux x64 預覽套件另見 [v1.3.0 發行指南](releases/v1.3.0.md)。下載後依發行指南核對相符的驗證檔，將 macOS App 解壓縮並移至應用程式資料夾。macOS 版仍需另裝 Node，沒有已發佈的 Intel 或 Universal 套件。公開 App 採 ad-hoc 簽章，未做 Developer ID 簽章或公證，macOS 可能阻擋不受信任的下載；請先評估來源並使用系統提供的安全控制。
+目前的 [v1.4.0 發行版](https://github.com/JERMYSUEN/promptfinch/releases/tag/v1.4.0) 提供 Universal macOS 套件 `PromptFinch-1.4.0-macos-universal.dmg`、`PromptFinch-1.4.0-macos-universal.zip`、Apple Silicon 驗證包 `PromptFinch-1.4.0-macos-arm64.zip`、`PromptFinch-extension-v1.4.0.zip`、`PromptFinch-source-v1.4.0.zip`、`SHA256SUMS` 及公開輸入雜湊 manifest；Windows／Linux x64 預覽套件另見 [v1.4.0 發行指南](releases/v1.4.0.md)。下載後依發行指南核對相符的驗證檔，開啟 DMG 或解壓縮將 `PromptFinch.app` 移至應用程式資料夾即可使用原生直連模式（免裝 Node.js）。公開 App 採 ad-hoc 簽章，未做 Developer ID 簽章或公證，macOS 可能阻擋不受信任的下載；請先評估來源並使用系統提供的安全控制。
 
-升級既有安裝會保留使用者資料夾中正在使用的外部後端，不會自動改用新版 App 內的規則。在新 App 設定選「使用此 App 隨附後端」才能採用隨附版本；此操作保留私人模型設定，啟動失敗時會嘗試回復。App 沒有網路自動更新；較舊下載仍是各自發佈時的快照，更新 `main` 不會重建它們。需要自行建置時使用下列指令。
+若先前使用傳統 `.env` 外部後端，升級後仍會保留原後端；在新 App 的「設定 → 模型 → 本機 Node.js .env 後端」點選「使用此 App 隨附後端」即可更新（保留私人模型設定並在啟動失敗時回復），或直接切換至原生直連模式。App 沒有網路自動更新；較舊下載仍是各自發佈時的快照，更新 `main` 不會重建它們。需要自行建置時使用下列指令。
 <!-- current-release-downloads:end -->
 
 ```sh
@@ -53,12 +53,15 @@ npm run install:mac -- --config .env
 
 語言文案集中於 `macos/Sources/Localization.swift`，不依賴翻譯服務。切換語言不傳送文字、不呼叫模型，也不改動 API 金鑰或設定檔。
 
-## 設定 DeepSeek
+## 設定模型與服務商（原生直連與傳統 `.env`）
 
-在 App 按「設定」→「建立 / 編輯模型設定」。它會建立 `~/Library/Application Support/PromptSelection/settings.env`，首次建立時限制為只有本人可讀寫，並開啟編輯器。填入 `LLM_API_KEY`、儲存，按「重新載入設定」。也能直接選擇既有 `.env`；這個檔案是後端設定，不是要貼入 Prompt 的內容。
+推薦使用 **原生直連模式（免 Node.js）**：點擊選單列小鳥 → **設定 → 模型**，選擇服務商預設（DeepSeek、OpenAI、Anthropic Claude、Google Gemini、本機 Ollama 或 Custom OpenAI-Compatible），從下拉選單挑選常用模型版本（或點擊 **↻ 讀取可用模型** 即時查詢 `/models`），填入 API 金鑰後點擊「儲存並啟用」與「測試連線」。金鑰會加密存放於 macOS 鑰匙圈（Keychain），不寫入明文偏好設定檔；平時也能直接點擊選單列 Popover 或工作台頂部的模型標籤一鍵切換模型。
+
+若需要使用傳統本機 Node.js `.env` 後端，切換至「本機 Node.js .env 後端」後按「建立／編輯模型設定」。它會建立 `~/Library/Application Support/PromptSelection/settings.env`（僅本人可讀寫），填入 `LLM_API_KEY`、儲存並按「重新載入設定」：
 
 ```dotenv
 OPTIMIZER_MODE=live
+LLM_PROVIDER=openai
 LLM_API_KEY=你的金鑰
 LLM_BASE_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-flash
@@ -68,7 +71,7 @@ LLM_QUALITY_REVIEW=false
 LLM_TIMEOUT_MS=90000
 ```
 
-`deepseek-flash` 是儲存庫 DeepSeek 範本使用的模型識別；請以自己供應商帳戶當前可用的模型名稱為準。後端會在 `LLM_BASE_URL` 後加上 `/chat/completions`，因此這裡填 API 基底網址，不填完整的 completions 路徑。更換供應商時修改網址、模型與金鑰；不支援 DeepSeek thinking 參數時把 `LLM_THINKING_MODE` 留空。不支援 JSON mode 時改為 `LLM_JSON_MODE=false`，但供應商仍須回傳本工具要求的 JSON 結構。原生 Claude 或 Gemini API 需相容閘道或 adapter，不能直接填入其原生網址。
+`deepseek-flash` 對應 DeepSeek 官方 **DeepSeek-V4.1-Flash**（1M 上下文，支援非思考／思考模式），另可選 `deepseek-v4-pro`、`deepseek-chat`、`deepseek-reasoner`；請以自己供應商帳戶當前可用的模型名稱為準。傳統 `.env` 後端已原生支援 `LLM_PROVIDER=openai`、`anthropic`（附帶 Prompt 快取）與 `gemini`。更換非 `deepseek-flash` 模型時，請將 `LLM_THINKING_MODE` 留空。不支援 JSON mode 時改為 `LLM_JSON_MODE=false`，但供應商仍須回傳本工具要求的 JSON 結構。
 
 工作台的「目標模型」只告訴優化器這份 Prompt 預計給哪個模型使用，不會切換負責生成的模型；實際呼叫由 `LLM_MODEL` 決定。「模型模式」或 API 的 `ready` 只表示必要設定已具備，不表示供應商連線已成功。模型錯誤不會靜默切換成 mock。
 

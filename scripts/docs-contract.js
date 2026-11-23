@@ -26,7 +26,7 @@ export function releaseDocumentationErrors(version, files) {
       if (match[1] !== version) errors.push(`${file}: stale current release ${match[1]} (expected ${version})`);
     }
     if (guideText) {
-      for (const match of block.matchAll(/`(PromptFinch-[^`\s]+\.(?:zip|exe|AppImage|tar\.gz))`/g)) {
+      for (const match of block.matchAll(/`(PromptFinch-[^`\s]+\.(?:zip|dmg|exe|AppImage|tar\.gz))`/g)) {
         if (!guideText.includes(`\`${match[1]}\``)) errors.push(`${file}: package missing from current release guide: ${match[1]}`);
       }
     }

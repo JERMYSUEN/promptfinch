@@ -37,7 +37,7 @@ const files = [
   'tests/fixtures/multilingual-parity.json', 'tests/fixtures/multilingual-language-edges.json', 'tests/multilingual-runner.test.js', 'tests/evaluation-options.test.js',
   'tests/literal-encoding.test.js', 'tests/quality-review.test.js', 'tests/fixtures/prompt-quality.json',
   'tests/quality-branch-fixtures.test.js', 'tests/fixtures/prompt-quality-branch-regressions.json', 'docs/prompt-quality-branch-regressions.md',
-  'docs/prompt-quality-rubric.md', 'docs/prompt-quality-verification.md', 'docs/prompt-quality-results.json', 'docs/releases/v1.3.0.md',
+  'docs/prompt-quality-rubric.md', 'docs/prompt-quality-verification.md', 'docs/prompt-quality-results.json', 'docs/releases/v1.3.0.md', 'docs/releases/v1.4.0.md',
   'tests/fixtures/optimization-value.json', 'tests/fixtures/release-quality.json',
   'scripts/build-macos.js', 'scripts/macos-sdk.js', 'scripts/setup-signing-macos.js', 'scripts/verify-signing-macos.js', 'scripts/install-macos.js', 'scripts/app-install.js', 'scripts/app-lifecycle.js', 'scripts/terminate-macos-app.swift', 'scripts/update-macos-backend.js', 'scripts/backend-release.js', 'scripts/test-macos.js', 'scripts/package-source.js', 'scripts/package-macos.js', 'scripts/check-package.js', 'scripts/verify-multilingual.js',
   'macos/Info.plist', 'macos/Icon.swift', 'macos/Sources/Localization.swift', 'macos/Sources/Core.swift', 'macos/Sources/NativeOptimizer.swift', 'macos/Sources/Backend.swift',
