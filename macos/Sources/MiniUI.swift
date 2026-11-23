@@ -91,6 +91,68 @@ final class SettingsDraftState: ObservableObject {
     }
 }
 
+struct QuickModelMenuBadge: View {
+    @ObservedObject var model: WorkspaceModel
+    let compact: Bool
+    let onOpenSettings: () -> Void
+
+    var body: some View {
+        if model.nativeConfig.enabled && !model.nativeConfig.demoMode && !model.quickModelOptions.isEmpty {
+            Menu {
+                Section(model.nativeConfig.preset.displayName) {
+                    ForEach(model.quickModelOptions) { option in
+                        Button {
+                            model.quickSwitchNativeModel(option.id)
+                        } label: {
+                            HStack {
+                                Text(option.menuLabel)
+                                if option.id == model.nativeConfig.model {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                }
+                Divider()
+                Button(L10n.text(.moreModelSettings)) { onOpenSettings() }
+            } label: {
+                HStack(spacing: 3) {
+                    Text(compact ? model.compactStatusLabel : model.modeLabel)
+                        .font(.system(size: 11, weight: .medium))
+                        .lineLimit(1)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 8.5, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2)
+                .background(Color.secondary.opacity(0.11))
+                .clipShape(Capsule())
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help(L10n.text(.quickSwitchModel))
+            .disabled(model.unavailable)
+            .accessibilityIdentifier("quickModelSwitcher")
+        } else {
+            Button(action: onOpenSettings) {
+                Text(compact ? model.compactStatusLabel : model.modeLabel)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.10))
+                    .clipShape(Capsule())
+                    .lineLimit(1)
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text(.settings))
+        }
+    }
+}
+
 struct MenuBarPopoverView: View {
     @ObservedObject var model: WorkspaceModel
     @ObservedObject var uiState: MiniUIState
@@ -106,11 +168,9 @@ struct MenuBarPopoverView: View {
                     .frame(width: 7, height: 7)
                 Text("PromptFinch")
                     .font(.system(size: 13, weight: .semibold))
-                Text(model.compactStatusLabel)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                Spacer()
+                    .fixedSize()
+                QuickModelMenuBadge(model: model, compact: true, onOpenSettings: onOpenSettings)
+                Spacer(minLength: 4)
                 Button(action: onOpenStudio) {
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
                 }
@@ -227,7 +287,27 @@ struct MenuBarPopoverView: View {
                 }
             }
 
-            if let result = model.result {
+            if model.busy && !model.streamingPreview.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.mini)
+                        Text(L10n.text(.streamingStatus))
+                            .font(.system(size: 11.5, weight: .medium))
+                            .foregroundStyle(finchAccent)
+                        Spacer()
+                    }
+                    ScrollView {
+                        Text(model.streamingPreview)
+                            .font(.system(size: 12.5))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(8)
+                    }
+                    .frame(height: 112)
+                    .background(Color(nsColor: .textBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(finchAccent.opacity(0.35)))
+                }
+            } else if let result = model.result {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text(L10n.text(.copyablePrompt))

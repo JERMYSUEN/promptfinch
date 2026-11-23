@@ -15,6 +15,7 @@ Notable changes to PromptFinch are documented here. Entries describe the code at
 - Universal macOS (`arm64` + `x86_64`) release automation workflow (`.github/workflows/release-macos.yml`) supporting DMG/ZIP packaging and optional Developer ID signing & `xcrun notarytool` notarization.
 - Refreshed 16-second synthetic workflow demo (`docs/media/demo-selection.gif` and 1280×800 30 fps `docs/media/demo-selection.mp4`) showcasing the Selection Micro-Pill, dynamic Result Card with inline editing notes, one-click paste-back, and 356 px Menu-Bar Popover.
 - Interactive LLM model selector with curated version descriptions (clarifying `deepseek-flash` as DeepSeek-V4.1-Flash alongside `deepseek-v4-pro`, `deepseek-chat`, `deepseek-reasoner`, plus OpenAI, Claude, Gemini, and Ollama presets), live provider `/models` discovery (`Fetch models` / `GET /api/models`), and per-model thinking-mode resolution across macOS native settings, Electron desktop, Node API, and the browser extension.
+- Real SSE token streaming (`NativeOptimizerEngine` via `URLSession.bytes` and Node `optimizeStream`) across OpenAI/DeepSeek, Anthropic, and Gemini with clean incremental JSON `"prompt"` preview extraction, plus one-click floating Result Card style switching & rerun controls and a header quick model switcher in the macOS Menu-Bar Popover and Studio window.
 
 ### Removed
 

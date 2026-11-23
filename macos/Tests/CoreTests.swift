@@ -520,6 +520,138 @@ struct CoreTests {
         check(gemFetched.map(\.id) == ["gemini-2.5-flash"],
               "native engine fetches Gemini /models and filters to generateContent models")
 
+        // Incremental JSON prompt preview extraction, real SSE streaming across providers,
+        // ResultPanel streaming + quick rerun controls, and Popover quick model switching.
+        check(NativeOptimizerEngine.extractStreamingPromptPreview("{\"pro") == nil,
+              "streaming extractor waits until prompt string starts")
+        check(NativeOptimizerEngine.extractStreamingPromptPreview("{\"prompt\":\"Line 1\\n\\\"quoted\\\"\\") == "Line 1\n\"quoted\"",
+              "streaming extractor decodes escapes and ignores dangling trailing backslash")
+        check(NativeOptimizerEngine.extractStreamingPromptPreview("```json\n{\"prompt\":\"\\u4e2d\\u6587 prompt\",\"improvements\":[\"ignore") == "中文 prompt",
+              "streaming extractor strips fences, decodes \\uXXXX, and stops before improvements JSON")
+
+        final class MockStreamURLProtocol: URLProtocol {
+            override class func canInit(with request: URLRequest) -> Bool { true }
+            override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+            override func startLoading() {
+                guard let url = request.url else { return }
+                let host = url.host ?? ""
+                if host == "api.deepseek.com" {
+                    let sse = [
+                        #"data: {"choices":[{"delta":{"content":"{\"prompt\":\"Goal: Fix "}}]}"#,
+                        #"data: {"choices":[{"delta":{"content":"CSV dedup for <<PF_SECRET_1>>\nVerify tests.\","}}]}"#,
+                        #"data: {"choices":[{"delta":{"content":"\"improvements\":[\"Clarified goal.\"],\"assumptions\":[]}"}}]}"#,
+                        "data: [DONE]",
+                        "",
+                    ].joined(separator: "\n")
+                    let resp = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "text/event-stream"])!
+                    client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: Data(sse.utf8))
+                    client?.urlProtocolDidFinishLoading(self)
+                } else if host == "api.anthropic.com" {
+                    let sse = [
+                        #"data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"{\"prompt\":\"Claude streamed "}}"#,
+                        #"data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"prompt.\",\"improvements\":[],\"assumptions\":[]}"}}"#,
+                        #"data: {"type":"message_delta","delta":{"stop_reason":"end_turn"}}"#,
+                        "",
+                    ].joined(separator: "\n")
+                    let resp = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "text/event-stream"])!
+                    client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: Data(sse.utf8))
+                    client?.urlProtocolDidFinishLoading(self)
+                } else if host == "generativelanguage.googleapis.com" {
+                    let sse = [
+                        #"data: {"candidates":[{"content":{"parts":[{"text":"{\"prompt\":\"Gemini live "}]}}]}"#,
+                        #"data: {"candidates":[{"content":{"parts":[{"text":"stream.\",\"improvements\":[],\"assumptions\":[]}"}]},"finishReason":"STOP"}]}"#,
+                        "",
+                    ].joined(separator: "\n")
+                    let resp = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "text/event-stream"])!
+                    client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: Data(sse.utf8))
+                    client?.urlProtocolDidFinishLoading(self)
+                } else {
+                    let resp = HTTPURLResponse(url: url, statusCode: 400, httpVersion: nil, headerFields: nil)!
+                    client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocolDidFinishLoading(self)
+                }
+            }
+            override func stopLoading() {}
+        }
+
+        let streamSessionCfg = URLSessionConfiguration.ephemeral
+        streamSessionCfg.protocolClasses = [MockStreamURLProtocol.self]
+        let streamEngine = NativeOptimizerEngine(session: URLSession(configuration: streamSessionCfg), secrets: memorySecrets)
+        _ = memorySecrets.writeSecret("sk-ds-stream", account: ProviderPreset.deepseek.rawValue)
+        _ = memorySecrets.writeSecret("sk-ant-stream", account: ProviderPreset.anthropic.rawValue)
+        _ = memorySecrets.writeSecret("gem-stream", account: ProviderPreset.gemini.rawValue)
+
+        final class StreamCollector: @unchecked Sendable {
+            private let lock = NSLock()
+            private var items: [String] = []
+            func append(_ s: String) { lock.lock(); items.append(s); lock.unlock() }
+            var values: [String] { lock.lock(); defer { lock.unlock() }; return items }
+        }
+
+        let dsPreviews = StreamCollector()
+        let dsStreamInput = PromptRequest(
+            prompt: "Fix CSV with sk-proj-StreamSecretToken1234567890",
+            task: "coding", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "structured"
+        )
+        let dsStreamOut = try? await streamEngine.optimize(
+            dsStreamInput, config: NativeProviderConfig.default(preset: .deepseek), redactSecrets: true
+        ) { preview in dsPreviews.append(preview) }
+        check(dsPreviews.values.count >= 2 && dsPreviews.values.first == "Goal: Fix "
+              && dsPreviews.values.last?.contains("sk-proj-StreamSecretToken1234567890") == true
+              && dsStreamOut?.prompt.contains("sk-proj-StreamSecretToken1234567890") == true,
+              "native DeepSeek/OpenAI SSE streams incremental clean prompt previews and restores local secrets")
+
+        let antPreviews = StreamCollector()
+        let antStreamOut = try? await streamEngine.optimize(
+            PromptRequest(prompt: "Test Anthropic", task: "general", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "balanced"),
+            config: NativeProviderConfig.default(preset: .anthropic)
+        ) { preview in antPreviews.append(preview) }
+        check(antPreviews.values.count >= 2 && antStreamOut?.prompt == "Claude streamed prompt.",
+              "native Anthropic SSE streams incremental prompt previews cleanly")
+
+        let gemPreviews = StreamCollector()
+        let gemStreamOut = try? await streamEngine.optimize(
+            PromptRequest(prompt: "Test Gemini", task: "general", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "balanced"),
+            config: NativeProviderConfig.default(preset: .gemini)
+        ) { preview in gemPreviews.append(preview) }
+        check(gemPreviews.values.count >= 2 && gemStreamOut?.prompt == "Gemini live stream.",
+              "native Gemini SSE streams incremental prompt previews cleanly")
+
+        // Floating ResultPanel live streaming preview & quick style rerun controls.
+        var rerunStylePicked = ""
+        miniPanel.onRerun = { style in rerunStylePicked = style }
+        miniPanel.present(anchor: CGPoint(x: 200, y: 400), modelName: "deepseek-flash", style: "balanced")
+        miniPanel.updateStreamingPreview("Goal: Streamed live preview...")
+        let streamingScrolls = miniPanel.contentView?.subviews.compactMap { $0 as? NSScrollView } ?? []
+        check(streamingScrolls.first?.isHidden == false,
+              "floating ResultPanel reveals prompt scroll view during live streaming")
+        miniPanel.finish(prompt: "Final prompt.", status: "Done", canPasteBack: true, error: false,
+                         improvements: ["Improved."], modelName: "deepseek-flash", style: "balanced", canRerun: true)
+        let stylePopup = miniPanel.contentView?.subviews.compactMap { $0 as? NSPopUpButton }.first
+        check(stylePopup != nil && stylePopup?.isHidden == false,
+              "floating ResultPanel exposes quick style switcher after completion")
+        stylePopup?.selectItem(at: 1) // concise
+        _ = stylePopup?.sendAction(stylePopup!.action, to: stylePopup!.target)
+        check(rerunStylePicked == "concise",
+              "changing style inside floating ResultPanel triggers immediate rerun with chosen style")
+        miniPanel.orderOut(nil)
+
+        // Quick model switching from Menu-Bar Popover updates model, thinkingMode, and live config.
+        var quickCfg = NativeProviderConfig.default(preset: .deepseek)
+        quickCfg.enabled = true
+        quickCfg.demoMode = false
+        draftModel.saveNativeProvider(quickCfg, apiKey: "sk-quick-test")
+        check(draftModel.quickModelOptions.map(\.id).contains("deepseek-v4-pro"),
+              "quickModelOptions exposes curated models for Popover switcher")
+        draftModel.quickSwitchNativeModel("deepseek-v4-pro")
+        check(draftModel.nativeConfig.model == "deepseek-v4-pro"
+              && draftModel.nativeConfig.thinkingMode == ""
+              && draftModel.config?.generationModel == "deepseek-v4-pro",
+              "quickSwitchNativeModel switches active model and updates thinking mode immediately")
+
         // Refinement style validation and zero-Node built-in native demo tests.
         let validConcise = PromptRequest(prompt: "Refine this", task: "coding", targetModel: "", promptLanguage: "en", notesLanguage: "en", style: "concise")
         check((try? validConcise.validate()) != nil, "concise refinement style validates cleanly")

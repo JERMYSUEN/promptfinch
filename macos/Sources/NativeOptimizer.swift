@@ -552,7 +552,8 @@ final class NativeOptimizerEngine {
         return NativeConnectionCheckResult(ok: true, latencyMs: max(1, elapsed), model: model)
     }
 
-    func optimize(_ input: PromptRequest, config: NativeProviderConfig, redactSecrets: Bool = false) async throws -> PromptResult {
+    func optimize(_ input: PromptRequest, config: NativeProviderConfig, redactSecrets: Bool = false,
+                  onStreamPreview: (@Sendable (String) -> Void)? = nil) async throws -> PromptResult {
         try input.validate()
         if config.demoMode {
             return demoOptimize(input)
@@ -589,26 +590,45 @@ final class NativeOptimizerEngine {
         let userContent = String(data: payloadData, encoding: .utf8) ?? "{}"
 
         var lastError: Error = ToolError.message(L10n.text(.providerNoResult))
-        for _ in 0..<2 {
+        var streamingAllowed = onStreamPreview != nil
+        for attempt in 0..<2 {
             try Task.checkCancellation()
             let remaining = deadline - ProcessInfo.processInfo.systemUptime
             guard remaining > 0.2 else { throw ToolError.message(L10n.text(.providerTimeout)) }
+            let useStream = streamingAllowed && attempt == 0
             let request = try buildRequest(
                 baseURL: baseURL, provider: config.preset.apiProtocol, apiKey: key, model: model,
                 systemPrompt: system, userContent: userContent, maxTokens: 4096,
-                jsonMode: config.jsonMode, thinkingMode: config.thinkingMode, timeout: remaining
+                jsonMode: config.jsonMode, thinkingMode: config.thinkingMode, timeout: remaining,
+                stream: useStream
             )
-            let (data, response): (Data, URLResponse)
-            do {
-                (data, response) = try await session.data(for: request)
-            } catch let urlError as URLError {
-                if urlError.code == .cancelled { throw CancellationError() }
-                if urlError.code == .timedOut { throw ToolError.message(L10n.text(.providerTimeout)) }
-                throw ToolError.message(L10n.text(.providerNetwork))
+            let content: String?
+            let truncated: Bool
+            if useStream {
+                do {
+                    (content, truncated) = try await collectStreamedContent(
+                        request: request, provider: config.preset.apiProtocol, deadline: deadline,
+                        redactedTokens: redacted.tokens, onStreamPreview: onStreamPreview
+                    )
+                } catch let toolError as ToolError where toolError.localizedDescription == L10n.text(.providerSettings) {
+                    // Some OpenAI-compatible proxies reject stream:true; retry once non-streaming.
+                    streamingAllowed = false
+                    lastError = toolError
+                    continue
+                }
+            } else {
+                let (data, response): (Data, URLResponse)
+                do {
+                    (data, response) = try await session.data(for: request)
+                } catch let urlError as URLError {
+                    if urlError.code == .cancelled { throw CancellationError() }
+                    if urlError.code == .timedOut { throw ToolError.message(L10n.text(.providerTimeout)) }
+                    throw ToolError.message(L10n.text(.providerNetwork))
+                }
+                try validateHTTPResponse(response)
+                guard data.count <= 262_144 else { throw ToolError.message(L10n.text(.providerTooLong)) }
+                (content, truncated) = try extractModelContent(data: data, provider: config.preset.apiProtocol)
             }
-            try validateHTTPResponse(response)
-            guard data.count <= 262_144 else { throw ToolError.message(L10n.text(.providerTooLong)) }
-            let (content, truncated) = try extractModelContent(data: data, provider: config.preset.apiProtocol)
             if truncated { throw ToolError.message(L10n.text(.providerTruncated)) }
             guard let trimmed = content?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
                 lastError = ToolError.message(L10n.text(.providerIncompleteText))
@@ -638,9 +658,266 @@ final class NativeOptimizerEngine {
         throw lastError
     }
 
+    private func collectStreamedContent(
+        request: URLRequest,
+        provider: ProviderProtocol,
+        deadline: TimeInterval,
+        redactedTokens: [(placeholder: String, value: String)],
+        onStreamPreview: (@Sendable (String) -> Void)?
+    ) async throws -> (String?, Bool) {
+        let (bytes, response): (URLSession.AsyncBytes, URLResponse)
+        do {
+            (bytes, response) = try await session.bytes(for: request)
+        } catch let urlError as URLError {
+            if urlError.code == .cancelled { throw CancellationError() }
+            if urlError.code == .timedOut { throw ToolError.message(L10n.text(.providerTimeout)) }
+            throw ToolError.message(L10n.text(.providerNetwork))
+        }
+        try validateHTTPResponse(response)
+        let contentType = ((response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type") ?? "").lowercased()
+        let isEventStream = contentType.contains("text/event-stream")
+
+        if !isEventStream {
+            var raw = Data()
+            do {
+                for try await byte in bytes {
+                    try Task.checkCancellation()
+                    if ProcessInfo.processInfo.systemUptime > deadline { throw ToolError.message(L10n.text(.providerTimeout)) }
+                    raw.append(byte)
+                    if raw.count > 262_144 { throw ToolError.message(L10n.text(.providerTooLong)) }
+                }
+            } catch let urlError as URLError {
+                if urlError.code == .cancelled { throw CancellationError() }
+                if urlError.code == .timedOut { throw ToolError.message(L10n.text(.providerTimeout)) }
+                throw ToolError.message(L10n.text(.providerNetwork))
+            }
+            let (content, truncated) = try extractModelContent(data: raw, provider: provider)
+            if let content, let preview = Self.extractStreamingPromptPreview(content) {
+                onStreamPreview?(LocalSecretRedactor.restore(preview, tokens: redactedTokens))
+            }
+            return (content, truncated)
+        }
+
+        var accumulated = ""
+        var totalBytes = 0
+        var truncated = false
+        var lastPreviewCount = 0
+        var lineBuffer = Data()
+
+        func processLine(_ rawLine: String) {
+            let trimmed = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, trimmed.hasPrefix("data:") else { return }
+            let payload = trimmed.dropFirst(5).trimmingCharacters(in: .whitespaces)
+            guard !payload.isEmpty, payload != "[DONE]" else { return }
+            let (delta, hitLimit) = Self.parseSSEEvent(payload: payload, provider: provider)
+            if hitLimit { truncated = true }
+            guard let delta, !delta.isEmpty else { return }
+            accumulated += delta
+            if let onStreamPreview, let preview = Self.extractStreamingPromptPreview(accumulated) {
+                let count = preview.utf16.count
+                if count > lastPreviewCount {
+                    lastPreviewCount = count
+                    onStreamPreview(LocalSecretRedactor.restore(preview, tokens: redactedTokens))
+                }
+            }
+        }
+
+        do {
+            for try await byte in bytes {
+                try Task.checkCancellation()
+                if ProcessInfo.processInfo.systemUptime > deadline { throw ToolError.message(L10n.text(.providerTimeout)) }
+                totalBytes += 1
+                if totalBytes > 524_288 { throw ToolError.message(L10n.text(.providerTooLong)) }
+                if byte == 0x0A { // '\n'
+                    if let line = String(data: lineBuffer, encoding: .utf8) {
+                        processLine(line)
+                    }
+                    lineBuffer.removeAll(keepingCapacity: true)
+                } else if byte != 0x0D { // ignore '\r'
+                    lineBuffer.append(byte)
+                }
+            }
+            if !lineBuffer.isEmpty, let trailing = String(data: lineBuffer, encoding: .utf8) {
+                processLine(trailing)
+            }
+        } catch let urlError as URLError {
+            if urlError.code == .cancelled { throw CancellationError() }
+            if urlError.code == .timedOut { throw ToolError.message(L10n.text(.providerTimeout)) }
+            throw ToolError.message(L10n.text(.providerNetwork))
+        }
+        return (accumulated, truncated)
+    }
+
+    static func parseSSEEvent(payload: String, provider: ProviderProtocol) -> (delta: String?, truncated: Bool) {
+        guard let data = payload.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return (nil, false)
+        }
+        switch provider {
+        case .anthropic:
+            let type = object["type"] as? String ?? ""
+            if type == "content_block_delta", let delta = object["delta"] as? [String: Any] {
+                return (delta["text"] as? String, false)
+            }
+            if type == "message_delta", let delta = object["delta"] as? [String: Any] {
+                return (nil, (delta["stop_reason"] as? String) == "max_tokens")
+            }
+            return (nil, false)
+        case .gemini:
+            let candidates = object["candidates"] as? [[String: Any]] ?? []
+            let first = candidates.first
+            let finish = first?["finishReason"] as? String
+            let parts = (first?["content"] as? [String: Any])?["parts"] as? [[String: Any]] ?? []
+            let text = parts.compactMap { $0["text"] as? String }.joined()
+            return (text.isEmpty ? nil : text, finish == "MAX_TOKENS")
+        case .openai:
+            let choices = object["choices"] as? [[String: Any]] ?? []
+            let first = choices.first
+            let finish = first?["finish_reason"] as? String
+            let delta = first?["delta"] as? [String: Any]
+            let text = delta?["content"] as? String
+            return (text, finish == "length")
+        }
+    }
+
+    /// Incrementally extracts and unescapes the `"prompt"` string field from a partially
+    /// streamed JSON object so users see clean prompt text instead of raw JSON syntax.
+    static func extractStreamingPromptPreview(_ raw: String) -> String? {
+        var text = String(raw.drop(while: { $0.isWhitespace || $0.isNewline }))
+        if text.hasPrefix("```") {
+            if let firstNewline = text.firstIndex(of: "\n") {
+                text = String(text[text.index(after: firstNewline)...])
+            } else {
+                return nil
+            }
+        }
+        guard let brace = text.firstIndex(of: "{") else { return nil }
+        let scalars = Array(text[brace...].unicodeScalars)
+        var i = 0
+        var depth = 0
+        var expectingKey = false
+
+        func skipWS() {
+            while i < scalars.count, CharacterSet.whitespacesAndNewlines.contains(scalars[i]) { i += 1 }
+        }
+
+        func readCompleteString() -> String? {
+            guard i < scalars.count, scalars[i] == "\"" else { return nil }
+            i += 1
+            var out = ""
+            while i < scalars.count {
+                let s = scalars[i]
+                if s == "\"" { i += 1; return out }
+                if s == "\\" {
+                    i += 1
+                    guard i < scalars.count else { return nil }
+                    out.append(Character(scalars[i]))
+                    i += 1
+                    continue
+                }
+                out.append(Character(s))
+                i += 1
+            }
+            return nil
+        }
+
+        func decodePartialString() -> String {
+            var out = ""
+            while i < scalars.count {
+                let s = scalars[i]
+                if s == "\"" { break }
+                if s == "\\" {
+                    guard i + 1 < scalars.count else { break }
+                    let next = scalars[i + 1]
+                    switch next {
+                    case "\"": out.append("\""); i += 2
+                    case "\\": out.append("\\"); i += 2
+                    case "/": out.append("/"); i += 2
+                    case "n": out.append("\n"); i += 2
+                    case "r": out.append("\r"); i += 2
+                    case "t": out.append("\t"); i += 2
+                    case "b": out.append("\u{08}"); i += 2
+                    case "f": out.append("\u{0C}"); i += 2
+                    case "u":
+                        guard i + 5 < scalars.count else { return out }
+                        let hex = String(String.UnicodeScalarView(scalars[(i + 2)...(i + 5)]))
+                        guard let code = UInt16(hex, radix: 16) else { i += 6; continue }
+                        if (0xD800...0xDBFF).contains(code) {
+                            guard i + 11 < scalars.count, scalars[i + 6] == "\\", scalars[i + 7] == "u" else { return out }
+                            let lowHex = String(String.UnicodeScalarView(scalars[(i + 8)...(i + 11)]))
+                            if let low = UInt16(lowHex, radix: 16), (0xDC00...0xDFFF).contains(low) {
+                                let combined = 0x10000 + ((UInt32(code - 0xD800) << 10) | UInt32(low - 0xDC00))
+                                if let scalar = UnicodeScalar(combined) { out.append(Character(scalar)) }
+                            }
+                            i += 12
+                        } else if let scalar = UnicodeScalar(code) {
+                            out.append(Character(scalar))
+                            i += 6
+                        } else {
+                            i += 6
+                        }
+                    default:
+                        out.append(Character(next)); i += 2
+                    }
+                    continue
+                }
+                out.append(Character(s))
+                i += 1
+            }
+            return out
+        }
+
+        while i < scalars.count {
+            skipWS()
+            guard i < scalars.count else { break }
+            let s = scalars[i]
+            if s == "{" {
+                depth += 1
+                expectingKey = (depth == 1)
+                i += 1
+            } else if s == "}" {
+                depth -= 1
+                expectingKey = false
+                i += 1
+                if depth <= 0 { break }
+            } else if s == "[" {
+                depth += 1
+                expectingKey = false
+                i += 1
+            } else if s == "]" {
+                depth -= 1
+                i += 1
+            } else if s == "," {
+                if depth == 1 { expectingKey = true }
+                i += 1
+            } else if s == "\"" {
+                if depth == 1 && expectingKey {
+                    guard let key = readCompleteString() else { return nil }
+                    expectingKey = false
+                    skipWS()
+                    guard i < scalars.count, scalars[i] == ":" else { return nil }
+                    i += 1
+                    skipWS()
+                    if key == "prompt" {
+                        guard i < scalars.count, scalars[i] == "\"" else { return nil }
+                        i += 1
+                        let preview = decodePartialString()
+                        return preview.isEmpty ? nil : preview
+                    }
+                } else {
+                    guard readCompleteString() != nil else { return nil }
+                }
+            } else {
+                i += 1
+            }
+        }
+        return nil
+    }
+
     private func buildRequest(baseURL: URL, provider: ProviderProtocol, apiKey: String, model: String,
                               systemPrompt: String, userContent: String, maxTokens: Int,
-                              jsonMode: Bool, thinkingMode: String, timeout: TimeInterval) throws -> URLRequest {
+                              jsonMode: Bool, thinkingMode: String, timeout: TimeInterval,
+                              stream: Bool = false) throws -> URLRequest {
         let endpoint: URL
         var body: [String: Any]
         var headers: [String: String] = ["Content-Type": "application/json"]
@@ -656,9 +933,11 @@ final class NativeOptimizerEngine {
                 "system": [["type": "text", "text": systemPrompt, "cache_control": ["type": "ephemeral"]]],
                 "messages": [["role": "user", "content": userContent]],
             ]
+            if stream { body["stream"] = true }
         case .gemini:
             let encodedModel = model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? model
-            guard let geminiURL = URL(string: "\(baseURL.absoluteString)/models/\(encodedModel):generateContent") else {
+            let suffix = stream ? ":streamGenerateContent?alt=sse" : ":generateContent"
+            guard let geminiURL = URL(string: "\(baseURL.absoluteString)/models/\(encodedModel)\(suffix)") else {
                 throw ToolError.message(L10n.text(.providerSettings))
             }
             endpoint = geminiURL
@@ -681,6 +960,7 @@ final class NativeOptimizerEngine {
                     ["role": "user", "content": userContent],
                 ],
             ]
+            if stream { body["stream"] = true }
             if jsonMode { body["response_format"] = ["type": "json_object"] }
             let trimmedThinking = thinkingMode.trimmingCharacters(in: .whitespacesAndNewlines)
             if ["enabled", "disabled"].contains(trimmedThinking) {

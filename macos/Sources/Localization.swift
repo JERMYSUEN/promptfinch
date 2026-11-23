@@ -251,6 +251,11 @@ enum L10n {
         case refineShort
         case miniWindowToggle
         case fullWindowToggle
+        case rerunTooltip
+        case streamingStatus
+        case quickSwitchModel
+        case moreModelSettings
+        case modelSwitched
     }
 
     static var language: UILanguage { UILanguage.load() }
@@ -480,6 +485,11 @@ enum L10n {
         .refineShort: ["優化 Prompt", "Refine", "プロンプト改善", "프롬프트 개선"],
         .miniWindowToggle: ["迷你視窗", "Mini", "ミニ表示", "미니 창"],
         .fullWindowToggle: ["完整視窗", "Studio", "フル表示", "전체 창"],
+        .rerunTooltip: ["重新潤飾", "Regenerate", "再生成", "다시 생성"],
+        .streamingStatus: ["即時串流生成中…", "Streaming live…", "ストリーミング生成中…", "실시간 스트리밍 중…"],
+        .quickSwitchModel: ["快速切換模型", "Switch model", "モデル切替", "모델 빠른 전환"],
+        .moreModelSettings: ["切換服務商與更多設定…", "Provider & model settings…", "プロバイダーと詳細設定…", "공급자 및 모델 설정…"],
+        .modelSwitched: ["已切換模型：%@", "Switched model to %@", "モデルを %@ に切り替えました", "모델을 %@(으)로 전환했습니다"],
     ]
 
     static func text(_ key: Key, _ arguments: CVarArg..., language: UILanguage? = nil) -> String {

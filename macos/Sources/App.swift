@@ -56,6 +56,8 @@ final class WorkspaceModel: ObservableObject {
     @Published var promptLanguage: String
     @Published var refinementStyle: String
     @Published var nativeConfig: NativeProviderConfig
+    @Published var streamingPreview = ""
+    @Published private(set) var cachedFetchedModels: [ProviderPreset: [ProviderModelOption]] = [:]
     @Published var appAwarePresetsEnabled: Bool {
         didSet { preferences.set(appAwarePresetsEnabled, forKey: "appAwarePresetsEnabled") }
     }
@@ -116,6 +118,7 @@ final class WorkspaceModel: ObservableObject {
         resultPanel.onPasteBack = { [weak self] in self?.pasteBackFromPanel() }
         resultPanel.onCopy = { [weak self] in self?.copyFromPanel() }
         resultPanel.onClose = { [weak self] in self?.closeResultPanel() }
+        resultPanel.onRerun = { [weak self] style in self?.rerunFromPanel(style: style) }
     }
 
     var compactStatusLabel: String {
@@ -123,6 +126,32 @@ final class WorkspaceModel: ObservableObject {
         if config.mode == "mock" { return "Demo" }
         if !config.ready { return L10n.text(.incompleteConfig) }
         return config.generationModel ?? L10n.text(.configuredModel)
+    }
+
+    var quickModelOptions: [ProviderModelOption] {
+        var list = nativeConfig.preset.suggestedModels
+        var seen = Set(list.map(\.id))
+        for item in cachedFetchedModels[nativeConfig.preset] ?? [] where seen.insert(item.id).inserted {
+            list.append(item)
+        }
+        let active = nativeConfig.model.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !active.isEmpty && seen.insert(active).inserted {
+            list.insert(ProviderModelOption(id: active, title: "", note: ""), at: 0)
+        }
+        return list
+    }
+
+    func quickSwitchNativeModel(_ modelID: String) {
+        let cleaned = modelID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty, nativeConfig.enabled, !nativeConfig.demoMode else { return }
+        guard cleaned != nativeConfig.model else { return }
+        var updated = nativeConfig
+        updated.model = cleaned
+        updated.jsonMode = updated.preset.defaultJSONMode
+        updated.thinkingMode = updated.preset.resolvedThinkingMode(for: cleaned)
+        saveNativeProvider(updated, apiKey: nil)
+        settingsDraft.modelName = cleaned
+        notify(L10n.text(.modelSwitched, cleaned))
     }
 
     func restoreSessionEntry(_ entry: SessionHistoryEntry) {
@@ -223,6 +252,7 @@ final class WorkspaceModel: ObservableObject {
                 )
                 guard draft.selectedPreset == preset else { return }
                 draft.fetchedModels = models
+                cachedFetchedModels[preset] = models
                 if draft.modelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let first = models.first {
                     draft.modelName = first.id
                 }
@@ -324,7 +354,15 @@ final class WorkspaceModel: ObservableObject {
         } catch { showWindow?(); notify(L10n.errorDescription(error), error: true) }
     }
 
-    func generate(autoPaste: Bool = false, background: Bool = false, anchor: CGPoint? = nil) {
+    func rerunFromPanel(style: String) {
+        guard !backendSwitching, !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        if ["balanced", "concise", "structured"].contains(style) {
+            refinementStyle = style
+        }
+        generate(autoPaste: false, background: true, preserveAnchor: true)
+    }
+
+    func generate(autoPaste: Bool = false, background: Bool = false, anchor: CGPoint? = nil, preserveAnchor: Bool = false) {
         guard !backendSwitching else { return }
         let resolvedTask: String
         if background && appAwarePresetsEnabled, let pid = sourcePID,
@@ -344,7 +382,7 @@ final class WorkspaceModel: ObservableObject {
             else if autoPaste { showWindow?() }
             return
         }
-        cancel()
+        cancel(hideResultPanel: !preserveAnchor)
         let token = UUID()
         generationID = token
         let configToken = UUID()
@@ -352,11 +390,21 @@ final class WorkspaceModel: ObservableObject {
         let useNative = nativeConfig.enabled
         let activeNativeConfig = nativeConfig
         let redact = redactSecretsEnabled
+        let activeStyle = refinementStyle
+        let activeModelBadge = useNative
+            ? (activeNativeConfig.demoMode ? "Demo" : activeNativeConfig.model)
+            : (config?.generationModel ?? "")
         if !useNative { config = nil }
-        result = nil; resultOriginal = ""; busy = true; notify(L10n.text(.refining))
+        result = nil; resultOriginal = ""; streamingPreview = ""; busy = true; notify(L10n.text(.refining))
         DebugLog.write("generate seq=\(eventID) started background=\(background) native=\(useNative) selectedUTF16=\(input.prompt.utf16.count)")
         if background {
-            resultPanel.present(anchor: anchor ?? mouseAnchor, eventSequence: activeEventSequence)
+            resultPanel.present(
+                anchor: anchor ?? mouseAnchor,
+                modelName: activeModelBadge,
+                style: activeStyle,
+                preserveAnchor: preserveAnchor,
+                eventSequence: activeEventSequence
+            )
         } else {
             resultPanel.orderOut(nil)
         }
@@ -369,7 +417,15 @@ final class WorkspaceModel: ObservableObject {
                 let output: PromptResult
                 if useNative {
                     if configurationID == configToken { config = nativeEngine.serviceConfig(for: activeNativeConfig) }
-                    output = try await nativeEngine.optimize(input, config: activeNativeConfig, redactSecrets: redact)
+                    output = try await nativeEngine.optimize(input, config: activeNativeConfig, redactSecrets: redact) { [weak workspace = self] preview in
+                        Task { @MainActor in
+                            guard let workspace, workspace.generationID == token, workspace.busy else { return }
+                            workspace.streamingPreview = preview
+                            if background {
+                                workspace.resultPanel.updateStreamingPreview(preview)
+                            }
+                        }
+                    }
                 } else {
                     _ = try await backend.ensureRunning()
                     // Backend health belongs to the configuration, even if the
@@ -383,32 +439,35 @@ final class WorkspaceModel: ObservableObject {
                 }
                 DebugLog.write("generate seq=\(eventID) done mode=\(output.mode) generatedUTF16=\(output.prompt.utf16.count)")
                 guard generationID == token, !Task.isCancelled else { return }
+                streamingPreview = ""
                 result = output
                 resultOriginal = input.prompt
                 recordSessionHistory(original: input.prompt, result: output)
+                let finishedModel = output.mode == "mock" ? "Demo" : (output.generationModel ?? activeModelBadge)
                 if output.mode == "mock" {
                     notify(L10n.text(.mockNotice))
                     if background {
-                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.mockPanelNotice), canPasteBack: false, error: true, improvements: output.improvements, assumptions: output.assumptions, eventSequence: activeEventSequence)
+                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.mockPanelNotice), canPasteBack: false, error: true, improvements: output.improvements, assumptions: output.assumptions, modelName: finishedModel, style: activeStyle, canRerun: true, eventSequence: activeEventSequence)
                     } else if autoPaste { showWindow?() }
                 } else if autoPaste {
                     pasteBack(output.prompt)
                 } else {
                     notify(L10n.text(.promptReady))
                     if background {
-                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.promptComplete), canPasteBack: canOfferPasteBack, error: false, improvements: output.improvements, assumptions: output.assumptions, eventSequence: activeEventSequence)
+                        resultPanel.finish(prompt: output.prompt, status: L10n.text(.promptComplete), canPasteBack: canOfferPasteBack, error: false, improvements: output.improvements, assumptions: output.assumptions, modelName: finishedModel, style: activeStyle, canRerun: true, eventSequence: activeEventSequence)
                     }
                 }
             } catch {
                 DebugLog.write("generate seq=\(eventID) errorType=\(String(describing: type(of: error)))")
                 if !useNative && configurationID == configToken { config = backend.verifiedConfiguration }
                 guard generationID == token, !Task.isCancelled else { return }
+                streamingPreview = ""
                 if let networkError = error as? URLError, networkError.code == .cannotConnectToHost {
                     notify(L10n.text(.cannotConnect), error: true)
                 } else { notify(L10n.errorDescription(error), error: true) }
                 if background { resultPanel.fail(status: L10n.errorDescription(error), eventSequence: activeEventSequence) } else if autoPaste { showWindow?() }
             }
-            if generationID == token { busy = false; operation = nil }
+            if generationID == token { streamingPreview = ""; busy = false; operation = nil }
         }
     }
 
@@ -532,11 +591,12 @@ final class WorkspaceModel: ObservableObject {
         else { notify(L10n.text(.copyFailedWorkspace), error: true) }
     }
 
-    func cancel() {
+    func cancel(hideResultPanel: Bool = true) {
         invalidatePendingPasteFeedback()
         generationID = UUID()
         operation?.cancel(); operation = nil
-        if busy { resultPanel.orderOut(nil) }
+        streamingPreview = ""
+        if busy && hideResultPanel { resultPanel.orderOut(nil) }
         busy = false
     }
 
@@ -678,13 +738,9 @@ struct WorkspaceView: View {
                     .fixedSize(horizontal: model.miniWindowMode, vertical: false)
                     .lineLimit(1)
                     .help(L10n.text(.workspaceIntro))
-                Text(model.miniWindowMode ? model.compactStatusLabel : model.modeLabel)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(Color.secondary.opacity(0.10))
-                    .clipShape(Capsule())
-                    .lineLimit(1)
+                QuickModelMenuBadge(model: model, compact: model.miniWindowMode) {
+                    model.settingsVisible = true
+                }
                 Spacer(minLength: 4)
                 if model.miniWindowMode {
                     Button { model.miniWindowMode = false } label: {
@@ -804,7 +860,20 @@ struct WorkspaceView: View {
             }.buttonStyle(.borderedProminent).tint(accent).disabled(model.unavailable)
                 .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("generate")
 
-            if let result = model.result {
+            if model.busy && !model.streamingPreview.isEmpty {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.mini)
+                    Text(L10n.text(.streamingStatus)).font(.system(size: 11.5, weight: .medium)).foregroundStyle(accent)
+                    Spacer()
+                }
+                ScrollView {
+                    Text(model.streamingPreview)
+                        .font(.system(size: 13))
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(10)
+                }.frame(minHeight: 100, maxHeight: .infinity)
+                    .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(accent.opacity(0.35)))
+            } else if let result = model.result {
                 HStack {
                     Text(L10n.text(.copyablePrompt)).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                     Spacer()
@@ -880,18 +949,25 @@ struct WorkspaceView: View {
                     Button { model.copy() } label: { Label(L10n.text(.copy), systemImage: "doc.on.doc") }
                         .disabled(model.result == nil).accessibilityIdentifier("copyPrompt")
                 }
-                if let result = model.result {
+                if model.busy && !model.streamingPreview.isEmpty {
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.mini)
+                        Text(L10n.text(.streamingStatus)).font(.system(size: 11)).foregroundStyle(accent)
+                    }
+                } else if let result = model.result {
                     Text(result.mode == "mock" ? L10n.text(.mockResult) : L10n.text(.generatedBy, result.generationModel ?? L10n.text(.modelService)))
                         .font(.system(size: 11)).foregroundStyle(result.mode == "mock" ? Color.orange : .secondary)
                 }
                 ScrollView {
-                    Text(model.result?.prompt ?? L10n.text(.resultPlaceholder))
-                        .font(.system(size: 14)).foregroundStyle(model.result == nil ? .secondary : .primary)
+                    let displayText = model.result?.prompt ?? (!model.streamingPreview.isEmpty ? model.streamingPreview : L10n.text(.resultPlaceholder))
+                    let isPlaceholder = model.result == nil && model.streamingPreview.isEmpty
+                    Text(displayText)
+                        .font(.system(size: 14)).foregroundStyle(isPlaceholder ? .secondary : .primary)
                         .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(14)
                         .accessibilityIdentifier("resultPrompt")
                 }.frame(minHeight: 160, maxHeight: .infinity)
                     .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.15)))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(model.busy && !model.streamingPreview.isEmpty ? accent.opacity(0.4) : Color.secondary.opacity(0.15)))
                 if let result = model.result {
                     Button(L10n.text(.compareChanges)) { model.comparisonVisible = true }
                         .accessibilityIdentifier("compareChanges")

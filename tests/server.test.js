@@ -836,3 +836,33 @@ test('模型清單端點支援 OpenAI／DeepSeek、Anthropic 與 Gemini 格式�
   const gemData = await gemRes.json();
   assert.deepEqual(gemData.models, [{ id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }]);
 });
+
+test('SSE 串流端點即時轉發增量 Prompt 預覽並於最後回傳完整驗證結果', async t => {
+  const sseProvider = await listen(createServer((request, response) => {
+    response.writeHead(200, { 'Content-Type': 'text/event-stream' });
+    response.write('data: {"choices":[{"delta":{"content":"{\\"prompt\\":\\"Step 1: Inspect "}}]}\n\n');
+    response.write('data: {"choices":[{"delta":{"content":"CSV parser.\\nStep 2: Run checks.\\",\\"improvements\\":[\\"已整理步驟。\\"],\\"assumptions\\":[]}"}}]}\n\n');
+    response.write('data: [DONE]\n\n');
+    response.end();
+  }), t);
+  const url = await app(t, {
+    OPTIMIZER_MODE: 'live', LLM_PROVIDER: 'openai',
+    LLM_API_KEY: 'sk-sse-test', LLM_MODEL: 'deepseek-flash', LLM_BASE_URL: sseProvider,
+  });
+  const res = await fetch(`${url}/api/optimize/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: '幫我修 CSV 並跑測試', promptLanguage: 'en' }),
+  });
+  assert.equal(res.status, 200);
+  const events = (await res.text())
+    .split('\n\n')
+    .filter(line => line.startsWith('data: '))
+    .map(line => JSON.parse(line.slice(6)));
+  const deltas = events.filter(e => e.type === 'delta').map(e => e.text);
+  assert.ok(deltas.length >= 2, 'should emit incremental prompt deltas');
+  assert.equal(deltas[0], 'Step 1: Inspect ');
+  assert.equal(deltas.at(-1), 'Step 1: Inspect CSV parser.\nStep 2: Run checks.');
+  assert.equal(events.at(-1).type, 'result');
+  assert.equal(events.at(-1).data.prompt, 'Step 1: Inspect CSV parser.\nStep 2: Run checks.');
+});

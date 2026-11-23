@@ -1014,9 +1014,11 @@ final class ResultPanel: NSPanel {
     var onPasteBack: (() -> Void)?
     var onCopy: (() -> Void)?
     var onClose: (() -> Void)?
+    var onRerun: ((String) -> Void)?
 
     private let panelWidth: CGFloat = 410
     private let header = NSTextField(labelWithString: L10n.text(.englishPrompt))
+    private let modelBadge = NSTextField(labelWithString: "")
     private let closeButton = NSButton(title: "✕", target: nil, action: nil)
     private let textScroll = NSScrollView(frame: .zero)
     private let textView = NSTextView(frame: .zero)
@@ -1026,11 +1028,16 @@ final class ResultPanel: NSPanel {
     private let statusLine = NSTextField(wrappingLabelWithString: "")
     private let pasteButton = NSButton(title: L10n.text(.pasteBack), target: nil, action: nil)
     private let copyButton = NSButton(title: L10n.text(.copy), target: nil, action: nil)
+    private let stylePopup = NSPopUpButton(frame: .zero, pullsDown: false)
+    private let rerunButton = NSButton(frame: .zero)
     private let spinner = NSProgressIndicator()
     private let busyLabel = NSTextField(labelWithString: L10n.text(.converting))
+    private let styleIds = ["balanced", "concise", "structured"]
+    private var currentStyle = "balanced"
     private var currentNotesCount = 0
     private var notesExpanded = false
     private var currentPromptHeight: CGFloat = 110
+    private var isStreamingActive = false
 
     init() {
         super.init(contentRect: NSRect(x: 0, y: 0, width: 410, height: 220),
@@ -1052,8 +1059,14 @@ final class ResultPanel: NSPanel {
 
         header.font = NSFont.systemFont(ofSize: 12.5, weight: .semibold)
         header.textColor = .labelColor
-        header.frame = NSRect(x: 14, y: 10, width: 340, height: 20)
+        header.frame = NSRect(x: 16, y: 10, width: 112, height: 20)
         container.addSubview(header)
+
+        modelBadge.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        modelBadge.textColor = .secondaryLabelColor
+        modelBadge.lineBreakMode = .byTruncatingTail
+        modelBadge.frame = NSRect(x: 126, y: 11, width: 202, height: 18)
+        container.addSubview(modelBadge)
 
         closeButton.isBordered = false
         closeButton.contentTintColor = .secondaryLabelColor
@@ -1132,9 +1145,38 @@ final class ResultPanel: NSPanel {
             button.target = self; button.action = action
             container.addSubview(button)
         }
+        stylePopup.controlSize = .small
+        stylePopup.font = NSFont.systemFont(ofSize: 11.5)
+        stylePopup.target = self
+        stylePopup.action = #selector(styleChanged)
+        stylePopup.isHidden = true
+        refreshStyleMenuTitles()
+        container.addSubview(stylePopup)
+
+        rerunButton.bezelStyle = .rounded
+        rerunButton.controlSize = .small
+        rerunButton.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: L10n.text(.rerunTooltip))
+        rerunButton.title = ""
+        rerunButton.toolTip = L10n.text(.rerunTooltip)
+        rerunButton.target = self
+        rerunButton.action = #selector(rerunTapped)
+        rerunButton.isHidden = true
+        container.addSubview(rerunButton)
+
         contentView = container
         closeButton.setAccessibilityLabel(L10n.text(.close))
         relayout(isBusy: false, preserveTopLeft: false)
+    }
+
+    private func refreshStyleMenuTitles() {
+        let selectedIndex = styleIds.firstIndex(of: currentStyle) ?? 0
+        stylePopup.removeAllItems()
+        stylePopup.addItems(withTitles: [
+            L10n.text(.styleBalanced),
+            L10n.text(.styleConcise),
+            L10n.text(.styleStructured),
+        ])
+        stylePopup.selectItem(at: selectedIndex)
     }
 
     private func measurePromptHeight(_ text: String) -> CGFloat {
@@ -1151,14 +1193,50 @@ final class ResultPanel: NSPanel {
     private func relayout(isBusy: Bool, preserveTopLeft: Bool) {
         let oldTopLeft = NSPoint(x: frame.minX, y: frame.maxY)
         let innerWidth = panelWidth - 32
+        let headerWidth = min(155, ceil(header.intrinsicContentSize.width) + 4)
+        header.frame = NSRect(x: 16, y: 10, width: headerWidth, height: 20)
+        let badgeX = header.frame.maxX + 8
+        let rightBound: CGFloat = isBusy && isStreamingActive ? 346 : 368
+        modelBadge.frame = NSRect(x: badgeX, y: 11, width: max(40, rightBound - badgeX), height: 18)
+
         var y: CGFloat = 34
 
-        if isBusy {
+        if isBusy && !isStreamingActive {
+            spinner.frame = NSRect(x: (panelWidth - 16) / 2, y: 54, width: 16, height: 16)
+            busyLabel.frame = NSRect(x: 14, y: 78, width: panelWidth - 28, height: 18)
             textScroll.isHidden = true
             notesToggle.isHidden = true
             notesScroll.isHidden = true
             statusLine.isHidden = true
+            stylePopup.isHidden = true
+            rerunButton.isHidden = true
             let totalHeight: CGFloat = 122
+            resizeKeepingAnchor(width: panelWidth, height: totalHeight, topLeft: oldTopLeft, preserveTopLeft: preserveTopLeft)
+            return
+        }
+
+        if isBusy && isStreamingActive {
+            spinner.frame = NSRect(x: 352, y: 11, width: 14, height: 14)
+            busyLabel.isHidden = true
+            notesToggle.isHidden = true
+            notesScroll.isHidden = true
+            pasteButton.isHidden = true
+            copyButton.isHidden = true
+            stylePopup.isHidden = true
+            rerunButton.isHidden = true
+
+            textScroll.isHidden = false
+            textScroll.frame = NSRect(x: 16, y: y, width: innerWidth, height: currentPromptHeight)
+            textView.frame = NSRect(x: 0, y: 0, width: innerWidth, height: max(currentPromptHeight, textView.frame.height))
+            y += currentPromptHeight + 6
+
+            statusLine.stringValue = L10n.text(.streamingStatus)
+            statusLine.textColor = .secondaryLabelColor
+            statusLine.isHidden = false
+            statusLine.frame = NSRect(x: 16, y: y, width: innerWidth, height: 18)
+            y += 26
+
+            let totalHeight = min(310, max(122, y))
             resizeKeepingAnchor(width: panelWidth, height: totalHeight, topLeft: oldTopLeft, preserveTopLeft: preserveTopLeft)
             return
         }
@@ -1202,22 +1280,34 @@ final class ResultPanel: NSPanel {
             y += statusHeight + 8
         }
 
-        let hasButtons = !pasteButton.isHidden || !copyButton.isHidden
+        let hasButtons = !pasteButton.isHidden || !copyButton.isHidden || !rerunButton.isHidden
         if hasButtons {
-            let pasteWidth = max(116, ceil(pasteButton.intrinsicContentSize.width) + 20)
-            let copyWidth = max(84, ceil(copyButton.intrinsicContentSize.width) + 20)
-            if pasteButton.isHidden {
-                copyButton.frame = NSRect(x: 16, y: y, width: copyWidth, height: 28)
-            } else {
-                pasteButton.frame = NSRect(x: 16, y: y, width: min(210, pasteWidth), height: 28)
+            let pasteWidth = min(156, max(92, ceil(pasteButton.intrinsicContentSize.width) + 18))
+            let copyWidth = min(92, max(66, ceil(copyButton.intrinsicContentSize.width) + 18))
+            if !pasteButton.isHidden {
+                pasteButton.frame = NSRect(x: 16, y: y, width: pasteWidth, height: 28)
                 copyButton.frame = NSRect(x: pasteButton.frame.maxX + 8, y: y, width: copyWidth, height: 28)
+            } else if !copyButton.isHidden {
+                copyButton.frame = NSRect(x: 16, y: y, width: copyWidth, height: 28)
+            }
+            if !rerunButton.isHidden {
+                let rerunW: CGFloat = 28
+                let rerunX = panelWidth - 16 - rerunW
+                rerunButton.frame = NSRect(x: rerunX, y: y + 2, width: rerunW, height: 24)
+                let styleW: CGFloat = min(94, max(68, ceil(stylePopup.intrinsicContentSize.width) + 6))
+                stylePopup.frame = NSRect(x: rerunX - 6 - styleW, y: y + 2, width: styleW, height: 24)
+                stylePopup.isHidden = false
+            } else {
+                stylePopup.isHidden = true
             }
             y += 38
         } else {
+            stylePopup.isHidden = true
+            rerunButton.isHidden = true
             y += 8
         }
 
-        let totalHeight = min(390, max(110, y))
+        let totalHeight = min(400, max(110, y))
         resizeKeepingAnchor(width: panelWidth, height: totalHeight, topLeft: oldTopLeft, preserveTopLeft: preserveTopLeft)
     }
 
@@ -1244,18 +1334,31 @@ final class ResultPanel: NSPanel {
         pasteButton.title = L10n.text(.pasteBack)
         copyButton.title = L10n.text(.copy)
         busyLabel.stringValue = L10n.text(.converting)
+        rerunButton.toolTip = L10n.text(.rerunTooltip)
+        rerunButton.image?.accessibilityDescription = L10n.text(.rerunTooltip)
         closeButton.setAccessibilityLabel(L10n.text(.close))
+        refreshStyleMenuTitles()
         statusLine.stringValue = L10n.relocalize(statusLine.stringValue, from: previous)
         relayout(isBusy: !spinner.isHidden, preserveTopLeft: isVisible)
     }
 
-    func present(anchor: CGPoint, eventSequence: UInt64? = nil) {
+    func present(anchor: CGPoint, modelName: String = "", style: String = "balanced",
+                 preserveAnchor: Bool = false, eventSequence: UInt64? = nil) {
         currentNotesCount = 0
         notesExpanded = false
+        isStreamingActive = false
+        currentStyle = styleIds.contains(style) ? style : "balanced"
+        refreshStyleMenuTitles()
+        modelBadge.stringValue = modelName
         textView.string = ""
         notesView.string = ""
         statusLine.stringValue = ""
         busy(true)
+        if preserveAnchor && isVisible {
+            relayout(isBusy: true, preserveTopLeft: true)
+            orderFrontRegardless()
+            return
+        }
         let loadingHeight: CGFloat = 122
         let wanted = NSRect(x: anchor.x, y: anchor.y + 8, width: panelWidth, height: loadingHeight)
         let matchingScreen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(wanted) })
@@ -1264,13 +1367,35 @@ final class ResultPanel: NSPanel {
         let y = min(max(wanted.maxY, visible.minY + wanted.height + 4), visible.maxY - 4)
         setContentSize(NSSize(width: panelWidth, height: loadingHeight))
         setFrameTopLeftPoint(NSPoint(x: x, y: y))
+        relayout(isBusy: true, preserveTopLeft: true)
         orderFrontRegardless()
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") presented=true screenMatch=\(matchingScreen != nil) screenCount=\(NSScreen.screens.count) anchor=\(Int(anchor.x)),\(Int(anchor.y)) visible=\(Int(visible.minX)),\(Int(visible.minY)),\(Int(visible.width)),\(Int(visible.height)) frame=\(Int(frame.minX)),\(Int(frame.minY)),\(Int(frame.width)),\(Int(frame.height))")
     }
 
+    func updateStreamingPreview(_ text: String) {
+        guard isVisible, !spinner.isHidden, !text.isEmpty else { return }
+        isStreamingActive = true
+        textView.string = text
+        let measured = measurePromptHeight(text)
+        let shouldResize = abs(measured - currentPromptHeight) >= 6 || textScroll.isHidden
+        currentPromptHeight = measured
+        if shouldResize {
+            relayout(isBusy: true, preserveTopLeft: true)
+        }
+        textView.scrollToEndOfDocument(nil)
+    }
+
     func finish(prompt: String, status: String, canPasteBack: Bool, error: Bool,
-                improvements: [String] = [], assumptions: [String] = [], eventSequence: UInt64? = nil) {
+                improvements: [String] = [], assumptions: [String] = [],
+                modelName: String? = nil, style: String? = nil,
+                canRerun: Bool = true, eventSequence: UInt64? = nil) {
+        isStreamingActive = false
         busy(false)
+        if let modelName { modelBadge.stringValue = modelName }
+        if let style, styleIds.contains(style) {
+            currentStyle = style
+            refreshStyleMenuTitles()
+        }
         textView.string = prompt
         currentPromptHeight = measurePromptHeight(prompt)
         let combinedNotes = improvements.map { "• \($0)" } + assumptions.map { "ⓘ \($0)" }
@@ -1281,12 +1406,15 @@ final class ResultPanel: NSPanel {
         statusLine.textColor = error ? NSColor.systemOrange : .secondaryLabelColor
         pasteButton.isHidden = !canPasteBack
         copyButton.isHidden = false
+        rerunButton.isHidden = !canRerun
+        stylePopup.isHidden = !canRerun
         relayout(isBusy: false, preserveTopLeft: isVisible)
         orderFrontRegardless()
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") finished=true visible=\(isVisible) promptUTF16=\(prompt.utf16.count) notes=\(currentNotesCount) pasteButton=\(!pasteButton.isHidden) error=\(error)")
     }
 
     func fail(status: String, eventSequence: UInt64? = nil) {
+        isStreamingActive = false
         busy(false)
         currentNotesCount = 0
         notesExpanded = false
@@ -1295,6 +1423,7 @@ final class ResultPanel: NSPanel {
         statusLine.stringValue = status
         statusLine.textColor = .systemOrange
         pasteButton.isHidden = true; copyButton.isHidden = true
+        rerunButton.isHidden = true; stylePopup.isHidden = true
         relayout(isBusy: false, preserveTopLeft: isVisible)
         DebugLog.write("resultPanel seq=\(eventSequence.map(String.init) ?? "-") failed=true visible=\(isVisible)")
     }
@@ -1309,17 +1438,32 @@ final class ResultPanel: NSPanel {
 
     private func busy(_ running: Bool) {
         spinner.isHidden = !running
-        busyLabel.isHidden = !running
+        busyLabel.isHidden = !running || isStreamingActive
         if running { spinner.startAnimation(nil) } else { spinner.stopAnimation(nil) }
         if running {
             pasteButton.isHidden = true
             copyButton.isHidden = true
+            rerunButton.isHidden = true
+            stylePopup.isHidden = true
         }
     }
 
     @objc private func toggleNotes() {
         notesExpanded.toggle()
         relayout(isBusy: false, preserveTopLeft: isVisible)
+    }
+
+    @objc private func styleChanged() {
+        let index = stylePopup.indexOfSelectedItem
+        guard styleIds.indices.contains(index) else { return }
+        let picked = styleIds[index]
+        guard picked != currentStyle else { return }
+        currentStyle = picked
+        onRerun?(picked)
+    }
+
+    @objc private func rerunTapped() {
+        onRerun?(currentStyle)
     }
 
     @objc private func pasteTapped() { onPasteBack?() }
