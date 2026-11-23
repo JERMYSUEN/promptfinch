@@ -92,7 +92,7 @@ jobs:
             ditto --norsrc --noextattr -c -k --keepParent build/PromptFinch.app "$ZIP_PATH"
           fi
 
-          if [ "${{ inputs.create_dmg != false }}" = "true" ]; then
+          if [ "${{ github.event_name != 'workflow_dispatch' || inputs.create_dmg }}" = "true" ]; then
             DMG_STAGE="$RUNNER_TEMP/dmg-stage"
             rm -rf "$DMG_STAGE"
             mkdir -p "$DMG_STAGE"
